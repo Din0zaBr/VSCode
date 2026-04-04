@@ -1,17 +1,17 @@
 services:
   agent:
-    build: ./agent
+    build: .
     container_name: logvault-agent
+    restart: unless-stopped
     environment:
-      - LOGVAULT_SERVER_URL=${SERVER_URL:-http://192.168.1.10:8000}
+      - LOGVAULT_SERVER_URL=${SERVER_URL:-http://localhost:8000}
       - LOGVAULT_AGENT_ID=${AGENT_ID:-agent-01}
       - LOGVAULT_API_KEY=${API_KEY:-changeme-agent-key}
     volumes:
       - /var/log:/var/log:ro
       - /run/log/journal:/run/log/journal:ro
-      - ./agent/config.yaml:/etc/logvault/config.yaml:ro
+      - ./config.yaml:/etc/logvault/config.yaml:ro
       - agent_data:/data
-    restart: unless-stopped
 
 volumes:
   agent_data:

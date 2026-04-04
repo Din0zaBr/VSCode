@@ -7,6 +7,9 @@ dist/
 *.egg-info/
 .DS_Store
 Thumbs.db
-/agent/data/
-hack/
 .cursor/
+
+# Agent build artifacts
+logvault-agent/release/
+logvault-agent/build/
+logvault-agent/*.spec

@@ -12,8 +12,7 @@
 8. [Интеграции](#8-интеграции)
 9. [API-справочник](#9-api-справочник)
 10. [Схема базы данных](#10-схема-базы-данных)
-11. [agent_v (OpenSearch)](#11-agent_v-opensearch)
-12. [Устранение неполадок](#12-устранение-неполадок)
+11. [Устранение неполадок](#11-устранение-неполадок)
 
 ---
 
@@ -31,10 +30,9 @@
 │  │  - буфер SQLite    │  /ingest  │  - Alert Engine              │  │
 │  └────────────────────┘           │  - ML Engine (stub)          │  │
 │                                   └──────────────┬───────────────┘  │
-│  ┌────────────────────┐                          │                  │
-│  │  agent_v           │  Bulk API  ┌─────────────▼──────────────┐  │
-│  │  (→ OpenSearch)    ├───────────►│  PostgreSQL                │  │
-│  └────────────────────┘           │  logs, rules, assets, ...   │  │
+│                                   ┌─────────────▼──────────────┐  │
+│                                   │  PostgreSQL                │  │
+│                                   │  logs, rules, assets, ...   │  │
 │                                   └─────────────┬───────────────┘  │
 │                                                 │                   │
 │                                   ┌─────────────▼──────────────┐   │
@@ -69,8 +67,8 @@
 ### Установка и запуск
 
 ```bash
-# 1. Перейти в директорию проекта
-cd Хак/Test1111
+# 1. Скопировать logvault-server/ на сервер
+cd logvault-server
 
 # 2. Создать конфигурационный файл
 cp .env.example .env
@@ -79,21 +77,22 @@ cp .env.example .env
 #    API_KEYS=my-secret-key
 #    JWT_SECRET=my-random-jwt-secret
 
-# 4. Запустить стек
-docker compose up -d --build
+# 4. Быстрый запуск (установит Docker, соберёт образы, запустит)
+chmod +x start.sh
+sudo ./start.sh
 
-# 5. Проверить, что всё поднялось
+# Или вручную:
+docker compose up -d --build
 docker compose ps
 ```
 
 Первый запуск занимает **2–5 минут** (сборка образов).
 
+После запуска скрипт выведет команду для установки агентов на хосты.
+
 ### Доступ к UI
 
-Открыть в браузере: **https://localhost**
-
-> Браузер покажет предупреждение о самоподписанном сертификате.
-> Нажмите «Дополнительно» → «Перейти на сайт (небезопасно)».
+Открыть в браузере: **http://IP-СЕРВЕРА**
 
 **Учётные данные по умолчанию:**
 - Логин: `admin`
@@ -125,7 +124,7 @@ docker compose ps
 
 ## 3. Конфигурация сервера
 
-Все настройки задаются через файл `.env` в директории `Хак/Test1111/`.
+Все настройки задаются через файл `.env` в директории `logvault-server/`.
 
 ### Полный список переменных
 
@@ -187,7 +186,7 @@ AD_USE_SSL=true
 
 ### Конфигурация агента
 
-Файл `agent/config.yaml`:
+Файл `logvault-agent/config.yaml`:
 
 ```yaml
 # Адрес сервера URSUS SIEM
@@ -242,133 +241,83 @@ sources:
 
 ---
 
-### Способ 1: Docker (рекомендуется)
+### Способ 1: Дистанционная установка через сервер (рекомендуется)
 
-Подходит для Linux-хостов с Docker.
-
-**Шаг 1.** Скопируйте на целевой хост файлы:
-```
-docker-compose.agent.yml
-agent/config.yaml
-```
-
-**Шаг 2.** Отредактируйте `agent/config.yaml` — укажите адрес сервера и ключ.
-
-**Шаг 3.** Создайте `.env` с параметрами агента:
-
-```env
-SERVER_URL=https://siem.company.ru/api
-AGENT_ID=web-server-01
-API_KEY=changeme-agent-key
-```
-
-**Шаг 4.** Запустите агент:
+Сервер URSUS раздаёт скрипт установки агента. На каждом хосте-источнике выполните одну команду:
 
 ```bash
-docker compose -f docker-compose.agent.yml up -d
+curl -fsSL http://<SERVER_IP>:8000/agent/install | sudo bash -s -- --key <API_KEY>
 ```
 
-**Шаг 5.** Проверьте логи:
+С указанием ID агента:
+```bash
+curl -fsSL http://<SERVER_IP>:8000/agent/install | sudo bash -s -- --key <API_KEY> --id web-server-01
+```
+
+Скрипт автоматически:
+- Установит Docker (если нет)
+- Скачает конфигурацию с сервера
+- Запустит агент в Docker с автоперезапуском
+
+**Обновление агента** — та же команда, старый контейнер заменяется автоматически.
+
+**Удаление агента:**
+```bash
+docker compose -f /opt/ursus-agent/docker-compose.yml down
+rm -rf /opt/ursus-agent
+```
+
+---
+
+### Способ 2: Docker Compose (ручная установка)
+
+Скопируйте папку `logvault-agent/` на целевой хост.
 
 ```bash
-docker compose -f docker-compose.agent.yml logs -f
+cd logvault-agent
+
+# Отредактировать config.yaml: указать server_url, agent_id, api_key
+nano config.yaml
+
+# Запустить
+docker compose up -d
+
+# Проверить
+docker compose logs -f
 ```
 
 Агент автоматически перезапускается при сбоях (`restart: unless-stopped`).
 
 ---
 
-### Способ 2: Виртуальная машина / физический сервер (Linux)
+### Способ 3: Systemd-сервис (standalone-бинарник, без Docker)
 
-#### Ubuntu / Debian
+Для хостов без Docker. Бинарник собирается один раз и устанавливается как системная служба.
 
+**Сборка бинарника** (на машине с Docker):
 ```bash
-# 1. Установить зависимости
-sudo apt update
-sudo apt install -y python3 python3-pip git
-
-# 2. Скопировать файлы агента на хост (или клонировать репозиторий)
-# Пример через scp:
-# scp -r Хак/Test1111/agent/ user@192.168.1.20:/opt/ursus-agent/
-
-# 3. Перейти в директорию агента
-cd /opt/ursus-agent
-
-# 4. Установить зависимости Python
-pip3 install -r requirements.txt
-
-# 5. Создать директорию для данных
-sudo mkdir -p /data
-sudo chmod 777 /data
-
-# 6. Настроить config.yaml
-nano config.yaml
-# Указать: server_url, agent_id, api_key, sources
-
-# 7. Запустить агент (тест)
-python3 -m src.main config.yaml
+cd logvault-agent
+chmod +x build-in-docker.sh
+./build-in-docker.sh
+# Результат: release/logvault-agent + release/install.sh + release/config.yaml
 ```
 
-#### Автозапуск через systemd (Ubuntu / Debian / CentOS)
-
+**Установка на целевом хосте:**
 ```bash
-# Создать systemd unit-файл
-sudo tee /etc/systemd/system/ursus-agent.service << 'EOF'
-[Unit]
-Description=URSUS SIEM Agent
-After=network.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/ursus-agent
-ExecStart=/usr/bin/python3 -m src.main /opt/ursus-agent/config.yaml
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Включить и запустить
-sudo systemctl daemon-reload
-sudo systemctl enable ursus-agent
-sudo systemctl start ursus-agent
-
-# Проверить статус
-sudo systemctl status ursus-agent
-
-# Посмотреть логи агента
-sudo journalctl -u ursus-agent -f
+scp -r release/ user@host:~/agent/
+ssh user@host 'cd ~/agent && sudo ./install.sh --server http://<SERVER_IP>:8000 --key <KEY> --id web-01'
 ```
 
-#### CentOS / RHEL / Rocky Linux
-
+**Управление:**
 ```bash
-# Установить зависимости
-sudo dnf install -y python3 python3-pip
-
-# Установить агент аналогично Ubuntu (шаги 2–6)
-# Файлы логов на CentOS: /var/log/messages, /var/log/secure
-
-# В config.yaml использовать:
-# sources:
-#   - type: file
-#     path: "/var/log/messages"
-#     service: "syslog"
-#   - type: file
-#     path: "/var/log/secure"
-#     service: "auth"
+systemctl status logvault-agent   # Статус
+journalctl -u logvault-agent -f   # Логи
+systemctl restart logvault-agent   # Перезапуск
 ```
 
 ---
 
-### Способ 3: Windows-сервер
-
-Агент в текущей версии оптимизирован для Linux. На Windows рекомендуется один из следующих вариантов:
+### Способ 4: Windows-сервер
 
 #### Вариант A: WSL2 (Windows Subsystem for Linux)
 
@@ -376,19 +325,17 @@ sudo dnf install -y python3 python3-pip
 # PowerShell (от имени администратора)
 wsl --install -d Ubuntu
 
-# Затем в WSL:
-# Следовать инструкции для Ubuntu выше
+# Затем в WSL — дистанционная установка:
+curl -fsSL http://<SERVER_IP>:8000/agent/install | sudo bash -s -- --key <API_KEY>
 ```
 
 #### Вариант B: Docker Desktop для Windows
 
 ```powershell
-# Скопировать docker-compose.agent.yml и agent/config.yaml
-# Запустить:
-docker compose -f docker-compose.agent.yml up -d
+# Скопировать logvault-agent/ и запустить:
+cd logvault-agent
+docker compose up -d
 ```
-
-> **Примечание:** На Windows файлы логов находятся в другом расположении. Для мониторинга Windows Event Log используйте агент Ursus из корневой директории (`agent/agent.py`), который поддерживает Windows Event Channels (Security, System, Application).
 
 ---
 
@@ -990,68 +937,7 @@ idx_logs_category       ON logs USING gin((meta->'category'))
 
 ---
 
-## 11. agent_v (OpenSearch)
-
-Директория `Хак/agent_v/` содержит отдельный агент для отправки логов в **OpenSearch / Elasticsearch**. Он не связан с основным стеком URSUS SIEM.
-
-### Когда использовать
-
-- Уже развёрнут OpenSearch/Elasticsearch
-- Нужна интеграция с Kibana/OpenSearch Dashboards
-- Требуется параллельная отправка в обе системы
-
-### Конфигурация (agent_v/config.yml)
-
-```yaml
-agent:
-  hostname: null           # auto-detect
-  log_level: INFO
-  state_dir: /var/lib/log-agent
-
-inputs:
-  files:
-    - /var/log/syslog
-    - /var/log/auth.log
-    - /var/log/kern.log
-  journald: true
-  poll_interval: 1.0       # секунд
-
-buffer:
-  max_size_mb: 512
-
-output:
-  host: https://opensearch:9200
-  user: admin
-  password: admin          # или переменная OPENSEARCH_PASSWORD
-  index_prefix: logs
-  verify_ssl: false
-  batch_size: 200
-  flush_interval: 5.0
-```
-
-### Переменные окружения
-
-| Переменная | Описание |
-|-----------|----------|
-| `AGENT_HOSTNAME` | Имя хоста |
-| `AGENT_LOG_LEVEL` | Уровень логирования |
-| `OPENSEARCH_HOST` | Адрес OpenSearch |
-| `OPENSEARCH_USER` | Пользователь |
-| `OPENSEARCH_PASSWORD` | Пароль |
-| `OPENSEARCH_INDEX_PREFIX` | Префикс индекса |
-| `OPENSEARCH_VERIFY_SSL` | Проверка SSL |
-
-### Запуск
-
-```bash
-cd Хак/agent_v
-pip install -r requirements.txt
-python -m src.main -c config.yml
-```
-
----
-
-## 12. Устранение неполадок
+## 11. Устранение неполадок
 
 ### Контейнеры не запускаются
 

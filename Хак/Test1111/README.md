@@ -3,16 +3,15 @@
 Централизованная система мониторинга и корреляции событий информационной безопасности.
 
 ```
-┌──────────────┐                    ┌─────────────────────────────────────┐
-│  Agent 1     │─── HTTP POST ────►│           URSUS SIEM Server         │
-│  Agent 2     │─── /ingest ──────►│                                     │
-│  Agent N     │──────────────────►│  ┌─────────┐  ┌──────────────────┐  │
-└──────────────┘                   │  │ Parser  │  │ Correlation      │  │
-                                   │  │ (6 fmt) │  │ Engine (4 types) │  │
-┌──────────────┐                   │  └────┬────┘  └────────┬─────────┘  │
-│  agent_v     │                   │       │                │            │
-│ (OpenSearch) │                   │  ┌────▼────────────────▼─────────┐  │
-└──────────────┘                   │  │       PostgreSQL              │  │
+                                    ┌─────────────────────────────────────┐
+┌──────────────┐                    │           URSUS SIEM Server         │
+│  Agent 1     │─── HTTP POST ────►│                                     │
+│  Agent 2     │─── /ingest ──────►│  ┌─────────┐  ┌──────────────────┐  │
+│  Agent N     │──────────────────►│  │ Parser  │  │ Correlation      │  │
+└──────────────┘                   │  │ (6 fmt) │  │ Engine (4 types) │  │
+                                   │  └────┬────┘  └────────┬─────────┘  │
+                                   │  ┌────▼────────────────▼─────────┐  │
+                                   │  │       PostgreSQL              │  │
                                    │  │  logs, correlation_rules,     │  │
                                    │  │  assets, accounts, exclusions │  │
                                    │  └──────────────┬───────────────┘  │
@@ -25,6 +24,98 @@
                                               │  Live Logs  │
                                               └─────────────┘
 ```
+
+## Структура проекта
+
+```
+ursus-siem/
+├── logvault-server/        # Серверная часть (ставится на 1 машину)
+│   ├── server/             #   FastAPI backend + PostgreSQL
+│   ├── ui/                 #   React frontend
+│   ├── docker-compose.yml  #   Весь стек в одном файле
+│   ├── start.sh            #   Быстрый запуск
+│   └── .env                #   Конфигурация
+│
+├── logvault-agent/         # Агент сбора логов (ставится на каждый хост)
+│   ├── src/                #   Исходный код агента
+│   ├── Dockerfile          #   Docker-образ агента
+│   ├── docker-compose.yml  #   Запуск через Docker
+│   ├── install.sh          #   Установка как systemd-сервис
+│   ├── build-in-docker.sh  #   Сборка standalone-бинарника
+│   └── config.yaml         #   Конфигурация по умолчанию
+│
+└── README.md               # Этот файл
+```
+
+---
+
+## Быстрый старт
+
+### 1. Запуск сервера
+
+Скопировать `logvault-server/` на сервер (Ubuntu/Debian):
+
+```bash
+cd logvault-server
+cp .env.example .env
+nano .env                    # Задать API_KEYS, JWT_SECRET, PG_PASSWORD
+chmod +x start.sh
+sudo ./start.sh
+```
+
+После запуска скрипт выведет IP сервера и команду для установки агентов.
+
+Сервисы:
+- **UI**: `http://<IP>` (через Caddy)
+- **API**: `http://<IP>:8000`
+- **API Docs**: `http://<IP>:8000/docs`
+
+### 2. Установка агента на хосты
+
+#### Способ A: Дистанционно через сервер (рекомендуется)
+
+На каждом хосте-источнике выполнить одну команду:
+
+```bash
+curl -fsSL http://<SERVER_IP>:8000/agent/install | sudo bash -s -- --key <API_KEY>
+```
+
+Можно указать ID агента:
+```bash
+curl -fsSL http://<SERVER_IP>:8000/agent/install | sudo bash -s -- --key <API_KEY> --id web-server-01
+```
+
+Скрипт автоматически:
+- Установит Docker (если нет)
+- Скачает конфиг с сервера
+- Запустит агент в контейнере с автоперезапуском
+
+#### Способ B: Docker Compose (ручная установка)
+
+Скопировать `logvault-agent/` на хост:
+
+```bash
+cd logvault-agent
+# Отредактировать config.yaml: указать server_url и api_key
+docker compose up -d
+```
+
+#### Способ C: Systemd-сервис (без Docker)
+
+Собрать бинарник и установить как сервис:
+
+```bash
+# На машине для сборки:
+cd logvault-agent
+chmod +x build-in-docker.sh
+./build-in-docker.sh        # Создаст release/logvault-agent
+
+# На целевом хосте:
+scp -r release/ user@host:~/agent/
+ssh user@host 'cd ~/agent && sudo ./install.sh --server http://<SERVER_IP>:8000 --key <KEY>'
+```
+
+---
 
 ## Возможности
 
@@ -39,34 +130,19 @@
 - **Cooldown** — защита от спама алертов (5 мин между одинаковыми срабатываниями)
 
 ### PDQL — язык запросов
-Собственный язык запросов для фильтрации событий, аналог MaxPatrol SIEM:
+Собственный язык запросов для фильтрации событий:
 
 ```
 filter(level = "ERROR" and src.ip != "127.0.0.1") | select(time, host, message) | sort(time desc) | limit(100)
 ```
 
 **Операторы:** `=`, `!=`, `>`, `<`, `>=`, `<=`, `IN`, `MATCH`, `CONTAINS`, `STARTSWITH`, `ENDSWITH`
-**Логика:** `AND`, `OR`, `NOT`
-**Функции:** `match()`, `in_subnet()`, `in_list()`
 **Pipeline:** `filter()`, `select()`, `sort()`, `limit()`, `group()`, `aggregate()`
-
-**Агрегация:**
-```
-filter(level = "ERROR") | group(event_src.host) | aggregate(count(), min(time), max(time)) | sort(count desc) | limit(20)
-```
 
 ### Управление активами
 - **Assets** — реестр хостов с авто-обнаружением из логов
 - **Accounts** — учётные записи, извлечённые из событий
 - **Exclusions** — правила исключения для подавления ложных срабатываний
-
-### Интеграции (фундамент)
-- **Active Directory** — синхронизация пользователей и групп (заглушка, требует ldap3)
-- **Kaspersky EDR**, **PT Sandbox**, **PT NAD** — подключение ИБ-продуктов (заглушки)
-- **Syslog / CEF Receiver** — приём событий по стандартным протоколам (заглушки)
-
-### ML Engine (фундамент)
-- Детекция аномалий, кластеризация, UEBA — интерфейсы для будущих моделей
 
 ---
 
@@ -78,95 +154,6 @@ filter(level = "ERROR") | group(event_src.host) | aggregate(count(), min(time), 
 | **UI** | React 18, TypeScript, Tailwind CSS, Recharts |
 | **Agent** | Python 3.12, requests, SQLite (буфер) |
 | **Инфраструктура** | Docker Compose, Caddy (reverse proxy, auto-TLS) |
-
----
-
-## Быстрый старт
-
-### 1. Клонировать и настроить
-
-```bash
-cd Хак/Test1111
-cp .env.example .env
-# Отредактировать .env: задать API_KEYS, JWT_SECRET, PG_PASSWORD
-```
-
-### 2. Запустить стек
-
-```bash
-docker-compose up -d
-```
-
-Сервисы:
-- **UI**: http://localhost (через Caddy)
-- **API**: http://localhost/api
-- **PostgreSQL**: localhost:5432 (только localhost)
-
-### 3. Подключить агент
-
-На целевой машине:
-
-```bash
-# Отредактировать agent/config.yaml — указать server_url и api_key
-docker-compose -f docker-compose.agent.yml up -d
-```
-
----
-
-## Структура проекта
-
-```
-Хак/Test1111/
-├── server/                    # FastAPI backend
-│   ├── src/
-│   │   ├── main.py            # Точка входа, lifespan, роутеры
-│   │   ├── config.py          # Конфигурация из env
-│   │   ├── auth.py            # JWT + API key аутентификация
-│   │   ├── models.py          # Pydantic модели
-│   │   ├── routers/           # API эндпоинты
-│   │   │   ├── ingest.py      # POST /ingest — приём логов
-│   │   │   ├── search.py      # GET /search, GET /search/pdql
-│   │   │   ├── logs.py        # WebSocket /logs/live
-│   │   │   ├── correlation.py # CRUD правил и алертов корреляции
-│   │   │   ├── assets.py      # Assets, Accounts, Exclusions
-│   │   │   ├── alerts.py      # Threshold-алерты
-│   │   │   ├── stats.py       # Статистика для дашборда
-│   │   │   ├── agents.py      # Список агентов
-│   │   │   ├── ml.py          # ML API (заглушки)
-│   │   │   └── integrations.py# Управление интеграциями
-│   │   ├── services/          # Бизнес-логика
-│   │   │   ├── postgres.py    # PostgreSQL операции
-│   │   │   ├── pipeline.py    # Validate -> Enrich -> Index
-│   │   │   ├── parser.py      # Парсер логов + категоризация
-│   │   │   ├── pdql.py        # PDQL -> SQL транслятор
-│   │   │   ├── correlator.py  # Корреляционный движок
-│   │   │   ├── alerting.py    # Threshold-алерты + Telegram
-│   │   │   ├── ml_engine.py   # ML заглушки
-│   │   │   └── system_health.py # Мониторинг здоровья
-│   │   └── integrations/      # Коннекторы к ИБ-продуктам
-│   ├── init.sql               # Схема БД
-│   ├── Dockerfile
-│   └── requirements.txt
-├── ui/                        # React frontend
-│   ├── src/
-│   │   ├── App.tsx            # Роутинг + навигация
-│   │   ├── api/client.ts      # TypeScript API клиент
-│   │   ├── components/        # PDQLInput, HeatMap, Charts...
-│   │   └── pages/             # Dashboard, Search, LiveLogs,
-│   │                          # CorrelationRules, Assets...
-│   ├── Dockerfile
-│   └── package.json
-├── agent/                     # Агент сбора логов
-│   ├── src/
-│   │   ├── readers/           # File, journald
-│   │   └── transport/         # HTTP с retry
-│   ├── config.yaml
-│   └── Dockerfile
-├── docker-compose.yml         # Основной стек
-├── docker-compose.agent.yml   # Агент (отдельно)
-├── Caddyfile                  # Reverse proxy
-└── .env.example               # Шаблон конфигурации
-```
 
 ---
 
@@ -189,36 +176,51 @@ docker-compose -f docker-compose.agent.yml up -d
 ### Корреляция
 | Метод | Путь | Описание |
 |-------|------|----------|
-| GET | `/correlation/rules` | Список правил корреляции |
-| POST | `/correlation/rules` | Создать правило (admin) |
-| PUT | `/correlation/rules/{id}` | Обновить правило (admin) |
-| DELETE | `/correlation/rules/{id}` | Удалить правило (admin) |
-| GET | `/correlation/alerts` | Список алертов корреляции |
-| PATCH | `/correlation/alerts/{id}` | Обновить статус алерта |
+| GET/POST | `/correlation/rules` | CRUD правил корреляции |
+| GET/PATCH | `/correlation/alerts` | Список и обновление алертов |
 
 ### Активы
 | Метод | Путь | Описание |
 |-------|------|----------|
-| GET/POST | `/assets` | Список / создание хостов |
+| GET/POST | `/assets` | Реестр хостов |
 | POST | `/assets/discover` | Авто-обнаружение из логов |
-| GET/POST | `/accounts` | Список / создание учётных записей |
-| GET/POST | `/exclusions` | Список / создание исключений |
+| GET/POST | `/accounts` | Учётные записи |
+| GET/POST | `/exclusions` | Правила исключения |
+
+### Развёртывание агентов
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/agent/install` | Скрипт установки агента |
+| GET | `/agent/config` | Конфигурация агента |
+| GET | `/agent/compose` | docker-compose.yml агента |
 
 ### Система
 | Метод | Путь | Описание |
 |-------|------|----------|
 | GET | `/health` | Статус сервера |
-| GET | `/health/detailed` | Детальные метрики (auth) |
+| GET | `/health/detailed` | Детальные метрики |
 | GET | `/stats/*` | Статистика для дашборда |
 | GET | `/agents` | Список подключённых агентов |
-| GET | `/integrations` | Список интеграций |
-| GET | `/ml/status` | Статус ML-подсистемы |
 
 ---
 
-## agent_v (OpenSearch)
+## Управление
 
-В директории `Хак/agent_v/` находится автономный агент для отправки логов в OpenSearch/Elasticsearch. Он не зависит от основного стека URSUS SIEM и может использоваться отдельно для интеграции с существующей инфраструктурой ELK/OpenSearch.
+```bash
+# Сервер
+cd logvault-server
+docker compose logs -f          # Логи
+docker compose down             # Остановить
+docker compose restart          # Перезапустить
+
+# Агент (Docker)
+docker logs -f ursus-agent      # Логи
+docker restart ursus-agent      # Перезапуск
+
+# Агент (systemd)
+journalctl -u logvault-agent -f # Логи
+systemctl restart logvault-agent
+```
 
 ---
 

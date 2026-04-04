@@ -1,0 +1,25 @@
+FROM python:3.12-slim AS builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends binutils && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt pyinstaller
+
+COPY src/ ./agent/src/
+RUN touch ./agent/__init__.py
+COPY entrypoint.py .
+
+RUN pyinstaller \
+    --onefile \
+    --name logvault-agent \
+    --hidden-import agent.src.readers.file_reader \
+    --hidden-import agent.src.readers.journald_reader \
+    --hidden-import agent.src.transport.http \
+    --hidden-import pydantic \
+    --hidden-import yaml \
+    --paths /build \
+    entrypoint.py

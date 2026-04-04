@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.src.auth import verify_token
 from server.src.config import settings
 from server.src.routers import (
-    agents, alerts, assets, auth_router, correlation, ingest,
-    integrations, logs, metrics, ml, search, stats, users_router,
+    agent_deploy, agents, alerts, assets, auth_router, correlation,
+    ingest, integrations, logs, metrics, ml, search, stats, users_router,
 )
 from server.src.services.alerting import alert_loop
 from server.src.services.correlator import correlation_loop
@@ -106,6 +106,7 @@ app.include_router(correlation.router)
 app.include_router(assets.router)
 app.include_router(ml.router)
 app.include_router(integrations.router)
+app.include_router(agent_deploy.router)
 
 
 @app.get("/health")

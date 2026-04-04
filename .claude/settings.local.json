@@ -11,7 +11,31 @@
       "Bash(git filter-branch:*)",
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch \"\"Хак/Test1111/logs_export.json\"\"\" --prune-empty HEAD)",
       "Bash(git status:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(docker --version)",
+      "Bash(docker-compose --version)",
+      "Bash(docker compose:*)",
+      "Bash(curl -sv http://localhost/api/health)",
+      "Bash(curl -sk https://localhost/api/health)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -sk -X POST https://localhost/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"username\"\"\"\":\"\"\"\"admin\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"admin\"\"\"\"}')",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(find C:/Users/Kordon/VSCode/Хак/Test1111/ -not -path */.venv/* -not -path */node_modules/* -type f -o -type d)",
+      "Bash(find C:/Users/Kordon/VSCode/Хак/Test1111/ -not -path */.venv* -not -path */node_modules*)",
+      "Bash(cp -r server logvault-server/server)",
+      "Bash(cp -r ui logvault-server/ui)",
+      "Bash(cp Caddyfile logvault-server/)",
+      "Bash(cp .env.example logvault-server/)",
+      "Bash(cp .env logvault-server/)",
+      "Bash(cp -r agent/src logvault-agent/src)",
+      "Bash(cp -r deploy logvault-agent/deploy)",
+      "Bash(rm -rf deploy)",
+      "Bash(rm -rf agent)",
+      "Bash(ls -la \"C:\\\\Users\\\\Kordon\\\\VSCode\\\\Хак\\\\Test1111\"\" 2>/dev/null || find \"/c/Users/Kordon/VSCode/Хак/Test1111 \" -maxdepth 1 -type f)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Bash(rm -rf agent server ui deploy)",
+      "Bash(rm -f start.sh docker-compose.agent.yml docker-compose.yml Caddyfile cleanup-es.sh pyproject.toml .env .env.example logvault_log_monitoring_bfde98e5.plan.md project-context.md)"
     ]
   }
 }
