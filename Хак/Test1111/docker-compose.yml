@@ -1,0 +1,80 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: logvault-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN:-kronos-nexus.online}
+    depends_on:
+      - ui
+      - server
+    networks:
+      - logvault
+
+  postgres:
+    build: ./server/postgres
+    container_name: logvault-pg
+    environment:
+      POSTGRES_DB: logvault
+      POSTGRES_USER: logvault
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-logvault-secret}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./server/init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./server/postgres/init-cron.sql:/docker-entrypoint-initdb.d/02-cron.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - logvault
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logvault -d logvault"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  server:
+    build: ./server
+    container_name: logvault-server
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://logvault:${PG_PASSWORD:-logvault-secret}@postgres:5432/logvault
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - logvault
+    restart: unless-stopped
+
+  ui:
+    build: ./ui
+    container_name: logvault-ui
+    expose:
+      - "80"
+    depends_on:
+      - server
+    networks:
+      - logvault
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  logvault:
+    driver: bridge
