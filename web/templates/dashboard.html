@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Ursus Insight{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Ursus Insight / Dashboard{% endblock %}
+
+{% block content %}
+<div class="hex-bg">⬡</div>
+
+<!-- Stat cards -->
+<div class="stat-grid" id="stat-grid">
+  <div class="stat-card c-primary">
+    <div class="stat-label">ВСЕГО СОБЫТИЙ</div>
+    <div class="stat-value" id="s-total">—</div>
+    <div class="stat-sub">за всё время</div>
+  </div>
+  <div class="stat-card c-high">
+    <div class="stat-label">СОБЫТИЯ / 24Ч</div>
+    <div class="stat-value" id="s-24h">—</div>
+    <div class="stat-sub">последние 24 часа</div>
+  </div>
+  <div class="stat-card c-critical">
+    <div class="stat-label">ОТКРЫТЫЕ ИНЦИДЕНТЫ</div>
+    <div class="stat-value" id="s-alerts">—</div>
+    <div class="stat-sub">требуют внимания</div>
+  </div>
+  <div class="stat-card c-critical">
+    <div class="stat-label">КРИТИЧЕСКИЕ / 24Ч</div>
+    <div class="stat-value" id="s-crit">—</div>
+    <div class="stat-sub">критической важности</div>
+  </div>
+  <div class="stat-card c-success">
+    <div class="stat-label">АГЕНТЫ ONLINE</div>
+    <div class="stat-value" id="s-agents">—</div>
+    <div class="stat-sub">активных агентов</div>
+  </div>
+</div>
+
+<!-- Charts row 1 -->
+<div class="chart-grid" style="grid-template-columns: 2fr 1fr; margin-bottom:14px;">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">◈ TIMELINE СОБЫТИЙ</span>
+      <div class="panel-actions">
+        <select class="input" id="timeline-hours" onchange="refreshTimeline()">
+          <option value="6">6ч</option>
+          <option value="24" selected>24ч</option>
+          <option value="48">48ч</option>
+          <option value="168">7д</option>
+        </select>
+        <button class="btn btn-sm" onclick="refreshTimeline()">↺</button>
+      </div>
+    </div>
+    <div class="panel-body" style="padding:8px;">
+      <img id="chart-timeline" class="chart-img" src="/api/charts/timeline?hours=24" alt="Timeline"/>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">◉ SEVERITY</span>
+      <button class="btn btn-sm" onclick="refreshCharts()">↺</button>
+    </div>
+    <div class="panel-body" style="padding:8px;">
+      <img id="chart-severity" class="chart-img" src="/api/charts/severity?hours=24" alt="Severity"/>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row 2 -->
+<div class="chart-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:14px;">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">⟁ ТОП ИСТОЧНИКОВ</span>
+    </div>
+    <div class="panel-body" style="padding:8px;">
+      <img id="chart-sources" class="chart-img" src="/api/charts/sources?hours=24" alt="Sources"/>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">⬡ КАТЕГОРИИ</span>
+    </div>
+    <div class="panel-body" style="padding:8px;">
+      <img id="chart-categories" class="chart-img" src="/api/charts/categories?hours=24" alt="Categories"/>
+    </div>
+  </div>
+</div>
+
+<!-- Recent alerts + events split -->
+<div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
+
+  <!-- Recent alerts -->
+  <div class="table-panel">
+    <div class="table-header">
+      <span class="table-title">⚡ ПОСЛЕДНИЕ ИНЦИДЕНТЫ</span>
+      <a href="/alerts" class="btn btn-sm">Все →</a>
+    </div>
+    <table class="data-table" id="recent-alerts">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Правило</th>
+          <th>Источник</th>
+          <th>Время</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody id="recent-alerts-body">
+        <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Recent events -->
+  <div class="table-panel">
+    <div class="table-header">
+      <span class="table-title">◈ ПОСЛЕДНИЕ СОБЫТИЯ</span>
+      <a href="/events" class="btn btn-sm">Все →</a>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Категория</th>
+          <th>Источник</th>
+          <th>Сообщение</th>
+          <th>Время</th>
+        </tr>
+      </thead>
+      <tbody id="recent-events-body">
+        <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ts2str = ts => {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleString('ru-RU', {
+    month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+};
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/dashboard/stats');
+    const d = await r.json();
+    document.getElementById('s-total').textContent  = d.total_events.toLocaleString();
+    document.getElementById('s-24h').textContent    = d.events_24h.toLocaleString();
+    document.getElementById('s-alerts').textContent = d.open_alerts.toLocaleString();
+    document.getElementById('s-crit').textContent   = d.critical_24h.toLocaleString();
+    document.getElementById('s-agents').textContent = d.agents_online.toLocaleString();
+  } catch(e) {}
+}
+
+async function loadRecentAlerts() {
+  try {
+    const r = await fetch('/api/alerts?limit=8');
+    const d = await r.json();
+    const tbody = document.getElementById('recent-alerts-body');
+    if (!d.alerts.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет инцидентов</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.alerts.map(a => `
+      <tr class="fade-in">
+        <td><span class="sev-badge sev-${a.severity}">${a.severity}</span></td>
+        <td title="${a.rule_name}">${a.rule_name}</td>
+        <td><span class="ip-tag">${a.source_ip || '—'}</span></td>
+        <td style="font-family:var(--font-mono);font-size:10px;">${ts2str(a.created_at)}</td>
+        <td><span class="status-badge status-${a.status}">${a.status}</span></td>
+      </tr>
+    `).join('');
+  } catch(e) {}
+}
+
+async function loadRecentEvents() {
+  try {
+    const r = await fetch('/api/events?limit=8');
+    const d = await r.json();
+    const tbody = document.getElementById('recent-events-body');
+    if (!d.events.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет событий</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.events.map(ev => {
+      const msg = ev.raw_message.length > 50
+        ? ev.raw_message.slice(0,50) + '…'
+        : ev.raw_message;
+      return `
+        <tr class="fade-in">
+          <td><span class="sev-badge sev-${ev.severity}">${ev.severity}</span></td>
+          <td>${ev.category}</td>
+          <td><span class="ip-tag">${ev.source_ip || ev.source_host || '—'}</span></td>
+          <td title="${ev.raw_message}" style="font-family:var(--font-mono);font-size:10px;">${msg}</td>
+          <td style="font-family:var(--font-mono);font-size:10px;">${ts2str(ev.timestamp)}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {}
+}
+
+function refreshTimeline() {
+  const h = document.getElementById('timeline-hours').value;
+  const img = document.getElementById('chart-timeline');
+  img.src = `/api/charts/timeline?hours=${h}&t=${Date.now()}`;
+}
+
+function refreshCharts() {
+  const h = document.getElementById('timeline-hours').value;
+  const t = Date.now();
+  document.getElementById('chart-severity').src   = `/api/charts/severity?hours=${h}&t=${t}`;
+  document.getElementById('chart-sources').src    = `/api/charts/sources?hours=${h}&t=${t}`;
+  document.getElementById('chart-categories').src = `/api/charts/categories?hours=${h}&t=${t}`;
+}
+
+function refreshAll() {
+  loadStats();
+  loadRecentAlerts();
+  loadRecentEvents();
+}
+
+// Initial load
+refreshAll();
+
+// Auto-refresh every 15 seconds
+setInterval(() => {
+  refreshAll();
+  refreshCharts();
+  refreshTimeline();
+}, 15000);
+</script>
+{% endblock %}
