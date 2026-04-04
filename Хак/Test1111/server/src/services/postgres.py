@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -997,6 +998,22 @@ class PGService:
         finally:
             self._put(conn)
 
+    def get_account(self, account_id: int) -> dict[str, Any] | None:
+        conn = self._conn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT * FROM known_accounts WHERE id = %s", (account_id,))
+                row = cur.fetchone()
+            if not row:
+                return None
+            r = dict(row)
+            for k in ("first_seen", "last_seen", "created_at", "updated_at"):
+                if hasattr(r.get(k), "isoformat"):
+                    r[k] = r[k].isoformat()
+            return r
+        finally:
+            self._put(conn)
+
     def create_account(self, data: dict[str, Any]) -> dict[str, Any]:
         conn = self._conn()
         try:
@@ -1099,6 +1116,22 @@ class PGService:
                     if hasattr(r.get(k), "isoformat"):
                         r[k] = r[k].isoformat()
             return {"total": total, "exclusions": rows}
+        finally:
+            self._put(conn)
+
+    def get_exclusion(self, exclusion_id: int) -> dict[str, Any] | None:
+        conn = self._conn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT * FROM exclusions WHERE id = %s", (exclusion_id,))
+                row = cur.fetchone()
+            if not row:
+                return None
+            r = dict(row)
+            for k in ("expires_at", "created_at", "updated_at"):
+                if hasattr(r.get(k), "isoformat"):
+                    r[k] = r[k].isoformat()
+            return r
         finally:
             self._put(conn)
 

@@ -101,9 +101,10 @@ async def create_account(body: AccountBody, request: Request, user: dict = Depen
 
 @router.get("/accounts/{account_id}")
 async def get_account(account_id: int, request: Request, user: dict = Depends(verify_token)):
-    # Simple pass-through; PGService doesn't have get_account yet
-    accounts = request.app.state.db_service.list_accounts(page=1, size=1)
-    raise HTTPException(404, "Not implemented as direct get")
+    result = request.app.state.db_service.get_account(account_id)
+    if not result:
+        raise HTTPException(404, "Account not found")
+    return result
 
 
 @router.put("/accounts/{account_id}")
@@ -159,8 +160,10 @@ async def create_exclusion(body: ExclusionBody, request: Request, user: dict = D
 
 @router.get("/exclusions/{exclusion_id}")
 async def get_exclusion(exclusion_id: int, request: Request, user: dict = Depends(verify_token)):
-    exclusions = request.app.state.db_service.list_exclusions(page=1, size=1)
-    raise HTTPException(404, "Not implemented as direct get")
+    result = request.app.state.db_service.get_exclusion(exclusion_id)
+    if not result:
+        raise HTTPException(404, "Exclusion not found")
+    return result
 
 
 @router.put("/exclusions/{exclusion_id}")
