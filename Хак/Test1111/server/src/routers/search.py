@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from server.src.auth import get_allowed_agents, verify_token
+from server.src.services.pdql import PDQLParser, PDQLToSQL, PDQLParseError
 
 router = APIRouter()
 
@@ -36,3 +37,26 @@ async def search(
         from_ts=from_ts, to_ts=to_ts, page=page, size=size,
         allowed_agents=allowed,
     )
+
+
+@router.get("/search/pdql")
+async def pdql_search(
+    request: Request,
+    query: str = Query("", description="PDQL query string"),
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=500),
+    user: dict = Depends(verify_token),
+):
+    db = request.app.state.db_service
+    allowed = get_allowed_agents(user, db)
+
+    try:
+        parser = PDQLParser()
+        translator = PDQLToSQL()
+        parsed = parser.parse(query)
+        sql, params = translator.translate(parsed, allowed_agents=allowed)
+        return db.execute_pdql(sql, params, page, size)
+    except PDQLParseError as e:
+        raise HTTPException(status_code=400, detail=f"PDQL syntax error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"PDQL error: {e}")

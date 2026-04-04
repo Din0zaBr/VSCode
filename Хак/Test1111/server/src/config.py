@@ -24,5 +24,13 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = int(os.getenv("JWT_EXPIRE_MINUTES", "480"))
 
+    # Active Directory (optional)
+    AD_SERVER: str = os.getenv("AD_SERVER", "")
+    AD_DOMAIN: str = os.getenv("AD_DOMAIN", "")
+    AD_USERNAME: str = os.getenv("AD_USERNAME", "")
+    AD_PASSWORD: str = os.getenv("AD_PASSWORD", "")
+    AD_BASE_DN: str = os.getenv("AD_BASE_DN", "")
+    AD_USE_SSL: bool = os.getenv("AD_USE_SSL", "true").lower() == "true"
+
 
 settings = Settings()

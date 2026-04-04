@@ -1,4 +1,4 @@
-server_url: "https://kronos-nexus.online/api"
+server_url: "http://localhost:8000"
 agent_id: "agent-01"
 api_key: "changeme-agent-key"
 hostname: ""

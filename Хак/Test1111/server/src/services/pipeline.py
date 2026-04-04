@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from server.src.models import LogEvent
+from server.src.services.parser import parse_and_enrich
 from server.src.services.postgres import PGService
 
 logger = logging.getLogger("server.pipeline")
@@ -29,6 +30,11 @@ class IngestPipeline:
         if not doc.get("agent_id"):
             doc["agent_id"] = agent_id
         doc["level"] = (doc.get("level") or "INFO").upper()
+        # Parser enrichment: category, event_type, IPs, severity
+        enrichment = parse_and_enrich(doc["message"], doc.get("meta", {}))
+        doc["meta"] = {**doc.get("meta", {}), **enrichment}
+        if enrichment.get("detected_level"):
+            doc["level"] = enrichment["detected_level"]
         return doc
 
     def process(self, events: list[LogEvent], agent_id: str) -> tuple[int, int]:

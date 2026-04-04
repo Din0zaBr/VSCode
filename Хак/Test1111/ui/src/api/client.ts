@@ -192,6 +192,75 @@ export interface LoginResponse {
   agents: string[];
 }
 
+export interface CorrelationRule {
+  id: string;
+  name: string;
+  description?: string;
+  severity: string;
+  enabled: boolean;
+  conditions: Record<string, unknown>;
+  hit_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CorrelationAlert {
+  id: number;
+  created_at: string;
+  rule_id: string;
+  rule_name: string;
+  severity: string;
+  status: string;
+  source_ip?: string;
+  description?: string;
+  event_ids?: unknown;
+  notes?: string;
+}
+
+export interface Asset {
+  id: number;
+  hostname: string;
+  ip?: string;
+  os?: string;
+  department?: string;
+  owner?: string;
+  criticality: string;
+  tags?: string[];
+  notes?: string;
+  first_seen?: string;
+  last_seen?: string;
+  status: string;
+}
+
+export interface KnownAccount {
+  id: number;
+  username: string;
+  domain?: string;
+  display_name?: string;
+  email?: string;
+  department?: string;
+  role?: string;
+  risk_level: string;
+  is_service_account: boolean;
+  is_privileged: boolean;
+  notes?: string;
+  first_seen?: string;
+  last_seen?: string;
+}
+
+export interface Exclusion {
+  id: number;
+  name: string;
+  description?: string;
+  exclusion_type: string;
+  conditions: Record<string, unknown>;
+  enabled: boolean;
+  scope?: string;
+  created_by?: string;
+  expires_at?: string;
+  created_at?: string;
+}
+
 export interface UserInfo {
   id: number;
   username: string;
@@ -302,6 +371,133 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(rules),
     });
+  },
+
+  // ── PDQL ─────────────────────────────────────────────────────────────────
+  pdqlSearch(query: string, page = 1, size = 100) {
+    const qs = new URLSearchParams({ query, page: String(page), size: String(size) });
+    return request<any>(`/search/pdql?${qs}`);
+  },
+
+  // ── Correlation rules ────────────────────────────────────────────────────
+  correlationRules() {
+    return request<CorrelationRule[]>("/correlation/rules");
+  },
+
+  createCorrelationRule(rule: CorrelationRule) {
+    return request<CorrelationRule>("/correlation/rules", { method: "POST", body: JSON.stringify(rule) });
+  },
+
+  updateCorrelationRule(id: string, rule: CorrelationRule) {
+    return request<CorrelationRule>(`/correlation/rules/${id}`, { method: "PUT", body: JSON.stringify(rule) });
+  },
+
+  deleteCorrelationRule(id: string) {
+    return request<{ ok: boolean }>(`/correlation/rules/${id}`, { method: "DELETE" });
+  },
+
+  // ── Correlation alerts ───────────────────────────────────────────────────
+  correlationAlerts(params: { limit?: number; offset?: number; status?: string; severity?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set("limit", String(params.limit));
+    if (params.offset) qs.set("offset", String(params.offset));
+    if (params.status) qs.set("status", params.status);
+    if (params.severity) qs.set("severity", params.severity);
+    return request<{ total: number; alerts: CorrelationAlert[] }>(`/correlation/alerts?${qs}`);
+  },
+
+  updateCorrelationAlertStatus(id: number, status: string, notes?: string) {
+    return request<{ ok: boolean }>(`/correlation/alerts/${id}`, { method: "PATCH", body: JSON.stringify({ status, notes: notes ?? "" }) });
+  },
+
+  // ── Assets ───────────────────────────────────────────────────────────────
+  listAssets(params: { page?: number; size?: number; search?: string; status?: string; criticality?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set("page", String(params.page));
+    if (params.size) qs.set("size", String(params.size));
+    if (params.search) qs.set("search", params.search);
+    if (params.status) qs.set("status", params.status);
+    if (params.criticality) qs.set("criticality", params.criticality);
+    return request<{ total: number; assets: Asset[] }>(`/assets?${qs}`);
+  },
+
+  createAsset(data: Partial<Asset>) {
+    return request<Asset>("/assets", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateAsset(id: number, data: Partial<Asset>) {
+    return request<{ ok: boolean }>(`/assets/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteAsset(id: number) {
+    return request<{ ok: boolean }>(`/assets/${id}`, { method: "DELETE" });
+  },
+
+  discoverAssets() {
+    return request<{ ok: boolean; discovered: number }>("/assets/discover", { method: "POST" });
+  },
+
+  // ── Accounts ─────────────────────────────────────────────────────────────
+  listAccounts(params: { page?: number; size?: number; search?: string; domain?: string; risk_level?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set("page", String(params.page));
+    if (params.size) qs.set("size", String(params.size));
+    if (params.search) qs.set("search", params.search);
+    if (params.domain) qs.set("domain", params.domain);
+    if (params.risk_level) qs.set("risk_level", params.risk_level);
+    return request<{ total: number; accounts: KnownAccount[] }>(`/accounts?${qs}`);
+  },
+
+  createAccount(data: Partial<KnownAccount>) {
+    return request<KnownAccount>("/accounts", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateAccount(id: number, data: Partial<KnownAccount>) {
+    return request<{ ok: boolean }>(`/accounts/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteAccount(id: number) {
+    return request<{ ok: boolean }>(`/accounts/${id}`, { method: "DELETE" });
+  },
+
+  discoverAccounts() {
+    return request<{ ok: boolean; discovered: number }>("/accounts/discover", { method: "POST" });
+  },
+
+  // ── Exclusions ───────────────────────────────────────────────────────────
+  listExclusions(params: { page?: number; size?: number; type?: string; enabled?: boolean } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set("page", String(params.page));
+    if (params.size) qs.set("size", String(params.size));
+    if (params.type) qs.set("type", params.type);
+    if (params.enabled !== undefined) qs.set("enabled", String(params.enabled));
+    return request<{ total: number; exclusions: Exclusion[] }>(`/exclusions?${qs}`);
+  },
+
+  createExclusion(data: Partial<Exclusion> & { conditions: Record<string, unknown> }) {
+    return request<Exclusion>("/exclusions", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateExclusion(id: number, data: Partial<Exclusion> & { conditions: Record<string, unknown> }) {
+    return request<{ ok: boolean }>(`/exclusions/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteExclusion(id: number) {
+    return request<{ ok: boolean }>(`/exclusions/${id}`, { method: "DELETE" });
+  },
+
+  // ── Integrations ─────────────────────────────────────────────────────────
+  listIntegrations() {
+    return request<any[]>("/integrations");
+  },
+
+  adStatus() {
+    return request<{ configured: boolean; connected: boolean; server: string; domain: string }>("/integrations/ad/status");
+  },
+
+  // ── System Health ─────────────────────────────────────────────────────────
+  systemHealth() {
+    return request<any>("/health/detailed");
   },
 };
 
