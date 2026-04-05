@@ -27,6 +27,7 @@ class AgentConfig(BaseModel):
     retry_base: float = 1.0
     retry_max: float = 60.0
     buffer_db: str = "/data/buffer.db"
+    verify_ssl: bool = True   # set false when server uses a self-signed certificate
     sources: list[SourceConfig] = Field(default_factory=list)
 
 

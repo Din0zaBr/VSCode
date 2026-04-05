@@ -103,13 +103,29 @@ class WinEventReader(LogReader):
         self.channel = channel
         self.event_ids: frozenset[int] = frozenset(event_ids) if event_ids else frozenset()
         self.poll_interval = poll_interval
-        self._handle = None
         self._closed = False
+        self._available = False  # set True only if OpenEventLog succeeds
 
         # Offset file stores the last-read record number as a plain integer
         safe_name = channel.replace("/", "_").replace("\\", "_")
         OFFSET_DIR.mkdir(parents=True, exist_ok=True)
         self._offset_file = OFFSET_DIR / f"{safe_name}.offset"
+
+        # Open the channel now so permission errors surface at startup, not mid-run
+        try:
+            self._handle = win32evtlog.OpenEventLog(None, self.channel)
+            self._available = True
+        except Exception as exc:
+            self._handle = None
+            strerror = getattr(exc, "strerror", str(exc))
+            import logging as _logging
+            _logging.getLogger("agent.reader.winevent").error(
+                "Cannot open Event Log channel '%s': %s "
+                "(Security channel requires Administrator or SYSTEM rights; "
+                "run PowerShell as Admin or grant access: "
+                "wevtutil sl Security /ca:\"<sddl>(A;;0x2;;;SY)\")",
+                self.channel, strerror,
+            )
 
     # ── Offset helpers ────────────────────────────────────────────────────────
 
@@ -171,9 +187,11 @@ class WinEventReader(LogReader):
     # ── Core reader ───────────────────────────────────────────────────────────
 
     def read(self) -> Generator[LogEvent, None, None]:
+        if not self._available:
+            return  # channel failed to open at init time — yield nothing
+
         flags = win32evtlog.EVENTLOG_FORWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
 
-        self._handle = win32evtlog.OpenEventLog(None, self.channel)
         last_record = self._load_offset()
 
         # If no saved offset, position at the current end so we only
@@ -258,6 +276,7 @@ class WinEventReader(LogReader):
 
     def close(self) -> None:
         self._closed = True
+        self._available = False
         if self._handle:
             try:
                 win32evtlog.CloseEventLog(self._handle)

@@ -22,6 +22,7 @@ class HttpTransport(Transport):
         retry_base: float = 1.0,
         retry_max: float = 60.0,
         timeout: float = 10.0,
+        verify_ssl: bool = True,
     ) -> None:
         self.url = server_url.rstrip("/") + "/ingest"
         self.agent_id = agent_id
@@ -31,6 +32,10 @@ class HttpTransport(Transport):
         self.timeout = timeout
         self._session = requests.Session()
         self._session.headers["X-Api-Key"] = self.api_key
+        self._session.verify = verify_ssl
+        if not verify_ssl:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def send(self, batch: list[LogEvent]) -> bool:
         if not batch:

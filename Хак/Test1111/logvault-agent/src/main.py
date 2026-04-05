@@ -101,10 +101,17 @@ def flush_worker(
             batch.clear()
 
         if current:
-            ok = transport.send(current)
-            if not ok:
-                logger.warning("Server unreachable, buffering %d events", len(current))
-                buffer.push(current)
+            # Send in chunks to respect the server's MAX_BATCH_SIZE limit
+            failed: list[LogEvent] = []
+            for i in range(0, len(current), cfg.batch_size):
+                chunk = current[i:i + cfg.batch_size]
+                if transport.send(chunk):
+                    logger.info("Sent %d events to server", len(chunk))
+                else:
+                    logger.warning("Server unreachable, buffering %d events", len(chunk))
+                    failed.extend(chunk)
+            if failed:
+                buffer.push(failed)
 
         buffered = buffer.peek(cfg.batch_size)
         if buffered:
@@ -128,6 +135,7 @@ def main() -> NoReturn:
         api_key=cfg.api_key,
         retry_base=cfg.retry_base,
         retry_max=cfg.retry_max,
+        verify_ssl=cfg.verify_ssl,
     )
     readers = build_readers(cfg)
     if not readers:
