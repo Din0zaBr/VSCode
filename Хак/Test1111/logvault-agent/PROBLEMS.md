@@ -1,5 +1,12 @@
 # Известные проблемы и нерешённые задачи
 
+## Автозапуск агента на Windows 10 — РЕШЕНО
+
+**Итоговое решение:** VBScript в папке автозапуска пользователя (Способ D ниже).
+`install-windows.ps1` автоматически устанавливает этот способ.
+
+---
+
 ## Автозапуск агента на Windows 10 через Task Scheduler
 
 ### Проблема
@@ -101,6 +108,35 @@ xcopy "C:\Users\Kordon\VSCode\Хак\Test1111" "C:\logvault" /E /I /H
 
 После этого Task Scheduler с SYSTEM и bat-обёрткой заработает корректно,
 так как кодировка пути перестаёт быть проблемой.
+
+---
+
+---
+
+#### Способ D (реализован): VBScript в папке автозапуска пользователя
+
+Запускается при каждом входе пользователя, без Task Scheduler, без SYSTEM.
+Python из `AppData` доступен, окно консоли скрыто.
+
+```powershell
+# Файлы создаются автоматически через install-windows.ps1.
+# Для ручной установки:
+
+# 1. run-agent.bat — устанавливает PYTHONPATH и запускает агент
+# 2. start-agent.vbs — запускает bat скрыто (нет консольного окна)
+
+$vbs = "C:\ProgramData\logvault-agent\start-agent.vbs"
+$startup = [System.Environment]::GetFolderPath("Startup")
+Copy-Item $vbs "$startup\logvault-agent.vbs" -Force
+
+# Запустить немедленно:
+Start-Process wscript.exe -ArgumentList $vbs
+```
+
+Проверка работы:
+```powershell
+Get-Content "C:\ProgramData\logvault-agent\agent.log" -Tail 20
+```
 
 ---
 
