@@ -1,0 +1,940 @@
+import { useState, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "../api/client";
+import type { LogEvent } from "../api/client";
+import {
+  getFieldsets, saveFieldsets, getQueryHistory, addQueryHistory, clearQueryHistory,
+} from "../api/client";
+import type { Fieldset, QueryHistoryItem } from "../api/client";
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const QUICK_RANGES = [
+  { label: "15 мин", value: "15m", ms: 15 * 60_000 },
+  { label: "1 ч",   value: "1h",  ms: 60 * 60_000 },
+  { label: "2 ч",   value: "2h",  ms: 2 * 60 * 60_000 },
+  { label: "6 ч",   value: "6h",  ms: 6 * 60 * 60_000 },
+  { label: "12 ч",  value: "12h", ms: 12 * 60 * 60_000 },
+  { label: "24 ч",  value: "24h", ms: 24 * 60 * 60_000 },
+  { label: "7 д",   value: "7d",  ms: 7 * 24 * 60 * 60_000 },
+];
+
+// All possible detail fields in display order
+const DETAIL_FIELDS: { key: string; label: string }[] = [
+  { key: "time",                         label: "Время" },
+  { key: "msgid",                        label: "msgid" },
+  { key: "src.host",                     label: "src.host" },
+  { key: "src.ip",                       label: "src.ip" },
+  { key: "assigned_src_ip",             label: "assigned_src_ip" },
+  { key: "src.port",                     label: "src.port" },
+  { key: "src.geo.country",              label: "src.geo.country" },
+  { key: "src.geo.org",                  label: "src.geo.org" },
+  { key: "dst.hostname",                 label: "dst.hostname" },
+  { key: "dst.host",                     label: "dst.host" },
+  { key: "dst.ip",                       label: "dst.ip" },
+  { key: "dst.port",                     label: "dst.port" },
+  { key: "dst.geo.org",                  label: "dst.geo.org" },
+  { key: "protocol",                     label: "protocol" },
+  { key: "reason",                       label: "reason" },
+  { key: "action",                       label: "action" },
+  { key: "status",                       label: "status" },
+  { key: "duration",                     label: "duration" },
+  { key: "subject",                      label: "subject" },
+  { key: "subject.domain",               label: "subject.domain" },
+  { key: "subject.name",                 label: "subject.name" },
+  { key: "subject.group",                label: "subject.group" },
+  { key: "subject.type",                 label: "subject.type" },
+  { key: "subject.version",              label: "subject.version" },
+  { key: "subject.account.contact",      label: "subject.account.contact" },
+  { key: "subject.account.domain",       label: "subject.account.domain" },
+  { key: "subject.account.name",         label: "subject.account.name" },
+  { key: "subject.process.meta",         label: "subject.process.meta" },
+  { key: "subject.process.cmdline",      label: "subject.process.cmdline" },
+  { key: "subject.process.fullpath",     label: "subject.process.fullpath" },
+  { key: "object",                       label: "object" },
+  { key: "object.id",                    label: "object.id" },
+  { key: "object.domain",                label: "object.domain" },
+  { key: "object.name",                  label: "object.name" },
+  { key: "object.account.contact",       label: "object.account.contact" },
+  { key: "object.account.domain",        label: "object.account.domain" },
+  { key: "object.account.name",          label: "object.account.name" },
+  { key: "object.group",                 label: "object.group" },
+  { key: "object.type",                  label: "object.type" },
+  { key: "object.state",                 label: "object.state" },
+  { key: "object.property",              label: "object.property" },
+  { key: "object.path",                  label: "object.path" },
+  { key: "object.fullpath",              label: "object.fullpath" },
+  { key: "object.application.name",      label: "object.application.name" },
+  { key: "object.process.name",          label: "object.process.name" },
+  { key: "object.process.fullpath",      label: "object.process.fullpath" },
+  { key: "object.process.cmdline",       label: "object.process.cmdline" },
+  { key: "object.process.parent.fullpath",label:"object.process.parent.fullpath" },
+  { key: "object.hash",                  label: "object.hash" },
+  { key: "object.hash.md5",              label: "object.hash.md5" },
+  { key: "object.hash.sha1",             label: "object.hash.sha1" },
+  { key: "object.hash.sha256",           label: "object.hash.sha256" },
+  { key: "object.process.hash",          label: "object.process.hash" },
+  { key: "object.process.hash.md5",      label: "object.process.hash.md5" },
+  { key: "object.process.hash.sha1",     label: "object.process.hash.sha1" },
+  { key: "object.process.hash.sha256",   label: "object.process.hash.sha256" },
+  { key: "object.value",                 label: "object.value" },
+  { key: "object.new_value",             label: "object.new_value" },
+  { key: "object.storage.name",          label: "object.storage.name" },
+  { key: "object.storage.path",          label: "object.storage.path" },
+  { key: "object.storage.fullpath",      label: "object.storage.fullpath" },
+  { key: "object.vendor",                label: "object.vendor" },
+  { key: "object.version",               label: "object.version" },
+  { key: "count",                        label: "count" },
+  { key: "count.bytes",                  label: "count.bytes" },
+  { key: "count.bytes_in",               label: "count.bytes_in" },
+  { key: "count.bytes_out",              label: "count.bytes_out" },
+  { key: "datafield1",                   label: "datafield1" },
+  { key: "datafield2",                   label: "datafield2" },
+  { key: "datafield3",                   label: "datafield3" },
+  { key: "datafield4",                   label: "datafield4" },
+  { key: "datafield6",                   label: "datafield6" },
+  { key: "datafield7",                   label: "datafield7" },
+  { key: "datafield8",                   label: "datafield8" },
+  { key: "datafield9",                   label: "datafield9" },
+  { key: "event_src.host",               label: "event_src.host" },
+  { key: "event_src.ip",                 label: "event_src.ip" },
+  { key: "event_src.category",           label: "event_src.category" },
+  { key: "event_src.vendor",             label: "event_src.vendor" },
+  { key: "event_src.title",              label: "event_src.title" },
+  { key: "event_src.subsys",             label: "event_src.subsys" },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function getEventField(event: LogEvent, key: string): string {
+  if (key === "time")        return event.timestamp;
+  if (key === "text")        return event.message;
+  if (key === "criticality") return deriveCriticality(event);
+  if (key === "event_src.host") return (event.meta?.["event_src.host"] as string) || event.host || "";
+  if (key === "event_src.ip")   return (event.meta?.["event_src.ip"]  as string) || "";
+  // dot-notation lookup in meta
+  const metaVal = event.meta?.[key];
+  if (metaVal !== undefined && metaVal !== null) return String(metaVal);
+  // nested dot path
+  const parts = key.split(".");
+  let cur: unknown = event.meta;
+  for (const p of parts) {
+    if (cur && typeof cur === "object") cur = (cur as Record<string, unknown>)[p];
+    else { cur = undefined; break; }
+  }
+  return cur !== undefined && cur !== null ? String(cur) : "";
+}
+
+function deriveCriticality(event: LogEvent): string {
+  const lvl = (event.level || "").toUpperCase();
+  const sev = String(event.meta?.severity || event.meta?.["subject.type"] || "").toUpperCase();
+  if (lvl === "CRITICAL" || sev === "CRITICAL") return "critical";
+  if (lvl === "ERROR"    || sev === "HIGH")     return "high";
+  if (lvl === "WARN" || lvl === "WARNING" || sev === "MEDIUM") return "medium";
+  if (lvl === "INFO"     || sev === "LOW")      return "low";
+  return "info";
+}
+
+function critDotClass(c: string): string {
+  const map: Record<string, string> = {
+    critical: "crit-dot crit-dot-critical",
+    high:     "crit-dot crit-dot-high",
+    medium:   "crit-dot crit-dot-medium",
+    low:      "crit-dot crit-dot-low",
+    info:     "crit-dot crit-dot-info",
+  };
+  return map[c] ?? "crit-dot crit-dot-info";
+}
+
+function isCorrelationEvent(event: LogEvent): boolean {
+  return !!(event.meta?.corr_rule_id || event.meta?.["is_correlation"] || event.source === "correlation");
+}
+
+function fmtTime(ts: string): string {
+  try { return new Date(ts).toLocaleString("ru-RU"); } catch { return ts; }
+}
+
+function fmtTimeShort(ts: string): string {
+  try {
+    return new Date(ts).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch { return ts; }
+}
+
+function nowMinus(ms: number): string {
+  return new Date(Date.now() - ms).toISOString();
+}
+
+// ── Export functions ─────────────────────────────────────────────────────────
+
+function exportCSV(events: LogEvent[], fields: string[]) {
+  const header = fields.join(",");
+  const rows = events.map((e) =>
+    fields.map((f) => `"${getEventField(e, f).replace(/"/g, '""')}"`).join(",")
+  );
+  const blob = new Blob([header + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+  downloadBlob(blob, "events.csv");
+}
+
+function exportJSON(events: LogEvent[]) {
+  const blob = new Blob([JSON.stringify(events, null, 2)], { type: "application/json" });
+  downloadBlob(blob, "events.json");
+}
+
+function exportXML(events: LogEvent[], fields: string[]) {
+  const rows = events.map((e) => {
+    const fields_xml = fields
+      .map((f) => `    <${f.replace(/\./g, "_")}>${escXml(getEventField(e, f))}</${f.replace(/\./g, "_")}>`)
+      .join("\n");
+    return `  <event>\n${fields_xml}\n  </event>`;
+  }).join("\n");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<events>\n${rows}\n</events>`;
+  const blob = new Blob([xml], { type: "application/xml" });
+  downloadBlob(blob, "events.xml");
+}
+
+function escXml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function downloadBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── PDQL Modal ───────────────────────────────────────────────────────────────
+
+function PDQLModal({ value, onSave, onClose }: { value: string; onSave: (v: string) => void; onClose: () => void }) {
+  const [text, setText] = useState(value);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="w-[700px] max-h-[80vh] flex flex-col rounded-2xl border" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>⚡ PDQL Редактор</span>
+            <span className="text-xs text-gray-500">Полный запрос к каналу событий</span>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-200 text-lg">✕</button>
+        </div>
+        <div className="px-4 py-2 text-xs text-gray-500 border-b" style={{ borderColor: "#1a0d2e" }}>
+          Синтаксис: <span style={{ color: "#BF40BF" }}>select</span>(fields) <span style={{ color: "#8b20d1" }}>where</span>(filter) <span style={{ color: "#6A0DAD" }}>sort</span>(field [asc|desc]) <span style={{ color: "#3d6565" }}>limit</span>(n)
+        </div>
+        <textarea
+          className="flex-1 m-4 rounded-lg p-3 text-sm font-mono resize-none focus:outline-none"
+          style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860", minHeight: "300px" }}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          spellCheck={false}
+          placeholder={`select(time, event_src.host, src.ip, text)\nwhere(src.ip = "192.168.1.1")\nsort(time desc)\nlimit(100)`}
+        />
+        <div className="flex justify-end gap-2 px-4 pb-4">
+          <button onClick={onClose} className="siem-btn-ghost px-4 py-2 text-sm">Отмена</button>
+          <button onClick={() => { onSave(text); onClose(); }} className="siem-btn px-4 py-2 text-sm">Применить</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Fieldset Manager Modal ───────────────────────────────────────────────────
+
+function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
+  onClose: () => void;
+  onSelect: (fs: Fieldset) => void;
+  currentFieldsetId: string;
+}) {
+  const [fieldsets, setFieldsets] = useState<Fieldset[]>(getFieldsets());
+  const [editing, setEditing] = useState<Fieldset | null>(null);
+  const [newName, setNewName] = useState("");
+  const [checkedFields, setCheckedFields] = useState<string[]>([]);
+  const allFieldKeys = ["criticality", "time", "event_src.host", "text", ...DETAIL_FIELDS.map((f) => f.key)];
+  const uniqueFields = [...new Set(allFieldKeys)];
+
+  const startEdit = (fs: Fieldset) => {
+    setEditing(fs);
+    setNewName(fs.name);
+    setCheckedFields([...fs.fields]);
+  };
+
+  const startCreate = () => {
+    const nfs: Fieldset = { id: `fs-${Date.now()}`, name: "Новый филдсет", fields: ["time", "event_src.host", "text"] };
+    setEditing(nfs);
+    setNewName(nfs.name);
+    setCheckedFields([...nfs.fields]);
+  };
+
+  const save = () => {
+    if (!editing) return;
+    const updated = { ...editing, name: newName, fields: checkedFields };
+    const idx = fieldsets.findIndex((f) => f.id === updated.id);
+    let next: Fieldset[];
+    if (idx >= 0) {
+      next = fieldsets.map((f) => (f.id === updated.id ? updated : f));
+    } else {
+      next = [...fieldsets, updated];
+    }
+    setFieldsets(next);
+    saveFieldsets(next);
+    setEditing(null);
+  };
+
+  const del = (id: string) => {
+    if (id === "default") return;
+    const next = fieldsets.filter((f) => f.id !== id);
+    setFieldsets(next);
+    saveFieldsets(next);
+  };
+
+  const toggleField = (key: string) => {
+    setCheckedFields((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="w-[800px] max-h-[85vh] flex rounded-2xl border overflow-hidden" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+        {/* Left: fieldset list */}
+        <div className="w-56 border-r flex flex-col" style={{ borderColor: "#1a0d2e" }}>
+          <div className="flex items-center justify-between px-3 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+            <span className="text-xs font-bold" style={{ color: "#BF40BF" }}>Филдсеты</span>
+            <button onClick={startCreate} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF" }}>+ Новый</button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {fieldsets.map((fs) => (
+              <div
+                key={fs.id}
+                className="flex items-center justify-between px-3 py-2 cursor-pointer border-b"
+                style={{
+                  borderColor: "#1a0d2e",
+                  background: fs.id === currentFieldsetId ? "rgba(106,13,173,0.15)" : "transparent",
+                }}
+              >
+                <button onClick={() => onSelect(fs)} className="flex-1 text-left text-xs truncate" style={{ color: fs.id === currentFieldsetId ? "#BF40BF" : "#94a3b8" }}>
+                  {fs.name}
+                </button>
+                <div className="flex gap-1">
+                  <button onClick={() => startEdit(fs)} className="text-[10px] text-gray-500 hover:text-gray-200 px-1">✎</button>
+                  {!fs.isDefault && <button onClick={() => del(fs.id)} className="text-[10px] text-red-500/60 hover:text-red-400 px-1">✕</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-3 border-t" style={{ borderColor: "#1a0d2e" }}>
+            <button onClick={onClose} className="w-full siem-btn-ghost text-xs py-1.5">Закрыть</button>
+          </div>
+        </div>
+
+        {/* Right: field editor */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {editing ? (
+            <>
+              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+                <span className="text-xs text-gray-400">Название:</span>
+                <input
+                  className="siem-input text-xs py-1 flex-1"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                />
+              </div>
+              <div className="text-xs text-gray-500 px-4 pt-2">Выберите отображаемые поля:</div>
+              <div className="flex-1 overflow-y-auto px-4 py-2 grid grid-cols-3 gap-1 content-start">
+                {uniqueFields.map((key) => (
+                  <label key={key} className="flex items-center gap-1.5 cursor-pointer py-0.5">
+                    <input
+                      type="checkbox"
+                      checked={checkedFields.includes(key)}
+                      onChange={() => toggleField(key)}
+                      className="accent-violet-500 w-3 h-3"
+                    />
+                    <span className="text-[11px] font-mono truncate" style={{ color: checkedFields.includes(key) ? "#BF40BF" : "#64748b" }}>{key}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2 px-4 pb-4 border-t pt-3" style={{ borderColor: "#1a0d2e" }}>
+                <button onClick={() => setEditing(null)} className="siem-btn-ghost text-xs px-3 py-1.5">Отмена</button>
+                <button onClick={save} className="siem-btn text-xs px-3 py-1.5">Сохранить</button>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-600 text-sm">
+              Выберите филдсет для редактирования
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Query History Modal ──────────────────────────────────────────────────────
+
+function QueryHistoryModal({ onClose, onRestore }: {
+  onClose: () => void;
+  onRestore: (item: QueryHistoryItem) => void;
+}) {
+  const [history, setHistory] = useState<QueryHistoryItem[]>(getQueryHistory());
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-end bg-black/40">
+      <div className="w-[420px] h-full flex flex-col border-l" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>История запросов</span>
+          <div className="flex gap-2">
+            <button onClick={() => { clearQueryHistory(); setHistory([]); }} className="text-xs text-gray-500 hover:text-red-400">Очистить</button>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {history.length === 0 && <div className="text-center text-gray-600 py-12 text-sm">История пуста</div>}
+          {history.map((item) => (
+            <div
+              key={item.id}
+              className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
+              style={{ borderColor: "#1a0d2e" }}
+              onClick={() => { onRestore(item); onClose(); }}
+            >
+              <div className="text-[11px] text-gray-500 mb-1">{fmtTime(item.timestamp)}</div>
+              <div className="text-xs font-mono truncate" style={{ color: "#BF40BF" }}>{item.pdql}</div>
+              {item.label && <div className="text-[11px] text-gray-400 mt-0.5">{item.label}</div>}
+              <div className="text-[10px] text-gray-600 mt-0.5">
+                {item.timeRange.type === "relative" ? `Последние: ${item.timeRange.relative}` : `${item.timeRange.from} → ${item.timeRange.to}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Event Detail Panel ───────────────────────────────────────────────────────
+
+function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
+  event: LogEvent;
+  onClose: () => void;
+  onAddFilter: (key: string, value: string) => void;
+  onLinkIncident: (event: LogEvent) => void;
+}) {
+  const [showRaw, setShowRaw] = useState(false);
+  const crit = deriveCriticality(event);
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden border-r" style={{ borderColor: "#1a0d2e", background: "#0d0f18", width: "360px", flexShrink: 0 }}>
+      {/* Header */}
+      <div className="flex items-start justify-between px-3 py-2 border-b" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex-1 pr-2">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={critDotClass(crit)} />
+            {isCorrelationEvent(event) && <span className="corr-star">★</span>}
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: "#64748b" }}>
+              {event.level || "—"}
+            </span>
+          </div>
+          <div className="text-xs font-medium leading-snug" style={{ color: "#e2e8f0" }}>
+            {event.message || "(нет сообщения)"}
+          </div>
+          <div className="text-[10px] mt-1" style={{ color: "#64748b" }}>{fmtTime(event.timestamp)}</div>
+        </div>
+        <button onClick={onClose} className="text-gray-600 hover:text-gray-300 text-sm flex-shrink-0 mt-0.5">✕</button>
+      </div>
+
+      {/* Scrollable fields */}
+      <div className="flex-1 overflow-y-auto px-1 py-1">
+        {/* Top fields: level, source, host, agent */}
+        {[
+          { key: "event_id", label: "event_id", value: event.event_id },
+          { key: "host",     label: "host",     value: event.host },
+          { key: "agent_id", label: "agent_id", value: event.agent_id },
+          { key: "source",   label: "source",   value: event.source },
+          { key: "service",  label: "service",  value: event.service },
+          { key: "level",    label: "level",    value: event.level },
+        ].filter((f) => f.value).map((f) => (
+          <FieldRow key={f.key} fieldKey={f.key} label={f.label} value={f.value} onAddFilter={onAddFilter} />
+        ))}
+
+        {/* Divider */}
+        <div className="my-1 mx-2 border-t" style={{ borderColor: "#1a0d2e" }} />
+
+        {/* SIEM parsed fields */}
+        {DETAIL_FIELDS.map(({ key, label }) => {
+          const value = getEventField(event, key);
+          if (!value) return null;
+          return <FieldRow key={key} fieldKey={key} label={label} value={value} onAddFilter={onAddFilter} />;
+        })}
+
+        {/* Raw event */}
+        <div className="mx-2 my-2">
+          <button
+            onClick={() => setShowRaw((s) => !s)}
+            className="text-[11px] flex items-center gap-1 mb-1"
+            style={{ color: "#6A0DAD" }}
+          >
+            <span>{showRaw ? "▾" : "▸"}</span> Исходное событие (raw)
+          </button>
+          {showRaw && (
+            <pre className="text-[10px] font-mono p-2 rounded leading-relaxed overflow-auto max-h-64"
+              style={{ background: "#08090e", color: "#94a3b8", border: "1px solid #1a0d2e" }}>
+              {JSON.stringify({ ...event }, null, 2)}
+            </pre>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="px-3 py-2 border-t flex gap-2" style={{ borderColor: "#1a0d2e" }}>
+        <button
+          onClick={() => onLinkIncident(event)}
+          className="flex-1 text-xs py-1.5 rounded-lg transition-colors"
+          style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+        >
+          + В инцидент
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FieldRow({ fieldKey, label, value, onAddFilter }: {
+  fieldKey: string; label: string; value: string;
+  onAddFilter: (k: string, v: string) => void;
+}) {
+  return (
+    <div className="field-row group" onClick={() => onAddFilter(fieldKey, value)}>
+      <span className="text-[10px] font-mono w-32 flex-shrink-0 truncate" style={{ color: "#6A0DAD" }} title={label}>{label}</span>
+      <span className="text-[11px] flex-1 break-all leading-tight" style={{ color: "#cbd5e1" }}>{value}</span>
+      <span className="field-add-btn">+ фильтр</span>
+    </div>
+  );
+}
+
+// ── Link to Incident Modal ───────────────────────────────────────────────────
+
+function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () => void }) {
+  const { data } = useQuery({
+    queryKey: ["corr-alerts-link"],
+    queryFn: () => api.correlationAlerts({ limit: 100 }),
+  });
+  const [creating, setCreating] = useState(false);
+  const [newTitle, setNewTitle] = useState(`Ручной инцидент ${new Date().toLocaleString("ru-RU")}`);
+  const navigate = useNavigate();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="w-[480px] rounded-2xl border" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>Привязка к инциденту</span>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
+        </div>
+        <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+          <div className="text-xs text-gray-500 mb-2">Событие: <span className="text-gray-300">{event.message}</span></div>
+          {(data?.alerts ?? []).map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-purple-900/10 border"
+              style={{ borderColor: "#1a0d2e" }}
+            >
+              <div>
+                <div className="text-xs font-medium text-gray-200">#{a.id} — {a.rule_name}</div>
+                <div className="text-[10px] text-gray-500">{a.severity} · {a.status}</div>
+              </div>
+              <button
+                className="text-xs px-2 py-1 rounded"
+                style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF" }}
+                onClick={() => { navigate(`/incidents?id=${a.id}`); onClose(); }}
+              >
+                Привязать
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="px-4 pb-4 border-t pt-3" style={{ borderColor: "#1a0d2e" }}>
+          <div className="text-xs text-gray-400 mb-2">Или создать новый инцидент:</div>
+          <div className="flex gap-2">
+            <input
+              className="siem-input flex-1 text-xs"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Название инцидента"
+            />
+            <button className="siem-btn text-xs px-3" onClick={() => { navigate(`/incidents?create=1&title=${encodeURIComponent(newTitle)}`); onClose(); }}>
+              Создать
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Events Page ─────────────────────────────────────────────────────────
+
+export default function Events() {
+  const [searchParams] = useSearchParams();
+
+  // Time range
+  const [quickRange, setQuickRange]   = useState("1h");
+  const [fromDt, setFromDt]           = useState("");
+  const [toDt, setToDt]               = useState("");
+  const [useCustom, setUseCustom]     = useState(false);
+
+  // PDQL
+  const [pdqlFilter, setPdqlFilter]   = useState("select(time), sort(time)");
+  const [showPdqlModal, setShowPdqlModal] = useState(false);
+
+  // Fieldsets
+  const [fieldsets, setFieldsets]     = useState<Fieldset[]>(getFieldsets());
+  const [currentFsId, setCurrentFsId] = useState("default");
+  const [showFsManager, setShowFsManager] = useState(false);
+
+  // Results
+  const [page, setPage]               = useState(1);
+  const PAGE_SIZE = 100;
+
+  // Detail panel
+  const [selectedEvent, setSelectedEvent] = useState<LogEvent | null>(null);
+  const [linkEvent, setLinkEvent]     = useState<LogEvent | null>(null);
+
+  // History & export
+  const [showHistory, setShowHistory] = useState(false);
+  const [showExport, setShowExport]   = useState(false);
+
+  const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
+
+  // Build search params from PDQL + time range
+  const buildSearchParams = useCallback(() => {
+    const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
+    const from = useCustom ? fromDt : nowMinus(rangeMs);
+    const to   = useCustom ? toDt   : new Date().toISOString();
+
+    // Simple PDQL parse: extract text after "where(" if present
+    let q = "";
+    const whereMatch = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
+    if (whereMatch) q = whereMatch[1].trim();
+    else if (!pdqlFilter.match(/select\s*\(/i)) q = pdqlFilter.trim();
+
+    return { q, from, to, page, size: PAGE_SIZE };
+  }, [pdqlFilter, quickRange, fromDt, toDt, useCustom, page]);
+
+  const searchQ = buildSearchParams();
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["events-channel", searchQ],
+    queryFn: () => api.search(searchQ),
+    refetchInterval: 60_000,
+  });
+
+  // Restore from search params (e.g. from incidents page)
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setPdqlFilter(q);
+  }, [searchParams]);
+
+  const handleApply = () => {
+    setPage(1);
+    const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
+    addQueryHistory({
+      pdql: pdqlFilter,
+      timeRange: useCustom
+        ? { type: "absolute", from: fromDt, to: toDt }
+        : { type: "relative", relative: quickRange },
+      fieldsetId: currentFsId,
+    });
+    refetch();
+  };
+
+  const handleAddFilter = (key: string, value: string) => {
+    const token = `${key} = "${value}"`;
+    const existing = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
+    if (existing) {
+      setPdqlFilter(pdqlFilter.replace(/where\s*\([^)]*\)/i, `where(${existing[1]} AND ${token})`));
+    } else {
+      const hasSelect = pdqlFilter.match(/select\s*\(/i);
+      if (hasSelect) {
+        setPdqlFilter(pdqlFilter.trimEnd() + ` where(${token})`);
+      } else {
+        setPdqlFilter(`select(time), where(${token}), sort(time)`);
+      }
+    }
+  };
+
+  const handleRestoreHistory = (item: QueryHistoryItem) => {
+    setPdqlFilter(item.pdql);
+    if (item.timeRange.type === "relative" && item.timeRange.relative) {
+      setQuickRange(item.timeRange.relative);
+      setUseCustom(false);
+    } else if (item.timeRange.type === "absolute") {
+      setFromDt(item.timeRange.from ?? "");
+      setToDt(item.timeRange.to ?? "");
+      setUseCustom(true);
+    }
+    if (item.fieldsetId) {
+      setCurrentFsId(item.fieldsetId);
+      setFieldsets(getFieldsets());
+    }
+    setPage(1);
+  };
+
+  const events = data?.logs ?? [];
+  const total  = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
+
+  const handleExportCSV  = () => exportCSV(events, visibleFields);
+  const handleExportJSON = () => exportJSON(events);
+  const handleExportXML  = () => exportXML(events, visibleFields);
+
+  return (
+    <div className="flex h-[calc(100vh-52px)] overflow-hidden">
+      {/* ── Left: Event Detail Panel ──────────────────────────────────── */}
+      {selectedEvent && (
+        <EventDetailPanel
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onAddFilter={handleAddFilter}
+          onLinkIncident={(e) => setLinkEvent(e)}
+        />
+      )}
+
+      {/* ── Right: Main Area ──────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* ── Control Bar ─────────────────────────────────────────────── */}
+        <div className="px-4 pt-3 pb-2 border-b flex-shrink-0 space-y-2" style={{ borderColor: "#1a0d2e" }}>
+
+          {/* Row 1: Time + Quick ranges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-500 flex-shrink-0">Период:</span>
+            <div className="flex gap-0.5 bg-siem-surface2 rounded-lg p-0.5 border" style={{ borderColor: "#1a0d2e" }}>
+              {QUICK_RANGES.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => { setQuickRange(r.value); setUseCustom(false); }}
+                  className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
+                  style={{
+                    background: !useCustom && quickRange === r.value ? "#6A0DAD" : "transparent",
+                    color: !useCustom && quickRange === r.value ? "#fff" : "#64748b",
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+              <button
+                onClick={() => setUseCustom(true)}
+                className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
+                style={{
+                  background: useCustom ? "#6A0DAD" : "transparent",
+                  color: useCustom ? "#fff" : "#64748b",
+                }}
+              >
+                Свой
+              </button>
+            </div>
+
+            {useCustom && (
+              <>
+                <input type="datetime-local" className="siem-input text-xs py-1" value={fromDt} onChange={(e) => setFromDt(e.target.value)} />
+                <span className="text-gray-600 text-xs">→</span>
+                <input type="datetime-local" className="siem-input text-xs py-1" value={toDt} onChange={(e) => setToDt(e.target.value)} />
+              </>
+            )}
+
+            <button onClick={handleApply} className="siem-btn py-1.5 px-4 text-xs flex-shrink-0">
+              {isFetching ? "⟳" : "Применить"}
+            </button>
+
+            {/* History */}
+            <button
+              onClick={() => setShowHistory(true)}
+              className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
+              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+              title="История запросов"
+            >
+              ↺ История
+            </button>
+          </div>
+
+          {/* Row 2: PDQL bar + fieldset */}
+          <div className="flex items-center gap-2">
+            {/* Full PDQL editor button */}
+            <button
+              onClick={() => setShowPdqlModal(true)}
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
+              style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+              title="Открыть полный PDQL редактор"
+            >
+              ⚡
+            </button>
+
+            {/* Inline PDQL filter */}
+            <input
+              className="pdql-bar flex-1 px-3 py-1.5"
+              value={pdqlFilter}
+              onChange={(e) => setPdqlFilter(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleApply()}
+              placeholder="select(time), sort(time)"
+              spellCheck={false}
+            />
+
+            {/* Fieldset selector */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <select
+                className="siem-input text-xs py-1.5"
+                value={currentFsId}
+                onChange={(e) => { setCurrentFsId(e.target.value); setFieldsets(getFieldsets()); }}
+                style={{ minWidth: "120px" }}
+              >
+                {fieldsets.map((fs) => (
+                  <option key={fs.id} value={fs.id}>{fs.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowFsManager(true)}
+                className="text-xs px-2 py-1.5 rounded-lg"
+                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+                title="Управление филдсетами"
+              >
+                ⚙
+              </button>
+            </div>
+
+            {/* Export */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setShowExport((s) => !s)}
+                className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+              >
+                ↓ Экспорт
+              </button>
+              {showExport && (
+                <div
+                  className="absolute right-0 top-8 z-30 rounded-xl border py-1 shadow-xl"
+                  style={{ background: "#0d0f18", borderColor: "#2d1860", minWidth: "120px" }}
+                >
+                  {[
+                    { label: "CSV", fn: handleExportCSV },
+                    { label: "JSON", fn: handleExportJSON },
+                    { label: "XML", fn: handleExportXML },
+                  ].map(({ label, fn }) => (
+                    <button
+                      key={label}
+                      onClick={() => { fn(); setShowExport(false); }}
+                      className="w-full text-left px-4 py-1.5 text-xs hover:bg-purple-900/20 transition-colors"
+                      style={{ color: "#BF40BF" }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Event Table ─────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
+          ) : events.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-600">
+              <div className="text-center">
+                <div className="text-4xl mb-2" style={{ color: "#2d1860" }}>◎</div>
+                <div>Нет событий за выбранный период</div>
+                <div className="text-xs text-gray-700 mt-1">Измените фильтр или временной диапазон</div>
+              </div>
+            </div>
+          ) : (
+            <table className="w-full siem-table text-xs">
+              <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+                <tr>
+                  {visibleFields.map((f) => (
+                    <th key={f} className="text-left">
+                      {f === "criticality" ? "⬤" : f === "text" ? "Сообщение" : f}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event, i) => {
+                  const crit = deriveCriticality(event);
+                  const isCorr = isCorrelationEvent(event);
+                  const isSelected = selectedEvent?.event_id === event.event_id;
+                  return (
+                    <tr
+                      key={event.event_id || i}
+                      onClick={() => setSelectedEvent(isSelected ? null : event)}
+                      className="cursor-pointer"
+                      style={{
+                        background: isSelected ? "rgba(106,13,173,0.15)" : undefined,
+                        borderLeft: isSelected ? "2px solid #6A0DAD" : "2px solid transparent",
+                      }}
+                    >
+                      {visibleFields.map((f) => (
+                        <td key={f}>
+                          {f === "criticality" ? (
+                            <div className="flex items-center gap-1">
+                              <span className={critDotClass(crit)} />
+                              {isCorr && <span className="corr-star" title="Событие корреляции">★</span>}
+                            </div>
+                          ) : f === "time" ? (
+                            <span className="font-mono text-gray-400">{fmtTimeShort(getEventField(event, f))}</span>
+                          ) : f === "text" ? (
+                            <span className="text-gray-200 truncate block max-w-[500px]" title={getEventField(event, f)}>
+                              {getEventField(event, f) || "(нет сообщения)"}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
+                              {getEventField(event, f) || "—"}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* ── Pagination ──────────────────────────────────────────────── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            <span className="text-xs text-gray-600">{total.toLocaleString()} событий</span>
+            <div className="flex items-center gap-2">
+              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 text-xs rounded-lg disabled:opacity-30 siem-btn-ghost">← Пред</button>
+              <span className="text-xs text-gray-500">Стр. {page} / {totalPages}</span>
+              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 text-xs rounded-lg disabled:opacity-30 siem-btn-ghost">След →</button>
+            </div>
+          </div>
+        )}
+        {totalPages <= 1 && total > 0 && (
+          <div className="px-4 py-2 border-t text-xs text-gray-600 flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            {total.toLocaleString()} событий
+          </div>
+        )}
+      </div>
+
+      {/* ── Modals ──────────────────────────────────────────────────────── */}
+      {showPdqlModal && (
+        <PDQLModal value={pdqlFilter} onSave={setPdqlFilter} onClose={() => setShowPdqlModal(false)} />
+      )}
+      {showFsManager && (
+        <FieldsetManagerModal
+          currentFieldsetId={currentFsId}
+          onClose={() => { setFieldsets(getFieldsets()); setShowFsManager(false); }}
+          onSelect={(fs) => { setCurrentFsId(fs.id); setFieldsets(getFieldsets()); }}
+        />
+      )}
+      {showHistory && (
+        <QueryHistoryModal onClose={() => setShowHistory(false)} onRestore={handleRestoreHistory} />
+      )}
+      {linkEvent && (
+        <LinkIncidentModal event={linkEvent} onClose={() => setLinkEvent(null)} />
+      )}
+    </div>
+  );
+}
