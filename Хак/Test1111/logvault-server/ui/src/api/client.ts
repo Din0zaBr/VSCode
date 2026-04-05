@@ -503,9 +503,27 @@ export const api = {
   },
 
   // ── PDQL ─────────────────────────────────────────────────────────────────
-  pdqlSearch(query: string, page = 1, size = 100) {
+  pdqlSearch(
+    query: string,
+    page = 1,
+    size = 100,
+    opts?: { from?: string; to?: string },
+  ) {
     const qs = new URLSearchParams({ query, page: String(page), size: String(size) });
+    const isoFrom = opts?.from ? localToIso(opts.from) : "";
+    const isoTo = opts?.to ? localToIso(opts.to) : "";
+    if (isoFrom) qs.set("from", isoFrom);
+    if (isoTo) qs.set("to", isoTo);
     return request<any>(`/search/pdql?${qs}`);
+  },
+
+  /** Admin: re-run parser enrichment on existing DB rows (fills category, event_type, …). */
+  reparseMeta(limit = 5000, offset = 0) {
+    const qs = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    return request<{ scanned: number; updated: number; has_more: boolean; limit: number; offset: number }>(
+      `/search/reparse-meta?${qs}`,
+      { method: "POST" },
+    );
   },
 
   // ── Correlation rules ────────────────────────────────────────────────────

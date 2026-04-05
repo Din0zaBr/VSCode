@@ -20,9 +20,29 @@ const QUICK_RANGES = [
   { label: "7 д",   value: "7d",  ms: 7 * 24 * 60 * 60_000 },
 ];
 
+/** Поля для PDQL group() в канале событий (несколько через Ctrl+клик). */
+const GROUP_BY_FIELDS: { value: string; label: string }[] = [
+  { value: "level", label: "level" },
+  { value: "host", label: "host" },
+  { value: "agent_id", label: "agent_id" },
+  { value: "source", label: "source" },
+  { value: "service", label: "service" },
+  { value: "event_src.host", label: "event_src.host" },
+  { value: "src.ip", label: "src.ip" },
+  { value: "event_type", label: "event_type" },
+  { value: "category.generic", label: "category.generic" },
+  { value: "category.high", label: "category.high" },
+  { value: "category.low", label: "category.low" },
+];
+
 // All possible detail fields in display order
 const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: "time",                         label: "Время" },
+  { key: "event_type",                   label: "event_type" },
+  { key: "category.generic",             label: "category.generic" },
+  { key: "category.high",                label: "category.high" },
+  { key: "category.low",                 label: "category.low" },
+  { key: "detected_level",               label: "detected_level" },
   { key: "msgid",                        label: "msgid" },
   { key: "src.host",                     label: "src.host" },
   { key: "src.ip",                       label: "src.ip" },
@@ -204,6 +224,32 @@ function downloadBlob(blob: Blob, name: string) {
   URL.revokeObjectURL(url);
 }
 
+function exportGroupedCSV(columns: string[], rows: Record<string, unknown>[]) {
+  const header = columns.join(",");
+  const lines = rows.map((row) =>
+    columns.map((c) => `"${String(row[c] ?? "").replace(/"/g, '""')}"`).join(","),
+  );
+  const blob = new Blob([header + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  downloadBlob(blob, "groups.csv");
+}
+
+function exportGroupedJSON(columns: string[], rows: Record<string, unknown>[]) {
+  const blob = new Blob([JSON.stringify({ columns, rows }, null, 2)], { type: "application/json" });
+  downloadBlob(blob, "groups.json");
+}
+
+function exportGroupedXML(columns: string[], rows: Record<string, unknown>[]) {
+  const body = rows.map((row, i) => {
+    const cells = columns
+      .map((c) => `    <f name="${escXml(c)}">${escXml(String(row[c] ?? ""))}</f>`)
+      .join("\n");
+    return `  <group idx="${i}">\n${cells}\n  </group>`;
+  }).join("\n");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<groups>\n${body}\n</groups>`;
+  const blob = new Blob([xml], { type: "application/xml" });
+  downloadBlob(blob, "groups.xml");
+}
+
 // ── PDQL Modal ───────────────────────────────────────────────────────────────
 
 function PDQLModal({ value, onSave, onClose }: { value: string; onSave: (v: string) => void; onClose: () => void }) {
@@ -219,7 +265,10 @@ function PDQLModal({ value, onSave, onClose }: { value: string; onSave: (v: stri
           <button onClick={onClose} className="text-gray-500 hover:text-gray-200 text-lg">✕</button>
         </div>
         <div className="px-4 py-2 text-xs text-gray-500 border-b" style={{ borderColor: "#1a0d2e" }}>
-          Синтаксис: <span style={{ color: "#BF40BF" }}>select</span>(fields) <span style={{ color: "#8b20d1" }}>where</span>(filter) <span style={{ color: "#6A0DAD" }}>sort</span>(field [asc|desc]) <span style={{ color: "#3d6565" }}>limit</span>(n)
+          Команды через запятую или <code className="text-gray-400">|</code>:{" "}
+          <span style={{ color: "#8b20d1" }}>filter</span>/<span style={{ color: "#8b20d1" }}>where</span>(предикаты),{" "}
+          <span style={{ color: "#BF40BF" }}>select</span>(поля), <span style={{ color: "#6A0DAD" }}>sort</span>, <span style={{ color: "#3d6565" }}>limit</span>.
+          Операторы: <code className="text-gray-400">= != contains</code> и др.
         </div>
         <textarea
           className="flex-1 m-4 rounded-lg p-3 text-sm font-mono resize-none focus:outline-none"
@@ -450,7 +499,7 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
           { key: "source",   label: "source",   value: event.source },
           { key: "service",  label: "service",  value: event.service },
           { key: "level",    label: "level",    value: event.level },
-        ].filter((f) => f.value).map((f) => (
+        ].filter((f) => f.value !== undefined && f.value !== null && String(f.value).length > 0).map((f) => (
           <FieldRow key={f.key} fieldKey={f.key} label={f.label} value={f.value} onAddFilter={onAddFilter} />
         ))}
 
@@ -570,72 +619,135 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
 // ── Main Events Page ─────────────────────────────────────────────────────────
 
-interface PdqlFilters {
-  q: string;
-  level: string;
-  host: string;
-  service: string;
-  agent_id: string;
-  source: string;
+/** Split on commas or pipes only at nesting depth 0 (respecting parentheses). */
+function splitTopLevelDelim(input: string, sep: "," | "|"): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of input) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (ch === sep && depth === 0) {
+      parts.push(cur.trim());
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
 }
 
-/** Parse PDQL where() clause into typed API filter params.
- *  Supports:  field = "value"  field = value  AND conjunctions.
- *  Known fields → proper API param. Unknown fields → free-text q.
+function isPdqlCommand(chunk: string): boolean {
+  return /^(filter|select|sort|limit|group|aggregate)\s*\(/i.test(chunk.trim());
+}
+
+function normalizeWhereToFilter(chunk: string): string {
+  return chunk.trim().replace(/^where\s*\(/i, "filter(");
+}
+
+/** Ensure select() lists include event_id so rows are addressable in the channel UI. */
+function ensureEventIdInSelect(pipeline: string): string {
+  return pipeline
+    .split("|")
+    .map((seg) => {
+      const s = seg.trim();
+      if (!/^select\s*\(/i.test(s)) return s;
+      const start = s.indexOf("(");
+      if (start < 0) return s;
+      let depth = 1;
+      let i = start + 1;
+      for (; i < s.length; i++) {
+        if (s[i] === "(") depth++;
+        else if (s[i] === ")") {
+          depth--;
+          if (depth === 0) break;
+        }
+      }
+      const inner = s.slice(start + 1, i);
+      const rest = s.slice(i + 1);
+      const fields = splitTopLevelDelim(inner, ",")
+        .map((f) => f.trim())
+        .filter(Boolean);
+      if (!fields.some((f) => /^event_id$/i.test(f))) {
+        return `select(event_id, ${inner})${rest}`;
+      }
+      return s;
+    })
+    .join(" | ");
+}
+
+/**
+ * Converts channel bar syntax into piped PDQL for the backend:
+ * - Commas or pipes between commands (select(a,b), sort(time) keeps inner commas)
+ * - where(...) → filter(...)
+ * - Bare predicates (e.g. level != "INFO") are wrapped as filter(...)
  */
-function parsePdqlFilters(pdql: string): PdqlFilters {
-  const out: PdqlFilters = { q: "", level: "", host: "", service: "", agent_id: "", source: "" };
+function buildPipelinePdql(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "sort(time desc)";
 
-  const whereMatch = pdql.match(/where\s*\(([^)]*)\)/i);
-  // No where clause — if no select() treat whole string as q
-  if (!whereMatch) {
-    if (!pdql.match(/select\s*\(/i)) out.q = pdql.trim();
-    return out;
+  const usePipe = trimmed.includes("|");
+  const segments = usePipe ? splitTopLevelDelim(trimmed, "|") : splitTopLevelDelim(trimmed, ",");
+  const normalized = segments
+    .map((s) => normalizeWhereToFilter(s))
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => (isPdqlCommand(s) ? s : `filter(${s})`));
+
+  return ensureEventIdInSelect(normalized.join(" | "));
+}
+
+function pdqlFieldNameForUiKey(uiKey: string): string {
+  if (uiKey === "text") return "message";
+  return uiKey;
+}
+
+/** PDQL string literal: avoid breaking the bar on quotes/newlines. */
+function pdqlStringLiteral(value: string): string {
+  const safe = value.replace(/\r?\n/g, " ").replace(/"/g, "'");
+  return `"${safe}"`;
+}
+
+function buildFilterToken(fieldKey: string, value: string): string {
+  const f = pdqlFieldNameForUiKey(fieldKey);
+  const raw = value.replace(/\r?\n/g, " ").trim();
+  if (f === "event_id" && /^\d+$/.test(raw)) {
+    return `${f} = ${raw}`;
   }
+  return `${f} = ${pdqlStringLiteral(raw)}`;
+}
 
-  const clause = whereMatch[1];
-  const freeText: string[] = [];
-  const fieldRe = /(\S+)\s*(?:=|==)\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
-  let m: RegExpExecArray | null;
-
-  while ((m = fieldRe.exec(clause)) !== null) {
-    const field = m[1].toLowerCase();
-    const value = (m[2] ?? m[3] ?? m[4] ?? "").trim();
-    if (!value) continue;
-
-    switch (field) {
-      case "level":
-        out.level = value; break;
-      case "host":
-      case "event_src.host":
-      case "src.host":
-        out.host = value; break;
-      case "service":
-      case "event_src.title":
-      case "event_src.subsys":
-        out.service = value; break;
-      case "agent_id":
-        out.agent_id = value; break;
-      case "source":
-        out.source = value; break;
-      case "text":
-      case "message":
-      case "q":
-        out.q = value; break;
-      default:
-        freeText.push(value);
+/** Вставка AND в существующий where/filter с учётом вложенных скобок. */
+function mergeIntoWhereOrFilter(pdql: string, token: string): string | null {
+  const m = /\b(where|filter)\s*\(/i.exec(pdql);
+  if (!m) return null;
+  const kw = m[1].toLowerCase() === "filter" ? "filter" : "where";
+  const openParen = m.index + m[0].length - 1;
+  let depth = 0;
+  let i = openParen;
+  for (; i < pdql.length; i++) {
+    if (pdql[i] === "(") depth++;
+    else if (pdql[i] === ")") {
+      depth--;
+      if (depth === 0) break;
     }
   }
+  if (depth !== 0) return null;
+  const inner = pdql.slice(openParen + 1, i).trim();
+  const newInner = inner ? `${inner} AND ${token}` : token;
+  const before = pdql.slice(0, m.index);
+  const after = pdql.slice(i + 1);
+  return `${before}${kw}(${newInner})${after}`;
+}
 
-  // If nothing was matched as field=value, treat clause as raw free text
-  if (!out.q && !out.level && !out.host && !out.service && !out.agent_id && !out.source) {
-    const rawText = clause.replace(/\bAND\b|\bOR\b/gi, " ").trim();
-    if (rawText && !rawText.includes("=")) out.q = rawText;
-  } else if (freeText.length > 0) {
-    out.q = (out.q ? out.q + " " : "") + freeText.join(" ");
-  }
-
-  return out;
+/** Добавляет group | aggregate | sort | limit к запросу канала (если выбраны поля). */
+function buildChannelPdql(raw: string, groupFields: string[]): string {
+  const base = buildPipelinePdql(raw);
+  const fields = groupFields.map((f) => f.trim()).filter(Boolean);
+  if (!fields.length) return base;
+  if (/\bgroup\s*\(/i.test(raw.trim())) return base;
+  return `${base} | group(${fields.join(", ")}) | aggregate(count()) | sort(count desc) | limit(500)`;
 }
 
 export default function Events() {
@@ -647,8 +759,9 @@ export default function Events() {
   const [toDt, setToDt]               = useState("");
   const [useCustom, setUseCustom]     = useState(false);
 
-  // PDQL
-  const [pdqlFilter, setPdqlFilter]   = useState("select(time), sort(time)");
+  // PDQL (channel bar — commas or | between commands; where() = filter())
+  const [pdqlFilter, setPdqlFilter]   = useState("sort(time desc)");
+  const [groupByFields, setGroupByFields] = useState<string[]>([]);
   const [showPdqlModal, setShowPdqlModal] = useState(false);
 
   // Fieldsets
@@ -671,20 +784,28 @@ export default function Events() {
   // Auto-refresh control
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
 
-  // Committed (applied) search params — only change on explicit Apply, avoiding infinite refetch
-  const [appliedQ, setAppliedQ] = useState(() => {
+  // Committed PDQL + time window (Apply only); `page` merged below for pagination.
+  const [appliedChannel, setAppliedChannel] = useState(() => {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
-    return { q: "", level: "", host: "", service: "", agent_id: "", source: "", from: nowMinus(rangeMs), to: new Date().toISOString(), page: 1, size: 100 };
+    return {
+      pdql: "sort(time desc)",
+      from: nowMinus(rangeMs),
+      to: new Date().toISOString(),
+      size: 100,
+    };
   });
 
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
 
-  // When page changes via pagination, update appliedQ.page without rebuilding time range
-  const appliedQWithPage = { ...appliedQ, page };
+  const appliedChannelWithPage = { ...appliedChannel, page };
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["events-channel", appliedQWithPage],
-    queryFn: () => api.search(appliedQWithPage),
+    queryKey: ["events-channel", appliedChannelWithPage],
+    queryFn: () =>
+      api.pdqlSearch(appliedChannelWithPage.pdql, appliedChannelWithPage.page, appliedChannelWithPage.size, {
+        from: appliedChannelWithPage.from,
+        to: appliedChannelWithPage.to,
+      }),
     refetchInterval: isAutoRefresh ? 10_000 : false,
   });
 
@@ -698,9 +819,9 @@ export default function Events() {
     const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
     const from = useCustom ? fromDt : nowMinus(rangeMs);
     const to   = useCustom ? toDt   : new Date().toISOString();
-    const filters = parsePdqlFilters(pdqlFilter);
+    const pdql = buildChannelPdql(pdqlFilter, groupByFields);
     setPage(1);
-    setAppliedQ({ ...filters, from, to, page: 1, size: PAGE_SIZE });
+    setAppliedChannel({ pdql, from, to, size: PAGE_SIZE });
     addQueryHistory({
       pdql: pdqlFilter,
       timeRange: useCustom
@@ -708,20 +829,20 @@ export default function Events() {
         : { type: "relative", relative: quickRange },
       fieldsetId: currentFsId,
     });
-  }, [pdqlFilter, quickRange, fromDt, toDt, useCustom, currentFsId]);
+  }, [pdqlFilter, groupByFields, quickRange, fromDt, toDt, useCustom, currentFsId]);
 
   const handleAddFilter = (key: string, value: string) => {
-    const token = `${key} = "${value}"`;
-    const existing = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
-    if (existing) {
-      setPdqlFilter(pdqlFilter.replace(/where\s*\([^)]*\)/i, `where(${existing[1]} AND ${token})`));
+    const token = buildFilterToken(key, value);
+    const merged = mergeIntoWhereOrFilter(pdqlFilter, token);
+    if (merged) {
+      setPdqlFilter(merged);
+      return;
+    }
+    const hasSelect = pdqlFilter.match(/select\s*\(/i);
+    if (hasSelect) {
+      setPdqlFilter(`${pdqlFilter.trimEnd()}, where(${token})`);
     } else {
-      const hasSelect = pdqlFilter.match(/select\s*\(/i);
-      if (hasSelect) {
-        setPdqlFilter(pdqlFilter.trimEnd() + ` where(${token})`);
-      } else {
-        setPdqlFilter(`select(time), where(${token}), sort(time)`);
-      }
+      setPdqlFilter(`select(time), where(${token}), sort(time desc)`);
     }
   };
 
@@ -742,15 +863,32 @@ export default function Events() {
     setPage(1);
   };
 
-  const events = data?.logs ?? [];
-  const total  = data?.total ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const isGrouped = !!(data && typeof data === "object" && "rows" in data && "columns" in data);
+
+  const events: LogEvent[] =
+    !isGrouped && data && typeof data === "object" && "logs" in data
+      ? ((data as { logs: LogEvent[] }).logs ?? [])
+      : [];
+  const groupedCols = isGrouped ? (data as { columns: string[] }).columns : [];
+  const groupedRows = isGrouped ? (data as { rows: Record<string, unknown>[] }).rows : [];
+
+  const total = data?.total ?? 0;
+  const totalPages = isGrouped ? 1 : Math.ceil(total / PAGE_SIZE);
 
   const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
 
-  const handleExportCSV  = () => exportCSV(events, visibleFields);
-  const handleExportJSON = () => exportJSON(events);
-  const handleExportXML  = () => exportXML(events, visibleFields);
+  const handleExportCSV = () => {
+    if (isGrouped) exportGroupedCSV(groupedCols, groupedRows);
+    else exportCSV(events, visibleFields);
+  };
+  const handleExportJSON = () => {
+    if (isGrouped) exportGroupedJSON(groupedCols, groupedRows);
+    else exportJSON(events);
+  };
+  const handleExportXML = () => {
+    if (isGrouped) exportGroupedXML(groupedCols, groupedRows);
+    else exportXML(events, visibleFields);
+  };
 
   return (
     <div className="flex h-[calc(100vh-52px)] overflow-hidden">
@@ -843,6 +981,36 @@ export default function Events() {
             </button>
           </div>
 
+          {/* Group by */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-500 flex-shrink-0">Группировка:</span>
+            <select
+              multiple
+              className="siem-input text-xs py-1 rounded-md min-h-[72px] max-w-md"
+              style={{ minWidth: "220px" }}
+              value={groupByFields}
+              onChange={(e) => {
+                setGroupByFields([...e.target.selectedOptions].map((o) => o.value));
+              }}
+            >
+              {GROUP_BY_FIELDS.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+            <span className="text-[10px] text-gray-600 max-w-[180px] leading-tight">
+              Ctrl/Cmd + клик — несколько полей. К запросу добавляется group → aggregate(count).
+            </span>
+            {groupByFields.length > 0 && (
+              <button
+                type="button"
+                className="text-[10px] text-gray-500 hover:text-gray-300 underline"
+                onClick={() => setGroupByFields([])}
+              >
+                сбросить
+              </button>
+            )}
+          </div>
+
           {/* Row 2: PDQL bar + fieldset */}
           <div className="flex items-center gap-2">
             {/* Full PDQL editor button */}
@@ -861,7 +1029,7 @@ export default function Events() {
               value={pdqlFilter}
               onChange={(e) => setPdqlFilter(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleApply()}
-              placeholder="select(time), sort(time)"
+              placeholder='filter(level != "INFO") | select(time, text) или sort(time desc)'
               spellCheck={false}
             />
 
@@ -925,14 +1093,35 @@ export default function Events() {
         <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
-          ) : events.length === 0 ? (
+          ) : (isGrouped ? groupedRows.length === 0 : events.length === 0) ? (
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
                 <div className="text-4xl mb-2" style={{ color: "#2d1860" }}>◎</div>
-                <div>Нет событий за выбранный период</div>
+                <div>{isGrouped ? "Нет групп по текущему фильтру" : "Нет событий за выбранный период"}</div>
                 <div className="text-xs text-gray-700 mt-1">Измените фильтр или временной диапазон</div>
               </div>
             </div>
+          ) : isGrouped ? (
+            <table className="w-full siem-table text-xs">
+              <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+                <tr>
+                  {groupedCols.map((col) => (
+                    <th key={col} className="text-left font-mono">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {groupedRows.map((row, i) => (
+                  <tr key={i} className="hover:bg-purple-900/10">
+                    {groupedCols.map((col) => (
+                      <td key={col} className="text-gray-300 font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
+                        {row[col] === null || row[col] === undefined ? "—" : String(row[col])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <table className="w-full siem-table text-xs">
               <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
@@ -988,7 +1177,7 @@ export default function Events() {
         </div>
 
         {/* ── Pagination ──────────────────────────────────────────────── */}
-        {totalPages > 1 && (
+        {!isGrouped && totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-2 border-t flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
             <span className="text-xs text-gray-600">{total.toLocaleString()} событий</span>
             <div className="flex items-center gap-2">
@@ -998,9 +1187,14 @@ export default function Events() {
             </div>
           </div>
         )}
-        {totalPages <= 1 && total > 0 && (
+        {!isGrouped && totalPages <= 1 && total > 0 && (
           <div className="px-4 py-2 border-t text-xs text-gray-600 flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
             {total.toLocaleString()} событий
+          </div>
+        )}
+        {isGrouped && total > 0 && (
+          <div className="px-4 py-2 border-t text-xs text-gray-600 flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            {total.toLocaleString()} групп (лимит запроса 500)
           </div>
         )}
       </div>

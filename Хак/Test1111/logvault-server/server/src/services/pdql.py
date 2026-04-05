@@ -61,7 +61,7 @@ _TOKEN_RE = re.compile(
     r"""
     (?P<STRING>"[^"]*"|'[^']*')        |
     (?P<NUMBER>\d+(?:\.\d+)?)           |
-    (?P<OP>[!=<>]+|>=|<=)               |
+    (?P<OP>>=|<=|!=|==|[=<>])          |
     (?P<COMMA>,)                        |
     (?P<LPAREN>\()                      |
     (?P<RPAREN>\))                      |
@@ -132,6 +132,10 @@ class PDQLParser:
             upper = cmd.upper()
             if upper.startswith("FILTER"):
                 body = self._extract_body(cmd, "FILTER")
+                result.filter_node = self._parse_filter(body)
+            elif upper.startswith("WHERE"):
+                # Channel / UI synonym for FILTER (PT PDQL-style)
+                body = self._extract_body(cmd, "WHERE")
                 result.filter_node = self._parse_filter(body)
             elif upper.startswith("SELECT"):
                 body = self._extract_body(cmd, "SELECT")
@@ -324,6 +328,7 @@ class PDQLToSQL:
 
     DIRECT_FIELDS: dict[str, str] = {
         "time": "l.timestamp",
+        "event_id": "l.event_id",
         "text": "l.message",
         "message": "l.message",
         "level": "l.level",
@@ -332,6 +337,8 @@ class PDQLToSQL:
         "service": "s.name",
         "event_src.host": "l.host",
         "host": "l.host",
+        # часто в enrich — дублируем явно для group/filter
+        "event_type": "l.meta->>'event_type'",
     }
 
     NUMERIC_FIELDS: dict[str, str] = {
@@ -362,6 +369,9 @@ class PDQLToSQL:
         self,
         query: PDQLQuery,
         allowed_agents: list[str] | None = None,
+        time_from: str | None = None,
+        time_to: str | None = None,
+        omit_default_limit: bool = False,
     ) -> tuple[str, list[Any]]:
         params: list[Any] = []
         conditions: list[str] = []
@@ -372,6 +382,14 @@ class PDQLToSQL:
                 return "SELECT 0 WHERE FALSE", []
             conditions.append("l.agent_id = ANY(%s)")
             params.append(allowed_agents)
+
+        # Time window (ISO timestamps from API)
+        if time_from:
+            conditions.append("l.timestamp >= %s")
+            params.append(time_from)
+        if time_to:
+            conditions.append("l.timestamp <= %s")
+            params.append(time_to)
 
         # Filter
         if query.filter_node:
@@ -389,13 +407,22 @@ class PDQLToSQL:
         # Normal select mode
         select_cols = self._build_select(query.select_fields)
         sort_clause = self._build_sort(query.sort_items)
-        limit_clause = f"LIMIT {query.limit_value}" if query.limit_value else "LIMIT 500"
+        if query.limit_value:
+            limit_clause = f"LIMIT {query.limit_value}"
+        elif omit_default_limit:
+            limit_clause = ""
+        else:
+            limit_clause = "LIMIT 500"
 
-        sql = f"""SELECT {select_cols}
-FROM logs l LEFT JOIN services s ON l.service_id = s.id
-WHERE {where}
-{sort_clause}
-{limit_clause}"""
+        lines = [
+            f"SELECT {select_cols}",
+            "FROM logs l LEFT JOIN services s ON l.service_id = s.id",
+            f"WHERE {where}",
+            sort_clause,
+        ]
+        if limit_clause:
+            lines.append(limit_clause)
+        sql = "\n".join(lines)
 
         return sql, params
 

@@ -590,6 +590,57 @@ class PGService:
         finally:
             self._put(conn)
 
+    def reparse_meta_enrichment(self, limit: int = 5000, offset: int = 0) -> dict[str, Any]:
+        """Re-run parse_and_enrich on stored messages so category, event_type, IPs, etc. are filled."""
+        from server.src.services.parser import parse_and_enrich
+
+        conn = self._conn()
+        updated = 0
+        scanned = 0
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    """SELECT event_id, message, meta, level FROM logs
+                       ORDER BY timestamp ASC
+                       LIMIT %s OFFSET %s""",
+                    (limit, offset),
+                )
+                rows = cur.fetchall()
+                scanned = len(rows)
+                for r in rows:
+                    meta = r["meta"] if isinstance(r["meta"], dict) else (json.loads(r["meta"]) if r["meta"] else {})
+                    msg = r["message"] or ""
+                    new_enrich = parse_and_enrich(msg, meta)
+                    if not new_enrich:
+                        continue
+                    merged = {**meta, **new_enrich}
+                    prev_lvl = (r.get("level") or "INFO").upper()
+                    new_lvl = prev_lvl
+                    if new_enrich.get("detected_level"):
+                        new_lvl = str(new_enrich["detected_level"]).upper()
+                    meta_changed = json.dumps(merged, sort_keys=True) != json.dumps(meta, sort_keys=True)
+                    level_changed = new_lvl != prev_lvl
+                    if not meta_changed and not level_changed:
+                        continue
+                    cur.execute(
+                        """UPDATE logs SET meta = %s::jsonb, level = %s WHERE event_id = %s""",
+                        (json.dumps(merged), new_lvl, r["event_id"]),
+                    )
+                    updated += cur.rowcount
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            self._put(conn)
+        return {
+            "scanned": scanned,
+            "updated": updated,
+            "limit": limit,
+            "offset": offset,
+            "has_more": scanned == limit,
+        }
+
     # ── Correlation methods ──────────────────────────────────────────────────
 
     def get_correlation_rules(self, enabled_only: bool = False) -> list[dict[str, Any]]:

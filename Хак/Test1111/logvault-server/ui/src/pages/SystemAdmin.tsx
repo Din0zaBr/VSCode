@@ -211,7 +211,27 @@ function NotificationsTab() {
 // ── System Management Tab ─────────────────────────────────────────────────────
 
 function ManagementTab() {
+  const qc = useQueryClient();
   const { data: health } = useQuery({ queryKey: ["sys-health"], queryFn: api.systemHealth, refetchInterval: 15_000 });
+  const [reparseMsg, setReparseMsg] = useState("");
+  const [reparseOffset, setReparseOffset] = useState(0);
+
+  const reparseMutation = useMutation({
+    mutationFn: (offset: number) => api.reparseMeta(5000, offset),
+    onSuccess: (res, offset) => {
+      qc.invalidateQueries({ queryKey: ["events-channel"] });
+      if (res.has_more) {
+        setReparseOffset(offset + res.limit);
+        setReparseMsg(
+          `Пакет offset ${offset}: просмотрено ${res.scanned}, обновлено записей: ${res.updated}. Нажмите снова для следующего пакета.`,
+        );
+      } else {
+        setReparseOffset(0);
+        setReparseMsg(`Готово. Просмотрено ${res.scanned}, обновлено: ${res.updated}.`);
+      }
+    },
+    onError: (e: Error) => setReparseMsg(`Ошибка: ${e.message}`),
+  });
 
   const metrics = health as any;
 
@@ -221,6 +241,25 @@ function ManagementTab() {
         <h3 className="text-base font-semibold text-gray-200">Управление системой</h3>
         <p className="text-xs text-gray-600 mt-0.5">Состояние компонентов URSUS Insight</p>
       </div>
+
+      {isAdmin() && (
+        <div className="siem-card p-4 space-y-2">
+          <div className="text-sm font-medium text-gray-200">Обогащение событий в БД</div>
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            Повторно применяет парсер к уже сохранённым сообщениям: категории (category.*), тип события (event_type), IP, уровень и др.
+            Обрабатывает по 5000 строк за вызов; при большой базе нажимайте кнопку несколько раз.
+          </p>
+          <button
+            type="button"
+            className="siem-btn text-xs px-4 py-1.5"
+            disabled={reparseMutation.isPending}
+            onClick={() => reparseMutation.mutate(reparseOffset)}
+          >
+            {reparseMutation.isPending ? "Обработка…" : "Заполнить поля для накопленных событий"}
+          </button>
+          {reparseMsg && <div className="text-[11px] text-gray-400 font-mono">{reparseMsg}</div>}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         {[
