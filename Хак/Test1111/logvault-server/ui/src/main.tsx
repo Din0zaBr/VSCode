@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Toaster
           position="bottom-right"
           toastOptions={{
-            style: { background: "#1f2937", color: "#f3f4f6", border: "1px solid #374151" },
+            style: { background: "#0d0f18", color: "#e2e8f0", border: "1px solid #2d1860", boxShadow: "0 0 20px rgba(106,13,173,0.2)" },
           }}
         />
       </BrowserRouter>

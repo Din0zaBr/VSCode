@@ -198,10 +198,139 @@ export interface CorrelationRule {
   description?: string;
   severity: string;
   enabled: boolean;
+  // Sigma rule YAML stored as string
+  sigma_rule?: string;
   conditions: Record<string, unknown>;
   hit_count?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+// ── Local-only types (localStorage) ─────────────────────────────────────────
+
+export interface Fieldset {
+  id: string;
+  name: string;
+  fields: string[];
+  isDefault?: boolean;
+}
+
+export interface QueryHistoryItem {
+  id: string;
+  timestamp: string;
+  label?: string;
+  pdql: string;
+  timeRange: { type: string; relative?: string; from?: string; to?: string };
+  fieldsetId?: string;
+}
+
+export interface IncidentTask {
+  id: string;
+  title: string;
+  done: boolean;
+  created_at: string;
+}
+
+export interface IncidentNote {
+  id: string;
+  text: string;
+  created_at: string;
+  author?: string;
+}
+
+export interface IncidentHistoryEntry {
+  id: string;
+  event: string;   // e.g. "Статус изменён: OPEN → INVESTIGATING"
+  timestamp: string;
+  author?: string;
+}
+
+export interface IncidentExtra {
+  incident_id: number;
+  assignee?: string;
+  category?: string;
+  type?: string;
+  impact?: string;
+  tasks: IncidentTask[];
+  notes: IncidentNote[];
+  history: IncidentHistoryEntry[];
+}
+
+// ── Fieldset helpers ─────────────────────────────────────────────────────────
+
+const FS_KEY = "ursus_fieldsets";
+const DEFAULT_FIELDSET: Fieldset = {
+  id: "default",
+  name: "По умолчанию",
+  fields: ["criticality", "time", "event_src.host", "text"],
+  isDefault: true,
+};
+
+export function getFieldsets(): Fieldset[] {
+  try {
+    const raw = localStorage.getItem(FS_KEY);
+    if (!raw) return [DEFAULT_FIELDSET];
+    const parsed = JSON.parse(raw) as Fieldset[];
+    if (!parsed.find((f) => f.id === "default")) parsed.unshift(DEFAULT_FIELDSET);
+    return parsed;
+  } catch {
+    return [DEFAULT_FIELDSET];
+  }
+}
+
+export function saveFieldsets(fs: Fieldset[]): void {
+  localStorage.setItem(FS_KEY, JSON.stringify(fs));
+}
+
+// ── Query history helpers ────────────────────────────────────────────────────
+
+const QH_KEY = "ursus_query_history";
+const QH_MAX = 50;
+
+export function getQueryHistory(): QueryHistoryItem[] {
+  try {
+    return JSON.parse(localStorage.getItem(QH_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function addQueryHistory(item: Omit<QueryHistoryItem, "id" | "timestamp">): void {
+  const history = getQueryHistory();
+  const entry: QueryHistoryItem = {
+    ...item,
+    id: `qh-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+  };
+  const updated = [entry, ...history].slice(0, QH_MAX);
+  localStorage.setItem(QH_KEY, JSON.stringify(updated));
+}
+
+export function clearQueryHistory(): void {
+  localStorage.removeItem(QH_KEY);
+}
+
+// ── Incident extras helpers ──────────────────────────────────────────────────
+
+const IE_KEY = "ursus_incident_extras";
+
+export function getIncidentExtras(): Record<number, IncidentExtra> {
+  try {
+    return JSON.parse(localStorage.getItem(IE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function getIncidentExtra(id: number): IncidentExtra {
+  const all = getIncidentExtras();
+  return all[id] ?? { incident_id: id, tasks: [], notes: [], history: [] };
+}
+
+export function saveIncidentExtra(extra: IncidentExtra): void {
+  const all = getIncidentExtras();
+  all[extra.incident_id] = extra;
+  localStorage.setItem(IE_KEY, JSON.stringify(all));
 }
 
 export interface CorrelationAlert {

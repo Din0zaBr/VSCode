@@ -3,18 +3,144 @@
 @tailwind utilities;
 
 @layer base {
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  html, body, #root {
+    background-color: #08090e;
+    color: #e2e8f0;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   }
-  ::-webkit-scrollbar-track {
-    background: transparent;
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #0d0f18; }
+  ::-webkit-scrollbar-thumb { background: #2d1860; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6A0DAD; }
+}
+
+@layer components {
+  /* SIEM Card */
+  .siem-card {
+    @apply rounded-xl border bg-siem-surface;
+    border-color: #1a0d2e;
+    box-shadow: 0 0 24px rgba(106,13,173,0.08), 0 2px 8px rgba(0,0,0,0.5);
   }
-  ::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 3px;
+
+  /* SIEM Input */
+  .siem-input {
+    @apply bg-siem-surface2 border rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none transition-colors;
+    border-color: #2d1860;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
+  .siem-input:focus {
+    border-color: #6A0DAD;
+    box-shadow: 0 0 0 2px rgba(106,13,173,0.2);
   }
+  .siem-input::placeholder { color: #64748b; }
+
+  /* SIEM Button primary */
+  .siem-btn {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150;
+    background: linear-gradient(135deg, #6A0DAD, #8b20d1);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(106,13,173,0.3);
+  }
+  .siem-btn:hover {
+    background: linear-gradient(135deg, #8b20d1, #BF40BF);
+    box-shadow: 0 0 20px rgba(191,64,191,0.4);
+  }
+
+  /* SIEM Button ghost */
+  .siem-btn-ghost {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
+    background: rgba(45,24,96,0.3);
+    border: 1px solid #2d1860;
+    color: #b266ff;
+  }
+  .siem-btn-ghost:hover {
+    background: rgba(106,13,173,0.2);
+    border-color: #6A0DAD;
+    color: #d060d0;
+  }
+
+  /* SIEM Table */
+  .siem-table thead tr {
+    border-bottom: 1px solid #1a0d2e;
+  }
+  .siem-table thead th {
+    @apply text-xs uppercase tracking-wider px-3 py-2;
+    color: #64748b;
+  }
+  .siem-table tbody tr {
+    border-bottom: 1px solid rgba(26,13,46,0.5);
+    transition: background 0.1s;
+  }
+  .siem-table tbody tr:hover {
+    background: rgba(106,13,173,0.08);
+  }
+  .siem-table tbody td {
+    @apply px-3 py-2 text-sm;
+    color: #cbd5e1;
+  }
+
+  /* Nav link active */
+  .nav-active {
+    background: rgba(106,13,173,0.2);
+    color: #BF40BF;
+    border-bottom: 2px solid #BF40BF;
+  }
+
+  /* Severity badges */
+  .badge-critical { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-high     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+  .badge-medium   { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+  .badge-low      { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(106,13,173,0.15); color: #b266ff; border: 1px solid rgba(106,13,173,0.3); }
+
+  /* Status badges */
+  .badge-open         { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-investigating{ background: rgba(234,179,8,0.12); color: #facc15; border: 1px solid rgba(234,179,8,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-resolved     { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-fp           { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); @apply text-xs px-2 py-0.5 rounded; }
+
+  /* Criticality dot */
+  .crit-dot { @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0; }
+  .crit-dot-critical { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.8); }
+  .crit-dot-high     { background: #f97316; box-shadow: 0 0 6px rgba(249,115,22,0.6); }
+  .crit-dot-medium   { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.5); }
+  .crit-dot-low      { background: #3b82f6; box-shadow: 0 0 4px rgba(59,130,246,0.4); }
+  .crit-dot-info     { background: #e2e8f0; }
+
+  /* Correlation star */
+  .corr-star { color: #ef4444; font-size: 11px; line-height: 1; }
+
+  /* PDQL input area */
+  .pdql-bar {
+    background: rgba(13,15,24,0.9);
+    border: 1px solid #2d1860;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    color: #BF40BF;
+  }
+  .pdql-bar:focus {
+    border-color: #6A0DAD;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(106,13,173,0.25);
+  }
+
+  /* Detail panel field row */
+  .field-row {
+    @apply flex items-start gap-2 py-1 px-2 rounded cursor-pointer;
+    transition: background 0.1s;
+  }
+  .field-row:hover {
+    background: rgba(106,13,173,0.12);
+  }
+  .field-row:hover .field-add-btn { @apply visible; }
+  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: #BF40BF; background: rgba(191,64,191,0.15); }
+}
+
+/* Print styles for incident PDF */
+@media print {
+  body { background: white !important; color: black !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .incident-print-card { page-break-inside: avoid; }
 }
