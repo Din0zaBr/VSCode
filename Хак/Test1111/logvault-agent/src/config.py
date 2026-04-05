@@ -8,10 +8,13 @@ from pydantic import BaseModel, Field
 
 
 class SourceConfig(BaseModel):
-    type: str  # "file" or "journald"
+    type: str  # "file" | "journald" | "winevent"
     path: str = ""
     unit: str = ""
     service: str = ""
+    # winevent-specific fields
+    channel: str = "System"          # Windows Event Log channel name
+    event_ids: list[int] = Field(default_factory=list)  # filter by Event ID (empty = all)
 
 
 class AgentConfig(BaseModel):

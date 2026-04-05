@@ -16,6 +16,14 @@ from agent.src.readers.file_reader import FileReader
 from agent.src.readers.journald_reader import JournaldReader
 from agent.src.transport.http import HttpTransport
 
+# Windows Event Log reader — available only on Windows with pywin32 installed
+try:
+    from agent.src.readers.winevent_reader import WinEventReader as _WinEventReader
+    _WINEVENT_AVAILABLE = True
+except (ImportError, RuntimeError):
+    _WinEventReader = None  # type: ignore[assignment,misc]
+    _WINEVENT_AVAILABLE = False
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -29,9 +37,30 @@ def build_readers(cfg: AgentConfig) -> list[LogReader]:
     readers: list[LogReader] = []
     for src in cfg.sources:
         if src.type == "file":
+            if not src.path:
+                logger.warning("file source missing 'path', skipping")
+                continue
             readers.append(FileReader(path=src.path, service=src.service))
+
         elif src.type == "journald":
             readers.append(JournaldReader(unit=src.unit, service=src.service))
+
+        elif src.type == "winevent":
+            if not _WINEVENT_AVAILABLE:
+                logger.warning(
+                    "winevent source requested (channel=%s) but pywin32 is not installed. "
+                    "Run: pip install pywin32 && python Scripts/pywin32_postinstall.py -install",
+                    src.channel,
+                )
+                continue
+            readers.append(
+                _WinEventReader(  # type: ignore[misc]
+                    channel=src.channel,
+                    service=src.service or "windows",
+                    event_ids=list(src.event_ids) if src.event_ids else None,
+                )
+            )
+
         else:
             logger.warning("Unknown source type: %s", src.type)
     return readers

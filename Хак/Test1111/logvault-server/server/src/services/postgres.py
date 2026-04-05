@@ -74,12 +74,18 @@ class PGService:
                         service_name = doc.get("service", "")
                         service_id = self._get_or_create_service(conn, service_name)
 
+                        # Generate a unique event_id if not provided or empty
+                        event_id = doc.get("event_id") or ""
+                        if not event_id:
+                            import uuid
+                            event_id = uuid.uuid4().hex[:24]
+
                         cur.execute(
                             """INSERT INTO logs (event_id, timestamp, host, agent_id, source, level, message, service_id, meta)
                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                                ON CONFLICT (event_id) DO NOTHING""",
                             (
-                                doc.get("event_id", ""),
+                                event_id,
                                 doc.get("timestamp"),
                                 doc.get("host", ""),
                                 doc.get("agent_id", ""),
@@ -90,7 +96,9 @@ class PGService:
                                 json.dumps(doc.get("meta", {})),
                             ),
                         )
-                        success += 1
+                        # rowcount=0 means ON CONFLICT DO NOTHING fired (duplicate)
+                        if cur.rowcount > 0:
+                            success += 1
                     except Exception:
                         logger.exception("Failed to insert doc %s", doc.get("event_id"))
                         errors += 1
