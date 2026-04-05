@@ -4,9 +4,8 @@ services:
     container_name: logvault-caddy
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8080:80"  # Теперь заходим через 8080
       - "443:443"
-      - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -78,3 +77,6 @@ volumes:
 networks:
   logvault:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24

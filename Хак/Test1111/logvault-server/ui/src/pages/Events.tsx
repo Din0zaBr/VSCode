@@ -570,6 +570,14 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
 // ── Main Events Page ─────────────────────────────────────────────────────────
 
+function buildQ(pdqlFilter: string): string {
+  let q = "";
+  const whereMatch = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
+  if (whereMatch) q = whereMatch[1].trim();
+  else if (!pdqlFilter.match(/select\s*\(/i)) q = pdqlFilter.trim();
+  return q;
+}
+
 export default function Events() {
   const [searchParams] = useSearchParams();
 
@@ -600,29 +608,24 @@ export default function Events() {
   const [showHistory, setShowHistory] = useState(false);
   const [showExport, setShowExport]   = useState(false);
 
+  // Auto-refresh control
+  const [isAutoRefresh, setIsAutoRefresh] = useState(false);
+
+  // Committed (applied) search params — only change on explicit Apply, avoiding infinite refetch
+  const [appliedQ, setAppliedQ] = useState(() => {
+    const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
+    return { q: "", from: nowMinus(rangeMs), to: new Date().toISOString(), page: 1, size: 100 };
+  });
+
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
 
-  // Build search params from PDQL + time range
-  const buildSearchParams = useCallback(() => {
-    const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
-    const from = useCustom ? fromDt : nowMinus(rangeMs);
-    const to   = useCustom ? toDt   : new Date().toISOString();
-
-    // Simple PDQL parse: extract text after "where(" if present
-    let q = "";
-    const whereMatch = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
-    if (whereMatch) q = whereMatch[1].trim();
-    else if (!pdqlFilter.match(/select\s*\(/i)) q = pdqlFilter.trim();
-
-    return { q, from, to, page, size: PAGE_SIZE };
-  }, [pdqlFilter, quickRange, fromDt, toDt, useCustom, page]);
-
-  const searchQ = buildSearchParams();
+  // When page changes via pagination, update appliedQ.page without rebuilding time range
+  const appliedQWithPage = { ...appliedQ, page };
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["events-channel", searchQ],
-    queryFn: () => api.search(searchQ),
-    refetchInterval: 60_000,
+    queryKey: ["events-channel", appliedQWithPage],
+    queryFn: () => api.search(appliedQWithPage),
+    refetchInterval: isAutoRefresh ? 10_000 : false,
   });
 
   // Restore from search params (e.g. from incidents page)
@@ -631,9 +634,13 @@ export default function Events() {
     if (q) setPdqlFilter(q);
   }, [searchParams]);
 
-  const handleApply = () => {
-    setPage(1);
+  const handleApply = useCallback(() => {
     const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
+    const from = useCustom ? fromDt : nowMinus(rangeMs);
+    const to   = useCustom ? toDt   : new Date().toISOString();
+    const q    = buildQ(pdqlFilter);
+    setPage(1);
+    setAppliedQ({ q, from, to, page: 1, size: PAGE_SIZE });
     addQueryHistory({
       pdql: pdqlFilter,
       timeRange: useCustom
@@ -641,8 +648,7 @@ export default function Events() {
         : { type: "relative", relative: quickRange },
       fieldsetId: currentFsId,
     });
-    refetch();
-  };
+  }, [pdqlFilter, quickRange, fromDt, toDt, useCustom, currentFsId]);
 
   const handleAddFilter = (key: string, value: string) => {
     const token = `${key} = "${value}"`;
@@ -744,6 +750,27 @@ export default function Events() {
             <button onClick={handleApply} className="siem-btn py-1.5 px-4 text-xs flex-shrink-0">
               {isFetching ? "⟳" : "Применить"}
             </button>
+
+            {/* Start / Stop auto-refresh */}
+            {!isAutoRefresh ? (
+              <button
+                onClick={() => { handleApply(); setIsAutoRefresh(true); }}
+                className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 flex items-center gap-1"
+                style={{ background: "rgba(0,180,80,0.15)", color: "#00c853", border: "1px solid #00c853" }}
+                title="Запустить авто-обновление (10 с)"
+              >
+                ▶ Старт
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsAutoRefresh(false)}
+                className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 flex items-center gap-1"
+                style={{ background: "rgba(220,40,40,0.15)", color: "#ff5252", border: "1px solid #ff5252" }}
+                title="Остановить авто-обновление"
+              >
+                ■ Стоп
+              </button>
+            )}
 
             {/* History */}
             <button

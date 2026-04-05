@@ -35,7 +35,7 @@ fi
 HOST_IP=$(hostname -I | awk '{print $1}')
 
 step "Building and starting URSUS SIEM..."
-docker compose up -d --build
+docker compose up --build
 
 # ── Wait for healthy ────────────────────────────────────────
 step "Waiting for services..."

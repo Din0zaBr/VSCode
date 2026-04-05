@@ -1,10 +1,11 @@
-{$DOMAIN:localhost} {
-	handle /api/* {
-		uri strip_prefix /api
-		reverse_proxy server:8000
-	}
+:80 {
+    # Все запросы, начинающиеся с /api, отправляем на бэкенд
+    handle_path /api/* {
+        reverse_proxy server:8000
+    }
 
-	handle {
-		reverse_proxy ui:80
-	}
+    # Всё остальное отправляем на фронтенд (интерфейс)
+    handle {
+        reverse_proxy ui:80
+    }
 }
