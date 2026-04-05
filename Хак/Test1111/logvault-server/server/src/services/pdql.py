@@ -516,3 +516,4 @@ GROUP BY {group_sql}
             return f"{sql_field}::inet <<= %s::inet", [pred.value]
 
         return f"{sql_field} = %s", [pred.value]
+

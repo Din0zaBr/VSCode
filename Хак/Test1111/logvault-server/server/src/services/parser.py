@@ -446,7 +446,7 @@ def parse_log_line(raw: str, source_ip: str | None = None) -> dict[str, Any] | N
 def parse_and_enrich(message: str, existing_meta: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Parse a log message and return enrichment data to merge into event meta.
-    This is the main entry point used by IngestPipeline.
+    Field names match the frontend schema (event_src.host, src.ip, etc.).
     """
     parsed = parse_log_line(message)
     if not parsed:
@@ -460,16 +460,42 @@ def parse_and_enrich(message: str, existing_meta: dict[str, Any] | None = None) 
     source_ips = extract_ips(message)
     if source_ips:
         enrichment["source_ips"] = source_ips
-        if not (existing_meta or {}).get("src_ip"):
-            enrichment["src_ip"] = source_ips[0]
+        if not (existing_meta or {}).get("src.ip"):
+            enrichment["src.ip"] = source_ips[0]
 
     if parsed.get("source_host"):
-        enrichment["src_host"] = parsed["source_host"]
+        # Map to both frontend field names
+        enrichment["event_src.host"] = parsed["source_host"]
+        enrichment["src.host"] = parsed["source_host"]
 
     if parsed["severity"] != "INFO":
         enrichment["detected_level"] = parsed["severity"]
 
     if parsed.get("parsed"):
-        enrichment["parsed"] = parsed["parsed"]
+        p = parsed["parsed"]
+        enrichment["parsed"] = p
+        # Map parsed sub-fields to schema fields used in the frontend fieldsets
+        if p.get("program"):
+            enrichment["event_src.subsys"] = p["program"]
+        if p.get("app"):
+            enrichment["event_src.title"] = p["app"]
+        if p.get("pid"):
+            enrichment["subject.process.pid"] = str(p["pid"])
+        # HTTP / nginx fields
+        if p.get("client_ip"):
+            enrichment.setdefault("src.ip", p["client_ip"])
+        if p.get("method"):
+            enrichment["action"] = p["method"]
+        if p.get("path"):
+            enrichment["object.path"] = p["path"]
+        if p.get("status"):
+            enrichment["status"] = str(p["status"])
+        # Vendor / CEF fields
+        if p.get("vendor"):
+            enrichment["event_src.vendor"] = p["vendor"]
+        if p.get("product"):
+            enrichment["event_src.title"] = p.get("product", "")
+        if p.get("signature"):
+            enrichment["reason"] = p["signature"]
 
     return enrichment

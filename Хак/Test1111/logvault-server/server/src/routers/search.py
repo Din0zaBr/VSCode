@@ -55,8 +55,16 @@ async def pdql_search(
         translator = PDQLToSQL()
         parsed = parser.parse(query)
         sql, params = translator.translate(parsed, allowed_agents=allowed)
+        # === ДОБАВЬТЕ ЭТИ СТРОКИ ===
+        import logging
+        logging.error(f"PDQL SQL: {sql}")
+        logging.error(f"PDQL PARAMS: {params}")
+        # ============================
         return db.execute_pdql(sql, params, page, size)
+
     except PDQLParseError as e:
+        logging.error(f"PDQL parse error: {e}")
         raise HTTPException(status_code=400, detail=f"PDQL syntax error: {e}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"PDQL error: {e}")
+    

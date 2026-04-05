@@ -570,12 +570,72 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
 // ── Main Events Page ─────────────────────────────────────────────────────────
 
-function buildQ(pdqlFilter: string): string {
-  let q = "";
-  const whereMatch = pdqlFilter.match(/where\s*\(([^)]*)\)/i);
-  if (whereMatch) q = whereMatch[1].trim();
-  else if (!pdqlFilter.match(/select\s*\(/i)) q = pdqlFilter.trim();
-  return q;
+interface PdqlFilters {
+  q: string;
+  level: string;
+  host: string;
+  service: string;
+  agent_id: string;
+  source: string;
+}
+
+/** Parse PDQL where() clause into typed API filter params.
+ *  Supports:  field = "value"  field = value  AND conjunctions.
+ *  Known fields → proper API param. Unknown fields → free-text q.
+ */
+function parsePdqlFilters(pdql: string): PdqlFilters {
+  const out: PdqlFilters = { q: "", level: "", host: "", service: "", agent_id: "", source: "" };
+
+  const whereMatch = pdql.match(/where\s*\(([^)]*)\)/i);
+  // No where clause — if no select() treat whole string as q
+  if (!whereMatch) {
+    if (!pdql.match(/select\s*\(/i)) out.q = pdql.trim();
+    return out;
+  }
+
+  const clause = whereMatch[1];
+  const freeText: string[] = [];
+  const fieldRe = /(\S+)\s*(?:=|==)\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = fieldRe.exec(clause)) !== null) {
+    const field = m[1].toLowerCase();
+    const value = (m[2] ?? m[3] ?? m[4] ?? "").trim();
+    if (!value) continue;
+
+    switch (field) {
+      case "level":
+        out.level = value; break;
+      case "host":
+      case "event_src.host":
+      case "src.host":
+        out.host = value; break;
+      case "service":
+      case "event_src.title":
+      case "event_src.subsys":
+        out.service = value; break;
+      case "agent_id":
+        out.agent_id = value; break;
+      case "source":
+        out.source = value; break;
+      case "text":
+      case "message":
+      case "q":
+        out.q = value; break;
+      default:
+        freeText.push(value);
+    }
+  }
+
+  // If nothing was matched as field=value, treat clause as raw free text
+  if (!out.q && !out.level && !out.host && !out.service && !out.agent_id && !out.source) {
+    const rawText = clause.replace(/\bAND\b|\bOR\b/gi, " ").trim();
+    if (rawText && !rawText.includes("=")) out.q = rawText;
+  } else if (freeText.length > 0) {
+    out.q = (out.q ? out.q + " " : "") + freeText.join(" ");
+  }
+
+  return out;
 }
 
 export default function Events() {
@@ -614,7 +674,7 @@ export default function Events() {
   // Committed (applied) search params — only change on explicit Apply, avoiding infinite refetch
   const [appliedQ, setAppliedQ] = useState(() => {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
-    return { q: "", from: nowMinus(rangeMs), to: new Date().toISOString(), page: 1, size: 100 };
+    return { q: "", level: "", host: "", service: "", agent_id: "", source: "", from: nowMinus(rangeMs), to: new Date().toISOString(), page: 1, size: 100 };
   });
 
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
@@ -638,9 +698,9 @@ export default function Events() {
     const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
     const from = useCustom ? fromDt : nowMinus(rangeMs);
     const to   = useCustom ? toDt   : new Date().toISOString();
-    const q    = buildQ(pdqlFilter);
+    const filters = parsePdqlFilters(pdqlFilter);
     setPage(1);
-    setAppliedQ({ q, from, to, page: 1, size: PAGE_SIZE });
+    setAppliedQ({ ...filters, from, to, page: 1, size: PAGE_SIZE });
     addQueryHistory({
       pdql: pdqlFilter,
       timeRange: useCustom
