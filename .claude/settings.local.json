@@ -105,7 +105,10 @@
       "Bash(python3 -m json.tool)",
       "Bash(curl -sk -H \"Authorization: Bearer changeme-agent-key\" \"https://localhost/api/search?service=windows-system&size=3\")",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImFnZW50cyI6W10sImV4cCI6MTc3NTQxODc3Mn0.FvPJHnY1Hsix9u0nlj7yWdOxqPXpNa2oqX1s1d0sOoA\" curl -sk -H \"Authorization: Bearer $TOKEN\" \"https://localhost/api/search?service=windows-system&size=5\")",
-      "Bash(powershell.exe -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; Start-Process wscript.exe -ArgumentList ''C:\\\\ProgramData\\\\logvault-agent\\\\start-agent.vbs''; Start-Sleep -Seconds 8; Get-Content ''C:\\\\ProgramData\\\\logvault-agent\\\\agent.log'' -Tail 10\")"
+      "Bash(powershell.exe -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; Start-Process wscript.exe -ArgumentList ''C:\\\\ProgramData\\\\logvault-agent\\\\start-agent.vbs''; Start-Sleep -Seconds 8; Get-Content ''C:\\\\ProgramData\\\\logvault-agent\\\\agent.log'' -Tail 10\")",
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npm install:*)"
     ]
   }
 }

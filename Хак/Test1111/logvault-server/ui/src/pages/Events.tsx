@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -769,8 +769,6 @@ export default function Events() {
   const [currentFsId, setCurrentFsId] = useState("default");
   const [showFsManager, setShowFsManager] = useState(false);
 
-  // Results
-  const [page, setPage]               = useState(1);
   const PAGE_SIZE = 100;
 
   // Detail panel
@@ -784,30 +782,100 @@ export default function Events() {
   // Auto-refresh control
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
 
-  // Committed PDQL + time window (Apply only); `page` merged below for pagination.
+  // Infinite scroll
+  const [internalPage, setInternalPage] = useState(1);
+  const [allEvents, setAllEvents]       = useState<LogEvent[]>([]);
+  const [allGroupedRows, setAllGroupedRows] = useState<Record<string, unknown>[]>([]);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Client-side sort (applied on top of accumulated events)
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDir,   setSortDir]   = useState<"asc" | "desc">("desc");
+
+  // Committed PDQL + time window (Apply only)
   const [appliedChannel, setAppliedChannel] = useState(() => {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
     return {
       pdql: "sort(time desc)",
       from: nowMinus(rangeMs),
       to: new Date().toISOString(),
-      size: 100,
+      size: PAGE_SIZE,
     };
   });
 
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
 
-  const appliedChannelWithPage = { ...appliedChannel, page };
-
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["events-channel", appliedChannelWithPage],
+    queryKey: ["events-channel", appliedChannel, internalPage],
     queryFn: () =>
-      api.pdqlSearch(appliedChannelWithPage.pdql, appliedChannelWithPage.page, appliedChannelWithPage.size, {
-        from: appliedChannelWithPage.from,
-        to: appliedChannelWithPage.to,
+      api.pdqlSearch(appliedChannel.pdql, internalPage, appliedChannel.size, {
+        from: appliedChannel.from,
+        to: appliedChannel.to,
       }),
     refetchInterval: isAutoRefresh ? 10_000 : false,
   });
+
+  // When appliedChannel changes (new search) → reset accumulated data
+  useEffect(() => {
+    setInternalPage(1);
+    setAllEvents([]);
+    setAllGroupedRows([]);
+  }, [appliedChannel]);
+
+  // When new page data arrives → append (or replace on page 1)
+  useEffect(() => {
+    if (!data) return;
+    const isGrouped = "rows" in data && "columns" in data;
+    if (isGrouped) {
+      const rows = (data as any).rows ?? [];
+      setAllGroupedRows((prev) => internalPage === 1 ? rows : [...prev, ...rows]);
+    } else {
+      const logs: LogEvent[] = (data as any).logs ?? [];
+      setAllEvents((prev) => internalPage === 1 ? logs : [...prev, ...logs]);
+    }
+  }, [data, internalPage]);
+
+  // IntersectionObserver: load next page when sentinel is visible
+  const total       = (data as any)?.total ?? 0;
+  const isGrouped   = !!(data && "rows" in data && "columns" in data);
+  const loadedCount = isGrouped ? allGroupedRows.length : allEvents.length;
+  const hasMore     = !isGrouped && loadedCount < total;
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !isFetching) {
+          setInternalPage((p) => p + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isFetching]);
+
+  // Client-side sort on accumulated events
+  const sortedEvents = useMemo(() => {
+    if (!sortField) return allEvents;
+    return [...allEvents].sort((a, b) => {
+      const va = getEventField(a, sortField) ?? "";
+      const vb = getEventField(b, sortField) ?? "";
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [allEvents, sortField, sortDir]);
+
+  const handleColumnSort = (field: string) => {
+    if (field === "criticality") return; // dot-indicator, not sortable
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("desc");
+    }
+  };
 
   // Restore from search params (e.g. from incidents page)
   useEffect(() => {
@@ -820,7 +888,7 @@ export default function Events() {
     const from = useCustom ? fromDt : nowMinus(rangeMs);
     const to   = useCustom ? toDt   : new Date().toISOString();
     const pdql = buildChannelPdql(pdqlFilter, groupByFields);
-    setPage(1);
+    setSortField("");
     setAppliedChannel({ pdql, from, to, size: PAGE_SIZE });
     addQueryHistory({
       pdql: pdqlFilter,
@@ -860,34 +928,23 @@ export default function Events() {
       setCurrentFsId(item.fieldsetId);
       setFieldsets(getFieldsets());
     }
-    setPage(1);
   };
 
-  const isGrouped = !!(data && typeof data === "object" && "rows" in data && "columns" in data);
-
-  const events: LogEvent[] =
-    !isGrouped && data && typeof data === "object" && "logs" in data
-      ? ((data as { logs: LogEvent[] }).logs ?? [])
-      : [];
   const groupedCols = isGrouped ? (data as { columns: string[] }).columns : [];
-  const groupedRows = isGrouped ? (data as { rows: Record<string, unknown>[] }).rows : [];
-
-  const total = data?.total ?? 0;
-  const totalPages = isGrouped ? 1 : Math.ceil(total / PAGE_SIZE);
 
   const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
 
   const handleExportCSV = () => {
-    if (isGrouped) exportGroupedCSV(groupedCols, groupedRows);
-    else exportCSV(events, visibleFields);
+    if (isGrouped) exportGroupedCSV(groupedCols, allGroupedRows);
+    else exportCSV(sortedEvents, visibleFields);
   };
   const handleExportJSON = () => {
-    if (isGrouped) exportGroupedJSON(groupedCols, groupedRows);
-    else exportJSON(events);
+    if (isGrouped) exportGroupedJSON(groupedCols, allGroupedRows);
+    else exportJSON(sortedEvents);
   };
   const handleExportXML = () => {
-    if (isGrouped) exportGroupedXML(groupedCols, groupedRows);
-    else exportXML(events, visibleFields);
+    if (isGrouped) exportGroupedXML(groupedCols, allGroupedRows);
+    else exportXML(sortedEvents, visibleFields);
   };
 
   return (
@@ -1093,7 +1150,7 @@ export default function Events() {
         <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
-          ) : (isGrouped ? groupedRows.length === 0 : events.length === 0) ? (
+          ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) ? (
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
                 <div className="text-4xl mb-2" style={{ color: "#2d1860" }}>◎</div>
@@ -1111,7 +1168,7 @@ export default function Events() {
                 </tr>
               </thead>
               <tbody>
-                {groupedRows.map((row, i) => (
+                {allGroupedRows.map((row: Record<string, unknown>, i: number) => (
                   <tr key={i} className="hover:bg-purple-900/10">
                     {groupedCols.map((col) => (
                       <td key={col} className="text-gray-300 font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
@@ -1127,14 +1184,24 @@ export default function Events() {
               <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
                 <tr>
                   {visibleFields.map((f) => (
-                    <th key={f} className="text-left">
+                    <th
+                      key={f}
+                      className="text-left select-none"
+                      style={{ cursor: f === "criticality" ? "default" : "pointer" }}
+                      onClick={() => handleColumnSort(f)}
+                    >
                       {f === "criticality" ? "⬤" : f === "text" ? "Сообщение" : f}
+                      {sortField === f && f !== "criticality" && (
+                        <span className="ml-1" style={{ color: "#BF40BF" }}>
+                          {sortDir === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {events.map((event, i) => {
+                {sortedEvents.map((event: LogEvent, i: number) => {
                   const crit = deriveCriticality(event);
                   const isCorr = isCorrelationEvent(event);
                   const isSelected = selectedEvent?.event_id === event.event_id;
@@ -1174,29 +1241,21 @@ export default function Events() {
               </tbody>
             </table>
           )}
+          {/* Infinite scroll sentinel — inside scrollable area */}
+          {!isGrouped && <div ref={sentinelRef} className="h-4" />}
         </div>
 
-        {/* ── Pagination ──────────────────────────────────────────────── */}
-        {!isGrouped && totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-2 border-t flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
-            <span className="text-xs text-gray-600">{total.toLocaleString()} событий</span>
-            <div className="flex items-center gap-2">
-              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 text-xs rounded-lg disabled:opacity-30 siem-btn-ghost">← Пред</button>
-              <span className="text-xs text-gray-500">Стр. {page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 text-xs rounded-lg disabled:opacity-30 siem-btn-ghost">След →</button>
-            </div>
-          </div>
-        )}
-        {!isGrouped && totalPages <= 1 && total > 0 && (
-          <div className="px-4 py-2 border-t text-xs text-gray-600 flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
-            {total.toLocaleString()} событий
-          </div>
-        )}
-        {isGrouped && total > 0 && (
-          <div className="px-4 py-2 border-t text-xs text-gray-600 flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
-            {total.toLocaleString()} групп (лимит запроса 500)
-          </div>
-        )}
+        {/* ── Status bar ──────────────────────────────────────────────── */}
+        <div className="px-4 py-2 border-t flex-shrink-0 flex items-center gap-3" style={{ borderColor: "#1a0d2e" }}>
+          <span className="text-xs text-gray-600">
+            {isGrouped
+              ? allGroupedRows.length.toLocaleString() + " групп"
+              : "Загружено " + loadedCount.toLocaleString() + " из " + total.toLocaleString() + " событий"}
+          </span>
+          {isFetching && (
+            <span className="text-xs animate-pulse" style={{ color: "#8b20d1" }}>загрузка...</span>
+          )}
+        </div>
       </div>
 
       {/* ── Modals ──────────────────────────────────────────────────────── */}
