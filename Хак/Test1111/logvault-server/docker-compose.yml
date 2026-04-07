@@ -28,10 +28,8 @@ services:
       POSTGRES_PASSWORD: ${PG_PASSWORD:-logvault-secret}
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./server/init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./server/postgres/init-cron.sql:/docker-entrypoint-initdb.d/02-cron.sql:ro
-    ports:
-      - "127.0.0.1:5432:5432"
+      - ./server/init.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro,Z
+      - ./server/postgres/init-cron.sql:/docker-entrypoint-initdb.d/02-cron.sql:ro,Z
     networks:
       - logvault
     healthcheck:

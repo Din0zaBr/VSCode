@@ -62,6 +62,16 @@ CREATE TABLE IF NOT EXISTS correlation_rules (
     hit_count   INTEGER DEFAULT 0
 );
 
+-- ── Sigma rule column migration ─────────────────────────────────────────────
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'correlation_rules' AND column_name = 'sigma_rule'
+    ) THEN
+        ALTER TABLE correlation_rules ADD COLUMN sigma_rule TEXT DEFAULT '';
+    END IF;
+END $$;
+
 -- ── Correlation alerts ──────────���───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS correlation_alerts (
     id          SERIAL PRIMARY KEY,
@@ -79,6 +89,17 @@ CREATE TABLE IF NOT EXISTS correlation_alerts (
 CREATE INDEX IF NOT EXISTS idx_corr_alerts_status   ON correlation_alerts (status);
 CREATE INDEX IF NOT EXISTS idx_corr_alerts_severity ON correlation_alerts (severity);
 CREATE INDEX IF NOT EXISTS idx_corr_alerts_created  ON correlation_alerts (created_at DESC);
+
+-- ── API Keys ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS api_keys (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(128) NOT NULL,
+    key_value   VARCHAR(256) UNIQUE NOT NULL,
+    created_by  VARCHAR(64) DEFAULT '',
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    last_used   TIMESTAMPTZ,
+    enabled     BOOLEAN DEFAULT TRUE
+);
 
 -- ── Assets (hosts) ─────────────────────────────���────────────────────────────
 CREATE TABLE IF NOT EXISTS assets (

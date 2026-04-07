@@ -192,6 +192,28 @@ export interface LoginResponse {
   agents: string[];
 }
 
+export interface ApiKey {
+  id: number;
+  name: string;
+  key_preview: string;
+  key_value?: string; // only present on creation
+  created_by: string;
+  created_at: string;
+  last_used: string | null;
+  enabled: boolean;
+}
+
+export interface AgentInfo {
+  agent_id: string;
+  host: string;
+  timestamp: string;
+  cpu?: Record<string, unknown>;
+  memory?: Record<string, unknown>;
+  disk?: unknown[];
+  uptime?: Record<string, unknown>;
+  distro?: Record<string, unknown>;
+}
+
 export interface CorrelationRule {
   id: string;
   name: string;
@@ -645,6 +667,32 @@ export const api = {
   // ── System Health ─────────────────────────────────────────────────────────
   systemHealth() {
     return request<any>("/health/detailed");
+  },
+
+  // ── API Keys (admin) ──────────────────────────────────────────────────────
+  listApiKeys() {
+    return request<ApiKey[]>("/admin/api-keys");
+  },
+
+  createApiKey(name: string) {
+    return request<ApiKey>("/admin/api-keys", { method: "POST", body: JSON.stringify({ name }) });
+  },
+
+  deleteApiKey(id: number) {
+    return request<{ ok: boolean }>(`/admin/api-keys/${id}`, { method: "DELETE" });
+  },
+
+  toggleApiKey(id: number, enabled: boolean) {
+    return request<{ ok: boolean }>(`/admin/api-keys/${id}`, { method: "PATCH", body: JSON.stringify({ enabled }) });
+  },
+
+  // ── Agents ────────────────────────────────────────────────────────────────
+  listAgents() {
+    return request<AgentInfo[]>("/agents");
+  },
+
+  latestAgentMetrics() {
+    return request<AgentInfo[]>("/metrics/latest");
   },
 };
 

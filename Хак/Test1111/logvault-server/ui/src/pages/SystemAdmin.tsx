@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, isAdmin } from "../api/client";
-import type { UserInfo } from "../api/client";
+import type { UserInfo, ApiKey } from "../api/client";
 
 const SUB_TABS = [
   { id: "access",    label: "Права доступа" },
+  { id: "api-keys",  label: "API ключи" },
   { id: "reports",   label: "Отчёты" },
   { id: "notifications", label: "Уведомления" },
   { id: "policies",  label: "Политики" },
@@ -358,6 +359,158 @@ function PoliciesTab() {
   );
 }
 
+// ── API Keys Tab ─────────────────────────────────────────────────────────────
+
+function ApiKeysTab() {
+  const qc = useQueryClient();
+  const [newName, setNewName] = useState("");
+  const [freshKey, setFreshKey] = useState<ApiKey | null>(null);
+
+  const { data: keys, isLoading } = useQuery({ queryKey: ["api-keys"], queryFn: api.listApiKeys });
+
+  const createMutation = useMutation({
+    mutationFn: () => api.createApiKey(newName.trim()),
+    onSuccess: (k) => {
+      qc.invalidateQueries({ queryKey: ["api-keys"] });
+      setFreshKey(k);
+      setNewName("");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deleteApiKey(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => api.toggleApiKey(id, enabled),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+
+  const serverBase = `${window.location.protocol}//${window.location.host}`;
+
+  return (
+    <div className="p-6 space-y-6 overflow-y-auto h-full">
+      <div>
+        <h3 className="text-base font-semibold text-gray-200">Управление API-ключами агентов</h3>
+        <p className="text-xs text-gray-600 mt-0.5">Ключи используются агентами для отправки событий в SIEM</p>
+      </div>
+
+      {/* Server connection info */}
+      <div className="siem-card p-4 space-y-2">
+        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-20">Сервер:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860" }}>
+            {serverBase}
+          </code>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-20">API:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#8b20d1", border: "1px solid #2d1860" }}>
+            {serverBase}/api
+          </code>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-20">Ingest:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#3d6565", border: "1px solid #2d1860" }}>
+            POST {serverBase}/api/ingest   (X-Api-Key: &lt;ключ&gt;)
+          </code>
+        </div>
+      </div>
+
+      {/* Create new key */}
+      {isAdmin() && (
+        <div className="siem-card p-4 space-y-3">
+          <div className="text-sm font-semibold text-gray-200">Создать новый ключ</div>
+          <div className="flex gap-2">
+            <input
+              className="siem-input flex-1 text-sm"
+              placeholder="Название (например: linux-server-01)"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && newName.trim() && createMutation.mutate()}
+            />
+            <button
+              onClick={() => createMutation.mutate()}
+              disabled={!newName.trim() || createMutation.isPending}
+              className="siem-btn text-xs px-4 py-1.5 disabled:opacity-50"
+            >
+              {createMutation.isPending ? "Генерация..." : "Создать"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Newly created key — shown once */}
+      {freshKey?.key_value && (
+        <div className="siem-card p-4 space-y-2" style={{ borderColor: "#00c853" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold" style={{ color: "#00c853" }}>Новый ключ создан — скопируйте сейчас, он больше не будет показан!</span>
+            <button onClick={() => setFreshKey(null)} className="text-gray-500 hover:text-gray-200 text-sm">✕</button>
+          </div>
+          <code className="block text-xs font-mono px-3 py-2 rounded select-all" style={{ background: "#08090e", color: "#00c853", border: "1px solid #00c853", wordBreak: "break-all" }}>
+            {freshKey.key_value}
+          </code>
+          <div className="text-xs text-gray-600">
+            Команда установки агента: <code className="text-gray-400">curl -fsSL {serverBase}/api/agent/install | sudo bash -s -- --key {freshKey.key_value}</code>
+          </div>
+        </div>
+      )}
+
+      {/* Keys list */}
+      {isLoading ? (
+        <div className="text-center text-gray-600 py-8">Загрузка...</div>
+      ) : (
+        <table className="w-full siem-table text-xs">
+          <thead>
+            <tr>
+              <th className="text-left">Название</th>
+              <th className="text-left">Ключ (обрезан)</th>
+              <th className="text-left">Создан</th>
+              <th className="text-left">Последнее использование</th>
+              <th className="text-left">Статус</th>
+              {isAdmin() && <th></th>}
+            </tr>
+          </thead>
+          <tbody>
+            {(keys ?? []).map((k: ApiKey) => (
+              <tr key={k.id}>
+                <td className="font-medium text-gray-200">{k.name}</td>
+                <td><code className="font-mono text-gray-400">{k.key_preview}</code></td>
+                <td className="text-gray-500">{k.created_by} · {new Date(k.created_at).toLocaleDateString("ru-RU")}</td>
+                <td className="text-gray-500">{k.last_used ? new Date(k.last_used).toLocaleString("ru-RU") : "—"}</td>
+                <td>
+                  <button
+                    onClick={() => toggleMutation.mutate({ id: k.id, enabled: !k.enabled })}
+                    className={`text-xs px-2 py-0.5 rounded-full ${k.enabled ? "badge-resolved" : "badge-fp"}`}
+                  >
+                    {k.enabled ? "Активен" : "Отключён"}
+                  </button>
+                </td>
+                {isAdmin() && (
+                  <td>
+                    <button
+                      onClick={() => { if (confirm(`Удалить ключ "${k.name}"?`)) deleteMutation.mutate(k.id); }}
+                      className="text-xs px-2 py-1 rounded"
+                      style={{ color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}
+                    >
+                      Удалить
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+            {(keys ?? []).length === 0 && (
+              <tr><td colSpan={6} className="text-center text-gray-600 py-6">Нет ключей. Создайте первый выше.</td></tr>
+            )}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function SystemAdmin() {
@@ -379,6 +532,7 @@ export default function SystemAdmin() {
       </div>
       <div className="flex-1 overflow-hidden">
         {activeTab === "access"        && <AccessTab />}
+        {activeTab === "api-keys"      && <ApiKeysTab />}
         {activeTab === "notifications" && <NotificationsTab />}
         {activeTab === "management"    && <ManagementTab />}
         {activeTab === "reports"       && <ReportsTab />}

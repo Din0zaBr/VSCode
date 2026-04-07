@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, isAdmin } from "../api/client";
-import type { Asset } from "../api/client";
+import type { Asset, AgentInfo } from "../api/client";
 
 const CRITICALITY_COLORS: Record<string, string> = {
   CRITICAL: "text-red-400",
@@ -10,7 +10,112 @@ const CRITICALITY_COLORS: Record<string, string> = {
   LOW: "text-blue-400",
 };
 
-export default function Assets() {
+// ── Agents sub-tab ──────────────────────────────────────────────────────────
+
+function AgentsTab() {
+  const { data: agents, isLoading, refetch } = useQuery({
+    queryKey: ["agents-list"],
+    queryFn: api.listAgents,
+    refetchInterval: 30_000,
+  });
+  const { data: metrics } = useQuery({
+    queryKey: ["agent-metrics"],
+    queryFn: api.latestAgentMetrics,
+    refetchInterval: 30_000,
+  });
+
+  const serverBase = `${window.location.protocol}//${window.location.host}`;
+
+  const metricsMap: Record<string, AgentInfo> = {};
+  (metrics ?? []).forEach((m: AgentInfo) => { metricsMap[m.agent_id] = m; });
+
+  return (
+    <div className="p-6 space-y-5 overflow-y-auto h-full">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-gray-200">Агенты ({(agents ?? []).length})</h3>
+          <p className="text-xs text-gray-600 mt-0.5">Подключённые агенты сбора событий</p>
+        </div>
+        <button onClick={() => refetch()} className="siem-btn-ghost text-xs px-3 py-1.5">⟳ Обновить</button>
+      </div>
+
+      {/* Connection info */}
+      <div className="siem-card p-4 space-y-1.5">
+        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-500">Сервер:</span>
+          <code className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860" }}>{serverBase}</code>
+        </div>
+        <div className="mt-2 text-xs text-gray-600">
+          Установка агента:{" "}
+          <code className="text-gray-400 font-mono">
+            curl -fsSL {serverBase}/api/agent/install | sudo bash -s -- --key &lt;API_KEY&gt;
+          </code>
+        </div>
+        <div className="text-xs text-gray-600">
+          Скачать скрипт (без Docker):{" "}
+          <code className="text-gray-400 font-mono">
+            curl -fsSL {serverBase}/api/agent/install-native -o agent-linux.sh && sudo bash agent-linux.sh --server {serverBase} --key &lt;API_KEY&gt;
+          </code>
+        </div>
+      </div>
+
+      {/* Agents table */}
+      {isLoading ? (
+        <div className="text-center text-gray-600 py-8">Загрузка...</div>
+      ) : (agents ?? []).length === 0 ? (
+        <div className="text-center text-gray-600 py-12">
+          <div className="text-4xl mb-3" style={{ color: "#1a0d2e" }}>◎</div>
+          <div className="text-sm">Нет подключённых агентов</div>
+          <div className="text-xs text-gray-700 mt-1">Используйте команду выше для подключения первого агента</div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {(agents ?? []).map((a: AgentInfo) => {
+            const m = metricsMap[a.agent_id];
+            const cpuPct = (m?.cpu as any)?.percent ?? null;
+            const memPct = (m?.memory as any)?.percent ?? null;
+            const lastSeen = new Date(a.timestamp);
+            const isOnline = Date.now() - lastSeen.getTime() < 120_000;
+            return (
+              <div key={a.agent_id} className="siem-card p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5 ${isOnline ? "bg-green-500" : "bg-gray-600"}`} />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-200">{a.agent_id}</div>
+                      <div className="text-xs text-gray-500">{a.host || "—"}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    {cpuPct !== null && (
+                      <span>CPU: <span className={cpuPct > 80 ? "text-red-400" : "text-gray-300"}>{cpuPct.toFixed(1)}%</span></span>
+                    )}
+                    {memPct !== null && (
+                      <span>RAM: <span className={memPct > 85 ? "text-red-400" : "text-gray-300"}>{memPct.toFixed(1)}%</span></span>
+                    )}
+                    <span>Посл. сигнал: <span className={isOnline ? "text-green-400" : "text-yellow-500"}>{lastSeen.toLocaleString("ru-RU")}</span></span>
+                    <span className={isOnline ? "badge-resolved" : "badge-fp"}>{isOnline ? "Online" : "Offline"}</span>
+                  </div>
+                </div>
+                {m && (
+                  <div className="mt-2 ml-5.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-gray-600">
+                    {(m.distro as any)?.name && <span>OS: {(m.distro as any).name} {(m.distro as any).version}</span>}
+                    {(m.uptime as any)?.human && <span>Uptime: {(m.uptime as any).human}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Assets list ──────────────────────────────────────────────────────────────
+
+function AssetsListTab() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -152,6 +257,33 @@ export default function Assets() {
           <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-sm transition-colors">Next</button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Main Assets page with tabs ───────────────────────────────────────────────
+
+export default function Assets() {
+  const [tab, setTab] = useState<"assets" | "agents">("assets");
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-52px)]">
+      <div className="flex border-b flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+        {(["assets", "agents"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className="px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-colors"
+            style={{
+              color: tab === t ? "#BF40BF" : "#64748b",
+              borderBottom: tab === t ? "2px solid #BF40BF" : "2px solid transparent",
+            }}>
+            {t === "assets" ? "Активы (хосты)" : "Агенты"}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-hidden">
+        {tab === "assets"  && <AssetsListTab />}
+        {tab === "agents"  && <AgentsTab />}
+      </div>
     </div>
   );
 }

@@ -660,20 +660,22 @@ class PGService:
         try:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(
-                    """INSERT INTO correlation_rules (id, name, description, severity, enabled, conditions)
-                       VALUES (%s, %s, %s, %s, %s, %s)
+                    """INSERT INTO correlation_rules (id, name, description, severity, enabled, conditions, sigma_rule)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)
                        ON CONFLICT (id) DO UPDATE SET
                          name = EXCLUDED.name,
                          description = EXCLUDED.description,
                          severity = EXCLUDED.severity,
                          enabled = EXCLUDED.enabled,
                          conditions = EXCLUDED.conditions,
+                         sigma_rule = EXCLUDED.sigma_rule,
                          updated_at = NOW()
                        RETURNING *""",
                     (
                         rule["id"], rule["name"], rule.get("description", ""),
                         rule.get("severity", "MEDIUM"), rule.get("enabled", True),
                         json.dumps(rule["conditions"]),
+                        rule.get("sigma_rule", ""),
                     ),
                 )
                 row = cur.fetchone()
@@ -690,6 +692,68 @@ class PGService:
                 deleted = cur.rowcount > 0
             conn.commit()
             return deleted
+        finally:
+            self._put(conn)
+
+    # ── API Key methods ──────────────────────────────────────────────────────
+
+    def list_api_keys(self) -> list[dict[str, Any]]:
+        conn = self._conn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT id, name, key_value, created_by, created_at, last_used, enabled FROM api_keys ORDER BY created_at DESC")
+                return [dict(r) for r in cur.fetchall()]
+        finally:
+            self._put(conn)
+
+    def create_api_key(self, name: str, key_value: str, created_by: str = "") -> dict[str, Any]:
+        conn = self._conn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    "INSERT INTO api_keys (name, key_value, created_by) VALUES (%s, %s, %s) RETURNING *",
+                    (name, key_value, created_by),
+                )
+                row = cur.fetchone()
+            conn.commit()
+            return dict(row)
+        finally:
+            self._put(conn)
+
+    def delete_api_key(self, key_id: int) -> bool:
+        conn = self._conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM api_keys WHERE id = %s", (key_id,))
+                deleted = cur.rowcount > 0
+            conn.commit()
+            return deleted
+        finally:
+            self._put(conn)
+
+    def toggle_api_key(self, key_id: int, enabled: bool) -> bool:
+        conn = self._conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("UPDATE api_keys SET enabled = %s WHERE id = %s", (enabled, key_id))
+                updated = cur.rowcount > 0
+            conn.commit()
+            return updated
+        finally:
+            self._put(conn)
+
+    def verify_api_key_db(self, key_value: str) -> bool:
+        """Check if key exists and is enabled in DB, update last_used."""
+        conn = self._conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id FROM api_keys WHERE key_value = %s AND enabled = TRUE", (key_value,))
+                row = cur.fetchone()
+                if row:
+                    cur.execute("UPDATE api_keys SET last_used = NOW() WHERE id = %s", (row[0],))
+                    conn.commit()
+                    return True
+            return False
         finally:
             self._put(conn)
 

@@ -15,6 +15,7 @@ class RuleBody(BaseModel):
     description: str = ""
     severity: str = "MEDIUM"
     enabled: bool = True
+    sigma_rule: str = ""
     conditions: dict
 
 

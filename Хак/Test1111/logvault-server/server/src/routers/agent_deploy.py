@@ -109,9 +109,20 @@ fi
 
 @router.get("/install", response_class=PlainTextResponse)
 async def get_install_script(request: Request):
-    """Return a shell script that installs the agent on a remote host."""
+    """Return a shell script that installs the agent via Docker on a remote host."""
     server_url = str(request.base_url).rstrip("/")
     return INSTALL_SCRIPT.format(server_url=server_url)
+
+
+@router.get("/install-native", response_class=PlainTextResponse)
+async def get_native_install_script(request: Request):
+    """Return a standalone Python-based agent installer (no Docker required)."""
+    import pathlib
+    script_path = pathlib.Path(__file__).parent.parent.parent.parent.parent / "agent-linux.sh"
+    if script_path.exists():
+        return script_path.read_text()
+    # Fallback: redirect user to the file
+    return "#!/bin/bash\necho 'agent-linux.sh not found on server. Download it from the repository.'\n"
 
 
 @router.get("/config", response_class=PlainTextResponse)

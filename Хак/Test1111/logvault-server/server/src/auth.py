@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import jwt
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Request
 
 from server.src.config import settings
 
 
-async def verify_api_key(x_api_key: str = Header(..., alias="X-Api-Key")) -> str:
-    if x_api_key not in settings.API_KEYS:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return x_api_key
+async def verify_api_key(request: Request, x_api_key: str = Header(..., alias="X-Api-Key")) -> str:
+    # Check static keys from .env first (fast path)
+    if x_api_key in settings.API_KEYS:
+        return x_api_key
+    # Check DB-managed keys
+    db = getattr(request.app.state, "db_service", None)
+    if db is not None and db.verify_api_key_db(x_api_key):
+        return x_api_key
+    raise HTTPException(status_code=401, detail="Invalid API key")
 
 
 async def verify_token(authorization: str = Header(..., alias="Authorization")) -> dict:
