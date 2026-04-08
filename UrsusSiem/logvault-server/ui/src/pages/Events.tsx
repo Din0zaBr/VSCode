@@ -69,9 +69,12 @@ const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: "subject.account.contact",      label: "subject.account.contact" },
   { key: "subject.account.domain",       label: "subject.account.domain" },
   { key: "subject.account.name",         label: "subject.account.name" },
+  { key: "subject.account.id",           label: "subject.account.id" },
   { key: "subject.process.meta",         label: "subject.process.meta" },
   { key: "subject.process.cmdline",      label: "subject.process.cmdline" },
   { key: "subject.process.fullpath",     label: "subject.process.fullpath" },
+  { key: "subject.process.id",           label: "subject.process.id" },
+  { key: "subject.process.parent.id",    label: "subject.process.parent.id" },
   { key: "object",                       label: "object" },
   { key: "object.id",                    label: "object.id" },
   { key: "object.domain",                label: "object.domain" },
@@ -89,7 +92,9 @@ const DETAIL_FIELDS: { key: string; label: string }[] = [
   { key: "object.process.name",          label: "object.process.name" },
   { key: "object.process.fullpath",      label: "object.process.fullpath" },
   { key: "object.process.cmdline",       label: "object.process.cmdline" },
+  { key: "object.process.id",            label: "object.process.id" },
   { key: "object.process.parent.fullpath",label:"object.process.parent.fullpath" },
+  { key: "object.process.parent.id",     label: "object.process.parent.id" },
   { key: "object.hash",                  label: "object.hash" },
   { key: "object.hash.md5",              label: "object.hash.md5" },
   { key: "object.hash.sha1",             label: "object.hash.sha1" },
@@ -792,6 +797,12 @@ export default function Events() {
   const [sortField, setSortField] = useState<string>("");
   const [sortDir,   setSortDir]   = useState<"asc" | "desc">("desc");
 
+  // Hide columns that have no data in the current result set (without modifying fieldset)
+  const [hideEmpty, setHideEmpty] = useState(false);
+
+  // True while new page events are buffering (1 s min display to avoid jank)
+  const [appendPending, setAppendPending] = useState(false);
+
   // Committed PDQL + time window (Apply only)
   const [appliedChannel, setAppliedChannel] = useState(() => {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
@@ -822,17 +833,26 @@ export default function Events() {
     setAllGroupedRows([]);
   }, [appliedChannel]);
 
-  // When new page data arrives → append (or replace on page 1)
+  // When new page data arrives → replace (page 1) or append with 1 s min buffer (page 2+)
   useEffect(() => {
     if (!data) return;
-    const isGrouped = "rows" in data && "columns" in data;
-    if (isGrouped) {
-      const rows = (data as any).rows ?? [];
-      setAllGroupedRows((prev) => internalPage === 1 ? rows : [...prev, ...rows]);
-    } else {
-      const logs: LogEvent[] = (data as any).logs ?? [];
-      setAllEvents((prev) => internalPage === 1 ? logs : [...prev, ...logs]);
+    const isGroupedData = !!(data && "rows" in data && "columns" in data);
+    const rows = (data as any).rows ?? [];
+    const logs: LogEvent[] = (data as any).logs ?? [];
+    if (internalPage === 1) {
+      if (isGroupedData) setAllGroupedRows(rows);
+      else setAllEvents(logs);
+      setAppendPending(false);
+      return;
     }
+    // Page 2+: show spinner for at least 1 s so the list doesn't jank
+    setAppendPending(true);
+    const timer = setTimeout(() => {
+      if (isGroupedData) setAllGroupedRows((p) => [...p, ...rows]);
+      else setAllEvents((p) => [...p, ...logs]);
+      setAppendPending(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [data, internalPage]);
 
   // IntersectionObserver: load next page when sentinel is visible
@@ -846,7 +866,7 @@ export default function Events() {
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasMore && !isFetching) {
+        if (entry.isIntersecting && hasMore && !isFetching && !appendPending) {
           setInternalPage((p) => p + 1);
         }
       },
@@ -854,7 +874,7 @@ export default function Events() {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, isFetching]);
+  }, [hasMore, isFetching, appendPending]);
 
   // Client-side sort on accumulated events
   const sortedEvents = useMemo(() => {
@@ -866,6 +886,15 @@ export default function Events() {
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [allEvents, sortField, sortDir]);
+
+  // Derive visible column list — optionally hiding columns with no data
+  const activeFields = useMemo(() => {
+    const fields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
+    if (!hideEmpty || sortedEvents.length === 0) return fields;
+    return fields.filter(
+      (f: string) => f === "criticality" || sortedEvents.some((e: LogEvent) => getEventField(e, f) !== ""),
+    );
+  }, [hideEmpty, currentFieldset, sortedEvents]);
 
   const handleColumnSort = (field: string) => {
     if (field === "criticality") return; // dot-indicator, not sortable
@@ -932,6 +961,7 @@ export default function Events() {
 
   const groupedCols = isGrouped ? (data as { columns: string[] }).columns : [];
 
+  // visibleFields still used for export (full set), activeFields for the table columns
   const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
 
   const handleExportCSV = () => {
@@ -1112,6 +1142,20 @@ export default function Events() {
               </button>
             </div>
 
+            {/* Hide empty columns */}
+            <button
+              onClick={() => setHideEmpty((v: boolean) => !v)}
+              className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 transition-colors"
+              style={{
+                background: hideEmpty ? "rgba(191,64,191,0.2)" : "rgba(45,24,96,0.3)",
+                color: hideEmpty ? "#BF40BF" : "#8b20d1",
+                border: hideEmpty ? "1px solid #BF40BF" : "1px solid #2d1860",
+              }}
+              title={hideEmpty ? "Показать все столбцы" : "Скрыть пустые столбцы"}
+            >
+              {hideEmpty ? "⊞ Все столбцы" : "⊟ Скрыть пустые"}
+            </button>
+
             {/* Export */}
             <div className="relative flex-shrink-0">
               <button
@@ -1148,9 +1192,9 @@ export default function Events() {
 
         {/* ── Event Table ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-auto">
-          {isLoading ? (
+          {isLoading && loadedCount === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
-          ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) ? (
+          ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) && !isFetching ? (
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
                 <div className="text-4xl mb-2" style={{ color: "#2d1860" }}>◎</div>
@@ -1183,7 +1227,7 @@ export default function Events() {
             <table className="w-full siem-table text-xs">
               <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
                 <tr>
-                  {visibleFields.map((f) => (
+                  {activeFields.map((f: string) => (
                     <th
                       key={f}
                       className="text-left select-none"
@@ -1215,7 +1259,7 @@ export default function Events() {
                         borderLeft: isSelected ? "2px solid #6A0DAD" : "2px solid transparent",
                       }}
                     >
-                      {visibleFields.map((f) => (
+                      {activeFields.map((f: string) => (
                         <td key={f}>
                           {f === "criticality" ? (
                             <div className="flex items-center gap-1">
@@ -1252,7 +1296,7 @@ export default function Events() {
               ? allGroupedRows.length.toLocaleString() + " групп"
               : "Загружено " + loadedCount.toLocaleString() + " из " + total.toLocaleString() + " событий"}
           </span>
-          {isFetching && (
+          {(isFetching || appendPending) && (
             <span className="text-xs animate-pulse" style={{ color: "#8b20d1" }}>загрузка...</span>
           )}
         </div>

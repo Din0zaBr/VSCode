@@ -108,7 +108,8 @@
       "Bash(powershell.exe -Command \"Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; Start-Process wscript.exe -ArgumentList ''C:\\\\ProgramData\\\\logvault-agent\\\\start-agent.vbs''; Start-Sleep -Seconds 8; Get-Content ''C:\\\\ProgramData\\\\logvault-agent\\\\agent.log'' -Tail 10\")",
       "Bash(npx tsc:*)",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(wc -l /home/kikuzawa/Документы/GITHUB/VSCode2/Хак/Test1111/logvault-server/server/src/services/*.py)"
     ]
   }
 }

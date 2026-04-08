@@ -61,6 +61,16 @@ _CEF = re.compile(
 # ── IP Address extraction ───────────────────────────────────────────────────
 _IP_RE = re.compile(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b")
 
+# ── Process / account ID extraction ─────────────────────────────────────────
+# Subject PID from "program[PID]:", "pid=1234", "pid: 1234"
+_SUBJ_PID_RE = re.compile(r"\b(?:pid[=:\s]+(\d{1,7})|\S+\[(\d{1,7})\]:)", re.IGNORECASE)
+# Parent PID: "ppid=1234", "parent_pid=1234", "parent pid: 1234"
+_PPID_RE     = re.compile(r"\bppid[=:\s]+(\d{1,7})|\bparent[\s_-]*pid[=:\s]+(\d{1,7})", re.IGNORECASE)
+# Object/child process: "child_pid=1234", "spawned pid 1234"
+_OBJ_PID_RE  = re.compile(r"\b(?:child[\s_-]*pid|spawned[\s_-]*pid)[=:\s]+(\d{1,7})", re.IGNORECASE)
+# Account UID: "uid=1000", "auid=500"
+_UID_RE      = re.compile(r"\bau?id[=:\s]+(\d{1,7})", re.IGNORECASE)
+
 # ── Severity keywords ───────────────────────────────────────────────────────
 _SEV_MAP = {
     "emerg":    "CRITICAL", "panic":     "CRITICAL",
@@ -480,7 +490,7 @@ def parse_and_enrich(message: str, existing_meta: dict[str, Any] | None = None) 
         if p.get("app"):
             enrichment["event_src.title"] = p["app"]
         if p.get("pid"):
-            enrichment["subject.process.pid"] = str(p["pid"])
+            enrichment["subject.process.id"] = str(p["pid"])
         # HTTP / nginx fields
         if p.get("client_ip"):
             enrichment.setdefault("src.ip", p["client_ip"])
@@ -497,5 +507,27 @@ def parse_and_enrich(message: str, existing_meta: dict[str, Any] | None = None) 
             enrichment["event_src.title"] = p.get("product", "")
         if p.get("signature"):
             enrichment["reason"] = p["signature"]
+
+    # ── Process / account IDs extracted from raw message ────────────────────
+    # subject.process.id — try parsed pid first, then regex on message
+    if not enrichment.get("subject.process.id"):
+        m = _SUBJ_PID_RE.search(message)
+        if m:
+            enrichment["subject.process.id"] = m.group(1) or m.group(2)
+
+    # subject.process.parent.id (ppid / parent pid)
+    m = _PPID_RE.search(message)
+    if m:
+        enrichment["subject.process.parent.id"] = m.group(1) or m.group(2)
+
+    # object.process.id (child/spawned process)
+    m = _OBJ_PID_RE.search(message)
+    if m:
+        enrichment["object.process.id"] = m.group(1)
+
+    # subject.account.id (uid / auid)
+    m = _UID_RE.search(message)
+    if m:
+        enrichment["subject.account.id"] = m.group(1)
 
     return enrichment

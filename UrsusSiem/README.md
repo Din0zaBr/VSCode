@@ -222,8 +222,3 @@ journalctl -u logvault-agent -f # Логи
 systemctl restart logvault-agent
 ```
 
----
-
-## Лицензия
-
-Проект разработан в рамках хакатона.
