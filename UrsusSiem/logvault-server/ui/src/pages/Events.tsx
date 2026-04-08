@@ -808,6 +808,7 @@ export default function Events() {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
     return {
       pdql: "sort(time desc)",
+      rawFilter: "sort(time desc)",
       from: nowMinus(rangeMs),
       to: new Date().toISOString(),
       size: PAGE_SIZE,
@@ -831,6 +832,7 @@ export default function Events() {
     setInternalPage(1);
     setAllEvents([]);
     setAllGroupedRows([]);
+    setDrillDownRow(null);
   }, [appliedChannel]);
 
   // When new page data arrives → replace (page 1) or append with 1 s min buffer (page 2+)
@@ -918,7 +920,7 @@ export default function Events() {
     const to   = useCustom ? toDt   : new Date().toISOString();
     const pdql = buildChannelPdql(pdqlFilter, groupByFields);
     setSortField("");
-    setAppliedChannel({ pdql, from, to, size: PAGE_SIZE });
+    setAppliedChannel({ pdql, rawFilter: pdqlFilter, from, to, size: PAGE_SIZE });
     addQueryHistory({
       pdql: pdqlFilter,
       timeRange: useCustom
@@ -960,6 +962,31 @@ export default function Events() {
   };
 
   const groupedCols = isGrouped ? (data as { columns: string[] }).columns : [];
+
+  // ── Drill-down: click a grouped row to see its raw events ────────────────
+  const [drillDownRow, setDrillDownRow] = useState<Record<string, unknown> | null>(null);
+
+  const drillDownPdql = useMemo(() => {
+    if (!drillDownRow || !isGrouped) return null;
+    const keyFields = groupedCols.filter((c) => c !== "count");
+    if (!keyFields.length) return null;
+    const conditions = keyFields
+      .map((f) => `${f} = ${pdqlStringLiteral(String(drillDownRow[f] ?? ""))}`)
+      .join(" AND ");
+    const base = buildPipelinePdql(appliedChannel.rawFilter ?? "sort(time desc)");
+    return `${base} | filter(${conditions}) | sort(time desc)`;
+  }, [drillDownRow, isGrouped, groupedCols, appliedChannel]);
+
+  const { data: drillData, isLoading: drillLoading } = useQuery({
+    queryKey: ["events-drilldown", drillDownPdql, appliedChannel.from, appliedChannel.to],
+    queryFn: () =>
+      drillDownPdql
+        ? api.pdqlSearch(drillDownPdql, 1, 300, { from: appliedChannel.from, to: appliedChannel.to })
+        : Promise.resolve(null),
+    enabled: !!drillDownPdql,
+  });
+
+  const drillEvents: LogEvent[] = (drillData as any)?.logs ?? [];
 
   // visibleFields still used for export (full set), activeFields for the table columns
   const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];
@@ -1203,26 +1230,128 @@ export default function Events() {
               </div>
             </div>
           ) : isGrouped ? (
-            <table className="w-full siem-table text-xs">
-              <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
-                <tr>
-                  {groupedCols.map((col) => (
-                    <th key={col} className="text-left font-mono">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allGroupedRows.map((row: Record<string, unknown>, i: number) => (
-                  <tr key={i} className="hover:bg-purple-900/10">
-                    {groupedCols.map((col) => (
-                      <td key={col} className="text-gray-300 font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
-                        {row[col] === null || row[col] === undefined ? "—" : String(row[col])}
-                      </td>
+            <div className="flex flex-col h-full">
+              {/* Grouped aggregation table */}
+              <div className="overflow-auto" style={{ flex: drillDownRow ? "0 0 40%" : "1 1 0" }}>
+                <table className="w-full siem-table text-xs">
+                  <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+                    <tr>
+                      {groupedCols.map((col) => (
+                        <th key={col} className="text-left font-mono">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allGroupedRows.map((row: Record<string, unknown>, i: number) => (
+                      <tr
+                        key={i}
+                        className="cursor-pointer"
+                        style={{
+                          background: drillDownRow === row ? "rgba(106,13,173,0.18)" : undefined,
+                          borderLeft: drillDownRow === row ? "2px solid #6A0DAD" : "2px solid transparent",
+                        }}
+                        onClick={() => setDrillDownRow(drillDownRow === row ? null : row)}
+                      >
+                        {groupedCols.map((col) => (
+                          <td key={col} className="text-gray-300 font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
+                            {row[col] === null || row[col] === undefined ? "—" : String(row[col])}
+                          </td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Drill-down: event stream for the selected group row */}
+              {drillDownRow && (
+                <div className="flex flex-col border-t overflow-hidden" style={{ flex: "1 1 0", borderColor: "#2d1860" }}>
+                  <div
+                    className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
+                    style={{ borderColor: "#1a0d2e", background: "#08090e" }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold flex-shrink-0" style={{ color: "#BF40BF" }}>
+                        ▸ События группы:
+                      </span>
+                      <span className="text-xs font-mono text-gray-400 truncate">
+                        {groupedCols
+                          .filter((c) => c !== "count")
+                          .map((f) => `${f} = "${drillDownRow[f] ?? "—"}"`)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setDrillDownRow(null)}
+                      className="text-gray-500 hover:text-gray-200 text-sm flex-shrink-0 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto">
+                    {drillLoading ? (
+                      <div className="flex items-center justify-center h-full text-gray-600 text-sm">Загрузка событий...</div>
+                    ) : drillEvents.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-600 text-sm">Нет событий для этой группы</div>
+                    ) : (
+                      <table className="w-full siem-table text-xs">
+                        <thead className="sticky top-0" style={{ background: "#08090e" }}>
+                          <tr>
+                            {activeFields.map((f: string) => (
+                              <th key={f} className="text-left select-none">
+                                {f === "criticality" ? "⬤" : f === "text" ? "Сообщение" : f}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {drillEvents.map((event: LogEvent, i: number) => {
+                            const crit = deriveCriticality(event);
+                            const isCorr = isCorrelationEvent(event);
+                            const isSelected = selectedEvent?.event_id === event.event_id;
+                            return (
+                              <tr
+                                key={event.event_id || i}
+                                className="cursor-pointer"
+                                style={{
+                                  background: isSelected ? "rgba(106,13,173,0.15)" : undefined,
+                                  borderLeft: isSelected ? "2px solid #6A0DAD" : "2px solid transparent",
+                                }}
+                                onClick={() => setSelectedEvent(isSelected ? null : event)}
+                              >
+                                {activeFields.map((f: string) => (
+                                  <td key={f}>
+                                    {f === "criticality" ? (
+                                      <div className="flex items-center gap-1">
+                                        <span className={critDotClass(crit)} />
+                                        {isCorr && <span className="corr-star" title="Событие корреляции">★</span>}
+                                      </div>
+                                    ) : f === "time" ? (
+                                      <span className="font-mono text-gray-400">{fmtTimeShort(getEventField(event, f))}</span>
+                                    ) : f === "text" ? (
+                                      <span className="text-gray-200 truncate block max-w-[500px]" title={getEventField(event, f)}>
+                                        {getEventField(event, f) || "(нет сообщения)"}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-400 font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
+                                        {getEventField(event, f) || "—"}
+                                      </span>
+                                    )}
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                  <div className="px-3 py-1 border-t flex-shrink-0 text-xs text-gray-600" style={{ borderColor: "#1a0d2e" }}>
+                    {drillEvents.length} событий (первые 300)
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <table className="w-full siem-table text-xs">
               <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
