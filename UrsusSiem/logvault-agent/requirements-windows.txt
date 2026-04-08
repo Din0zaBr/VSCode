@@ -1,0 +1,11 @@
+# Windows-specific dependencies for the logvault agent
+# Install with: pip install -r requirements-windows.txt
+# After install run: python Scripts/pywin32_postinstall.py -install
+#
+# Base dependencies (same as requirements.txt)
+pydantic>=2.0,<3.0
+pyyaml>=6.0
+requests>=2.31
+
+# Windows Event Log access
+pywin32>=306

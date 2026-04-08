@@ -1,0 +1,15 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+*.egg-info/
+.DS_Store
+Thumbs.db
+.cursor/
+
+# Agent build artifacts
+logvault-agent/release/
+logvault-agent/build/
+logvault-agent/*.spec

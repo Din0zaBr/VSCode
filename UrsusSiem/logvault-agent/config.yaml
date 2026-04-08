@@ -1,0 +1,87 @@
+# LogVault Agent — configuration file
+# Copy to /etc/logvault/config.yaml (Linux) or C:\ProgramData\logvault-agent\config.yaml (Windows)
+# and edit before starting the agent.
+
+server_url: "http://localhost:8000"
+agent_id: "agent-01"
+api_key: "changeme-agent-key"
+hostname: ""          # leave blank to auto-detect
+
+batch_size: 200
+flush_interval: 2.0
+retry_base: 1.0
+retry_max: 60.0
+buffer_db: "/data/buffer.db"   # on Windows use: "C:/ProgramData/logvault-agent/buffer.db"
+
+# ─────────────────────────────────────────────────────────────
+# Log sources — uncomment and adapt to your OS / services
+# ─────────────────────────────────────────────────────────────
+sources:
+
+  # ── Linux: syslog files ──────────────────────────────────
+  - type: file
+    path: "/var/log/syslog"        # Ubuntu / Debian / Astra Linux
+    service: "syslog"
+
+  # - type: file
+  #   path: "/var/log/messages"    # RHEL / CentOS / RED OS
+  #   service: "syslog"
+
+  # - type: file
+  #   path: "/var/log/auth.log"    # Ubuntu / Debian — SSH + PAM authentication
+  #   service: "auth"
+
+  # - type: file
+  #   path: "/var/log/secure"      # RHEL / CentOS — SSH + PAM authentication
+  #   service: "auth"
+
+  # - type: file
+  #   path: "/var/log/kern.log"
+  #   service: "kernel"
+
+  # ── Linux: systemd journald ──────────────────────────────
+  # - type: journald
+  #   unit: ""                     # empty = all units
+  #   service: "journald"
+
+  # - type: journald
+  #   unit: "sshd"
+  #   service: "sshd"
+
+  # - type: journald
+  #   unit: "nginx"
+  #   service: "nginx"
+
+  # ── Windows: Event Log channels ─────────────────────────
+  # Requires: pip install -r requirements-windows.txt
+  # The agent must run as a user with read access to the channel.
+  # For the Security channel, run as SYSTEM or grant explicit rights
+  # via: wevtutil sl Security /ca:"O:BAG:SYD:(A;;0x2;;;BA)"
+  #
+  # - type: winevent
+  #   channel: "System"
+  #   service: "windows-system"
+  #
+  # - type: winevent
+  #   channel: "Application"
+  #   service: "windows-app"
+  #
+  # - type: winevent
+  #   channel: "Security"
+  #   service: "windows-security"
+  #   event_ids:               # forward only these security events
+  #     - 4624   # Logon
+  #     - 4625   # Logon failure
+  #     - 4634   # Logoff
+  #     - 4648   # Explicit credential logon
+  #     - 4672   # Special privileges assigned
+  #     - 4688   # Process creation
+  #     - 4698   # Scheduled task created
+  #     - 4720   # User account created
+  #     - 4726   # User account deleted
+  #     - 4740   # Account locked out
+  #     - 7045   # Service installed
+  #
+  # - type: winevent
+  #   channel: "Microsoft-Windows-Sysmon/Operational"
+  #   service: "sysmon"
