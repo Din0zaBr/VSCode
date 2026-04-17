@@ -9,6 +9,7 @@ import {
 import type { Fieldset, QueryHistoryItem } from "../api/client";
 import GroupingConfig from "../components/GroupingConfig";
 import AggregateSelector from "../components/AggregateSelector";
+import QueryBuilder from "../components/QueryBuilder";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -773,6 +774,7 @@ export default function Events() {
   const [groupByFields, setGroupByFields] = useState<string[]>([]);
   const [aggFuncs, setAggFuncs] = useState<string[]>(["count()"]);
   const [showPdqlModal, setShowPdqlModal] = useState(false);
+  const [showQueryBuilder, setShowQueryBuilder] = useState(false);
 
   // Fieldsets
   const [fieldsets, setFieldsets]     = useState<Fieldset[]>(getFieldsets());
@@ -1134,6 +1136,16 @@ export default function Events() {
               ⚡
             </button>
 
+            {/* Visual query builder button */}
+            <button
+              onClick={() => setShowQueryBuilder(true)}
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
+              style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+              title="Визуальный конструктор запросов"
+            >
+              🔧
+            </button>
+
             {/* Inline PDQL filter */}
             <input
               className="pdql-bar flex-1 px-3 py-1.5"
@@ -1441,6 +1453,18 @@ export default function Events() {
       )}
       {showHistory && (
         <QueryHistoryModal onClose={() => setShowHistory(false)} onRestore={handleRestoreHistory} />
+      )}
+      {showQueryBuilder && (
+        <QueryBuilder
+          onApply={(pdql) => {
+            const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
+            const from = useCustom ? fromDt : nowMinus(rangeMs);
+            const to   = useCustom ? toDt   : new Date().toISOString();
+            setPdqlFilter(pdql);
+            setAppliedChannel({ pdql, rawFilter: pdql, from, to, size: PAGE_SIZE });
+          }}
+          onClose={() => setShowQueryBuilder(false)}
+        />
       )}
       {linkEvent && (
         <LinkIncidentModal event={linkEvent} onClose={() => setLinkEvent(null)} />
