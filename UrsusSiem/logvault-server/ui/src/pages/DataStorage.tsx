@@ -653,7 +653,7 @@ export default function DataStorage() {
         {activeTab === "table-lists"       && <StubTab label="Табличные списки" icon="📊" />}
         {activeTab === "profiles"          && <StubTab label="Профили" icon="👤" />}
         {activeTab === "infrastructure"    && <StubTab label="Инфраструктура" icon="🏗️" />}
-        {activeTab === "source-monitoring" && <StubTab label="Мониторинг источников" icon="📡" />}
+        {activeTab === "source-monitoring" && <SourceMonitoringTab />}
         {activeTab === "tasks"             && <StubTab label="Задачи хранилища" icon="✅" />}
       </div>
     </div>
