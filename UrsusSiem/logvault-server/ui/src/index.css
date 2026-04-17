@@ -3,20 +3,38 @@
 @tailwind utilities;
 
 :root {
+  /* Backgrounds */
   --bg: #090b12;
   --bg-gradient-start: #090b12;
   --bg-gradient-mid: #121124;
   --bg-gradient-end: #0d1117;
   --surface: #11141d;
   --surface-2: #161b28;
+  /* Borders */
   --border: #26223a;
   --border-strong: #352a5a;
+  /* Typography */
   --text: #e6e9f2;
   --text-soft: #8f97aa;
   --text-muted: #a7afc2;
+  /* Accent (purple) */
   --accent: #c26af7;
   --accent-secondary: #a44fe0;
   --accent-glow: rgba(194, 106, 247, 0.28);
+  /* Spacing scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 24px var(--accent-glow);
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 [data-theme="light"] {
@@ -200,6 +218,50 @@
   }
   .field-row:hover .field-add-btn { @apply visible; }
   .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: #BF40BF; background: rgba(191,64,191,0.15); }
+
+  /* Page header / section title */
+  .siem-page-title {
+    @apply text-2xl font-bold;
+    color: var(--text);
+  }
+  .siem-section-title {
+    @apply text-xs uppercase tracking-widest font-medium;
+    color: var(--text-soft);
+  }
+
+  /* Stat / metric card */
+  .siem-stat-card {
+    @apply rounded-xl p-4 flex flex-col gap-1;
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    border: 1px solid var(--border);
+  }
+  .siem-stat-value {
+    @apply text-2xl font-bold;
+    color: var(--text);
+  }
+  .siem-stat-label {
+    @apply text-xs;
+    color: var(--text-soft);
+  }
+
+  /* Empty state */
+  .siem-empty {
+    @apply flex flex-col items-center justify-center py-16 gap-2 text-sm;
+    color: var(--text-soft);
+  }
+
+  /* Divider */
+  .siem-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Scrollable panel */
+  .siem-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
 }
 
 /* Print styles for incident PDF */
