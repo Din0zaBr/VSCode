@@ -10,6 +10,7 @@ import type { Fieldset, QueryHistoryItem } from "../api/client";
 import GroupingConfig from "../components/GroupingConfig";
 import AggregateSelector from "../components/AggregateSelector";
 import QueryBuilder from "../components/QueryBuilder";
+import SavedQueries from "../components/SavedQueries";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -775,6 +776,7 @@ export default function Events() {
   const [aggFuncs, setAggFuncs] = useState<string[]>(["count()"]);
   const [showPdqlModal, setShowPdqlModal] = useState(false);
   const [showQueryBuilder, setShowQueryBuilder] = useState(false);
+  const [showSavedQueries, setShowSavedQueries] = useState(false);
 
   // Fieldsets
   const [fieldsets, setFieldsets]     = useState<Fieldset[]>(getFieldsets());
@@ -1103,6 +1105,15 @@ export default function Events() {
               title="История запросов"
             >
               ↺ История
+            </button>
+            {/* Saved Queries */}
+            <button
+              onClick={() => setShowSavedQueries(true)}
+              className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
+              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+              title="Сохранённые запросы и шаблоны"
+            >
+              ☆ Запросы
             </button>
           </div>
 
@@ -1464,6 +1475,20 @@ export default function Events() {
             setAppliedChannel({ pdql, rawFilter: pdql, from, to, size: PAGE_SIZE });
           }}
           onClose={() => setShowQueryBuilder(false)}
+        />
+      )}
+      {showSavedQueries && (
+        <SavedQueries
+          currentPdql={pdqlFilter}
+          onLoad={(pdql, timeRange) => {
+            const rangeMs = QUICK_RANGES.find((r) => r.value === timeRange)?.ms ?? 3600_000;
+            const from = nowMinus(rangeMs);
+            const to = new Date().toISOString();
+            setPdqlFilter(pdql);
+            setQuickRange(QUICK_RANGES.find((r) => r.value === timeRange) ? timeRange : "1h");
+            setAppliedChannel({ pdql, rawFilter: pdql, from, to, size: PAGE_SIZE });
+          }}
+          onClose={() => setShowSavedQueries(false)}
         />
       )}
       {linkEvent && (
