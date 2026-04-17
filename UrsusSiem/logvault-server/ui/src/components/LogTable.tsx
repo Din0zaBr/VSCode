@@ -64,19 +64,19 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
   }
 
   return (
-    <div className="overflow-auto rounded-lg border border-gray-800" style={{ maxHeight }}>
-      <table className="w-full text-sm">
-        <thead className="bg-gray-900/80 sticky top-0 z-10">
-          <tr className="text-left text-gray-400 text-xs uppercase tracking-wider">
-            <th className="px-3 py-2 w-40">Время</th>
-            <th className="px-3 py-2 w-20">Уровень</th>
-            <th className="px-3 py-2 w-24">Сервис</th>
-            <th className="px-3 py-2 w-28">Хост</th>
-            <th className="px-3 py-2 w-28">Агент</th>
-            <th className="px-3 py-2">Сообщение</th>
+    <div className="overflow-auto rounded-lg" style={{ maxHeight, border: "1px solid #1a0d2e" }}>
+      <table className="w-full text-sm siem-table">
+        <thead style={{ background: "#08090e" }} className="sticky top-0 z-10">
+          <tr className="text-left">
+            <th className="w-40">Время</th>
+            <th className="w-20">Уровень</th>
+            <th className="w-24">Сервис</th>
+            <th className="w-28">Хост</th>
+            <th className="w-28">Агент</th>
+            <th>Сообщение</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-800/50">
+        <tbody>
           {logs.map((log, i) => {
             const key = log.event_id || String(i);
             const isExpanded = expanded === key;
@@ -87,9 +87,8 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                 <tr
                   key={key}
                   onClick={() => setExpanded(isExpanded ? null : key)}
-                  className={`hover:bg-gray-800/40 transition-colors cursor-pointer ${
-                    isExpanded ? "bg-gray-800/30" : ""
-                  }`}
+                  className="transition-colors cursor-pointer"
+                  style={isExpanded ? { background: "rgba(106,13,173,0.08)" } : undefined}
                 >
                   <td className="px-3 py-1.5 text-gray-400 font-mono text-xs whitespace-nowrap">
                     {formatTime(log.timestamp)}
@@ -110,7 +109,7 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                 </tr>
                 {isExpanded && (
                   <tr key={`${key}-detail`}>
-                    <td colSpan={6} className="px-4 py-3 bg-gray-900/60">
+                    <td colSpan={6} className="px-4 py-3" style={{ background: "#0a0b12" }}>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-xs mb-2">
                         <DetailField label="ID события" value={log.event_id} />
                         <DetailField label="Время" value={log.timestamp} />
@@ -121,16 +120,16 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                         <DetailField label="Уровень" value={log.level} />
                       </div>
                       {hasMeta && (
-                        <div className="mt-2 pt-2 border-t border-gray-800">
-                          <span className="text-[10px] text-gray-500 uppercase tracking-wider">Метаданные</span>
-                          <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono bg-gray-950/50 rounded p-2 max-h-60 overflow-auto">
+                        <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1a0d2e" }}>
+                          <span className="text-[10px] uppercase tracking-wider" style={{ color: "#3d4557" }}>Метаданные</span>
+                          <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-60 overflow-auto" style={{ background: "#07080e" }}>
                             {JSON.stringify(log.meta, null, 2)}
                           </pre>
                         </div>
                       )}
-                      <div className="mt-2 pt-2 border-t border-gray-800">
-                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Полное сообщение</span>
-                        <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono bg-gray-950/50 rounded p-2 max-h-40 overflow-auto">
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1a0d2e" }}>
+                        <span className="text-[10px] uppercase tracking-wider" style={{ color: "#3d4557" }}>Полное сообщение</span>
+                        <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-40 overflow-auto" style={{ background: "#07080e" }}>
                           {log.message}
                         </pre>
                       </div>

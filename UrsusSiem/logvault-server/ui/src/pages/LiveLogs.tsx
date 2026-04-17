@@ -101,12 +101,12 @@ export default function LiveLogs() {
           placeholder="Фильтр по тексту..."
           value={filter.q}
           onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))}
-          className="flex-1 min-w-[200px] bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-vault-500"
+          className="siem-input flex-1 min-w-[200px]"
         />
         <select
           value={filter.level}
           onChange={(e) => setFilter((f) => ({ ...f, level: e.target.value }))}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-vault-500"
+          className="siem-input"
         >
           <option value="">Все уровни</option>
           {["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].map((l) => (
@@ -136,7 +136,7 @@ export default function LiveLogs() {
         />
       </div>
 
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div className="siem-card overflow-hidden">
         <div className="overflow-auto font-mono text-xs leading-relaxed" style={{ maxHeight: "70vh" }}>
           {filtered.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
@@ -175,7 +175,7 @@ function LogLine({ log, expanded, onToggle }: { log: LogEvent; expanded: boolean
 
   return (
     <div>
-      <div className="flex gap-2 hover:bg-gray-800/50 px-2 py-0.5 rounded cursor-pointer" onClick={onToggle}>
+      <div className="flex gap-2 px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-white/[0.03]" onClick={onToggle}>
         <span className="text-gray-600 shrink-0">{time}</span>
         <span className={`w-10 shrink-0 text-right ${levelCls}`}>{log.level}</span>
         <span className="text-cyan-600 shrink-0 w-24 truncate" title={log.host}>{log.host}</span>
@@ -186,7 +186,7 @@ function LogLine({ log, expanded, onToggle }: { log: LogEvent; expanded: boolean
         <span className="text-gray-300 break-all">{log.message}</span>
       </div>
       {expanded && (
-        <div className="ml-2 mb-1 px-3 py-2 bg-gray-800/40 rounded-lg border-l-2 border-vault-500/50">
+        <div className="ml-2 mb-1 px-3 py-2 rounded-lg border-l-2" style={{ background: "rgba(13,11,22,0.6)", borderLeftColor: "#6A0DAD" }}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-[11px]">
             <Field label="ID события" value={log.event_id} />
             <Field label="Время" value={log.timestamp} />
