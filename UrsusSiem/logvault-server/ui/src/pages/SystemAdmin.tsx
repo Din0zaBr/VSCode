@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, isAdmin } from "../api/client";
 import type { UserInfo, ApiKey } from "../api/client";
 import Reports from "./Reports";
+import CustomFieldsAdmin from "./CustomFieldsAdmin";
 
 const SUB_TABS = [
   { id: "access",    label: "Права доступа" },
   { id: "api-keys",  label: "API ключи" },
   { id: "reports",   label: "Отчёты" },
+  { id: "custom-fields", label: "Пользовательские поля" },
   { id: "notifications", label: "Уведомления" },
   { id: "policies",  label: "Политики" },
   { id: "management",label: "Управление системой" },
@@ -513,6 +515,7 @@ export default function SystemAdmin() {
         {activeTab === "notifications" && <NotificationsTab />}
         {activeTab === "management"    && <ManagementTab />}
         {activeTab === "reports"       && <ReportsTab />}
+        {activeTab === "custom-fields" && <CustomFieldsAdmin />}
         {activeTab === "policies"      && <PoliciesTab />}
       </div>
     </div>
