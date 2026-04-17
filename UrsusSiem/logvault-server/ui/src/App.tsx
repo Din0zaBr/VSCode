@@ -6,6 +6,7 @@ import Incidents from "./pages/Incidents";
 import Assets from "./pages/Assets";
 import DataStorage from "./pages/DataStorage";
 import SystemAdmin from "./pages/SystemAdmin";
+import Integrations from "./pages/Integrations";
 import Login from "./pages/Login";
 import { getToken, clearToken, isAdmin, getRole } from "./api/client";
 
@@ -37,11 +38,12 @@ function SiemLogo() {
 // ── Группы навигации ─────────────────────────────────────────────────────────
 
 const MAIN_TABS = [
-  { to: "/assets",       label: "Активы",            roles: ["admin", "operator"] },
-  { to: "/events",       label: "События",           roles: ["admin", "operator"] },
-  { to: "/incidents",    label: "Инциденты",         roles: ["admin", "operator"] },
-  { to: "/data",         label: "Хранилище данных",  roles: ["admin", "operator"] },
-  { to: "/system",       label: "Система",           roles: ["admin"] },
+  { to: "/assets",        label: "Активы",            roles: ["admin", "operator"] },
+  { to: "/events",        label: "События",           roles: ["admin", "operator"] },
+  { to: "/incidents",     label: "Инциденты",         roles: ["admin", "operator"] },
+  { to: "/data",          label: "Хранилище данных",  roles: ["admin", "operator"] },
+  { to: "/integrations",  label: "Интеграции",        roles: ["admin"] },
+  { to: "/system",        label: "Система",           roles: ["admin"] },
 ];
 
 type ThemeMode = "dark" | "light";
@@ -156,8 +158,9 @@ function AppLayout({ theme, onThemeToggle }: { theme: ThemeMode; onThemeToggle: 
           <Route path="/assets/*"    element={<Assets />} />
           <Route path="/events/*"    element={<Events />} />
           <Route path="/incidents/*" element={<Incidents />} />
-          <Route path="/data/*"      element={<DataStorage />} />
-          {isAdmin() && <Route path="/system/*" element={<SystemAdmin />} />}
+          <Route path="/data/*"         element={<DataStorage />} />
+          {isAdmin() && <Route path="/integrations/*" element={<Integrations />} />}
+          {isAdmin() && <Route path="/system/*"       element={<SystemAdmin />} />}
           <Route path="*"            element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
