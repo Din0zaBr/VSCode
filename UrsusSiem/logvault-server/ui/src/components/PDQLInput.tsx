@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 
 const PDQL_KEYWORDS = [
   "filter", "select", "sort", "limit", "group", "aggregate",
@@ -19,6 +19,11 @@ const PDQL_FIELDS = [
   "msgid",
 ];
 
+const PDQL_FUNCTIONS = new Set([
+  "filter", "select", "sort", "limit", "group", "aggregate",
+  "count", "count_distinct", "sum", "avg", "min", "max", "first", "last",
+]);
+
 const EXAMPLES = [
   'filter(level = "ERROR") | sort(time desc) | limit(100)',
   'filter(level = "ERROR" and host contains "prod") | select(time, host, message)',
@@ -28,6 +33,47 @@ const EXAMPLES = [
   'filter(level = "ERROR") | group(host) | aggregate(count(), min(time), max(time)) | sort(count desc)',
   'filter(level in ["ERROR", "CRITICAL"]) | group(agent_id) | aggregate(count()) | sort(count desc)',
 ];
+
+function validatePDQL(query: string): string | null {
+  if (!query.trim()) return null;
+
+  // Check unmatched parentheses
+  let depth = 0;
+  let inString = false;
+  let strChar = "";
+  for (const ch of query) {
+    if (inString) {
+      if (ch === strChar) inString = false;
+    } else if (ch === '"' || ch === "'") {
+      inString = true;
+      strChar = ch;
+    } else if (ch === "(") {
+      depth++;
+    } else if (ch === ")") {
+      depth--;
+      if (depth < 0) return "Лишняя закрывающая скобка ')'";
+    }
+  }
+  if (depth > 0) return `Не закрыто ${depth} скобка(ок) '('`;
+
+  // Check for empty pipe segments
+  const segments = query.split("|").map((s) => s.trim());
+  for (const seg of segments) {
+    if (!seg) return "Пустой сегмент в pipe (||)";
+  }
+
+  // Check each pipe segment starts with a valid function
+  for (const seg of segments) {
+    if (!seg) continue;
+    const funcName = seg.match(/^(\w+)\s*\(/)?.[1]?.toLowerCase();
+    if (funcName && !PDQL_FUNCTIONS.has(funcName)) {
+      const similar = [...PDQL_FUNCTIONS].filter((f) => f.startsWith(funcName[0])).slice(0, 3);
+      return `Неизвестная функция '${funcName}'${similar.length ? `. Похожие: ${similar.join(", ")}` : ""}`;
+    }
+  }
+
+  return null;
+}
 
 interface PDQLInputProps {
   value: string;
@@ -40,6 +86,8 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
   const [showExamples, setShowExamples] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const validationError = useMemo(() => validatePDQL(value), [value]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -93,10 +141,23 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
             onBlur={() => setTimeout(() => { setShowSuggestions(false); setShowExamples(false); }, 200)}
             placeholder='filter(level = "ERROR") | sort(time desc) | limit(100)'
             rows={2}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm
-                       text-green-300 font-mono placeholder-gray-600 focus:outline-none focus:border-vault-500
-                       resize-none"
+            className="w-full bg-gray-900 border rounded-lg px-4 py-2.5 text-sm
+                       text-green-300 font-mono placeholder-gray-600 focus:outline-none
+                       resize-none transition-colors"
+            style={{
+              borderColor: validationError ? "rgba(239,68,68,0.6)" : undefined,
+            }}
           />
+          {/* Validation error */}
+          {validationError && (
+            <div
+              className="flex items-center gap-1.5 mt-1 px-2 py-1 rounded text-xs"
+              style={{ background: "rgba(239,68,68,0.08)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}
+            >
+              <span>⚠</span>
+              <span>{validationError}</span>
+            </div>
+          )}
           {/* Suggestions dropdown */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute z-20 left-0 right-0 mt-1 bg-gray-800 border border-gray-700
