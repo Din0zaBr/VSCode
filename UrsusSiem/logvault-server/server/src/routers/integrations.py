@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from server.src.auth import require_admin, verify_token
+from server.src.integrations.webhook_receiver import push_webhook_event
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
@@ -92,3 +93,16 @@ async def sync_integration(name: str, request: Request, user: dict = Depends(req
         raise HTTPException(404, f"Integration '{name}' not found")
     events = integration.pull_events()
     return {"ok": True, "events_pulled": len(events)}
+
+
+# ── Webhook ingest endpoint ───────────────────────────────────────────────────
+
+@router.post("/webhook/{source_name}")
+async def ingest_webhook(source_name: str, request: Request):
+    """Receive inbound webhook from any external service."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    push_webhook_event(payload, source_name=source_name)
+    return {"ok": True, "source": source_name}

@@ -27,6 +27,12 @@ from server.src.integrations.kaspersky_edr import KasperskyEDR
 from server.src.integrations.positive_technologies import PTSandbox, PTNAD
 from server.src.integrations.generic_syslog import SyslogReceiver
 from server.src.integrations.generic_cef import CEFReceiver
+from server.src.integrations.suricata import SuricataIDS
+from server.src.integrations.elastic import ElasticIntegration
+from server.src.integrations.splunk import SplunkIntegration
+from server.src.integrations.ml_anomaly import MLAnomalyDetector
+from server.src.integrations.webhook_receiver import WebhookReceiver
+from server.src.integrations.rest_generic import GenericRESTConnector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -58,9 +64,13 @@ async def lifespan(app: FastAPI):
         )
     app.state.ad_connector = ad
 
-    # Integration registry
+    # Integration registry - register all available connectors
     registry = IntegrationRegistry()
-    for cls in (KasperskyEDR, PTSandbox, PTNAD, SyslogReceiver, CEFReceiver):
+    for cls in (
+        KasperskyEDR, PTSandbox, PTNAD, SyslogReceiver, CEFReceiver,
+        SuricataIDS, ElasticIntegration, SplunkIntegration,
+        MLAnomalyDetector, WebhookReceiver, GenericRESTConnector,
+    ):
         registry.register(cls())
     app.state.integration_registry = registry
 
