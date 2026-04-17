@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
@@ -26,8 +27,8 @@ function SiemLogo() {
       />
       <span style={{ display: "none", fontSize: "48px" }} role="img" aria-label="bear">🐻</span>
       <div className="leading-none">
-        <div className="text-sm font-bold tracking-widest" style={{ color: "#BF40BF" }}>URSUS</div>
-        <div className="text-[9px] tracking-[0.2em] font-light" style={{ color: "#8b20d1" }}>INSIGHT</div>
+        <div className="text-sm font-bold tracking-widest" style={{ color: "var(--accent)" }}>URSUS</div>
+        <div className="text-[9px] tracking-[0.2em] font-light" style={{ color: "var(--accent-secondary)" }}>INSIGHT</div>
       </div>
     </div>
   );
@@ -43,11 +44,18 @@ const MAIN_TABS = [
   { to: "/system",       label: "Система",           roles: ["admin"] },
 ];
 
+type ThemeMode = "dark" | "light";
+const THEME_STORAGE_KEY = "ursus-theme-mode";
+
+function applyTheme(theme: ThemeMode) {
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   return getToken() ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-function AppLayout() {
+function AppLayout({ theme, onThemeToggle }: { theme: ThemeMode; onThemeToggle: () => void }) {
   const navigate = useNavigate();
   const location = useLocation();
   const role = getRole();
@@ -63,22 +71,18 @@ function AppLayout() {
   const isTabActive = (to: string) => location.pathname.startsWith(to);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#08090e" }}>
+    <div className="min-h-screen flex flex-col app-shell">
       {/* ── Top Header ──────────────────────────────────────────────────── */}
       <header
         className="flex items-center gap-4 px-4 py-0 flex-shrink-0"
-        style={{
-          background: "linear-gradient(90deg, #08090e 0%, #0f0d1a 50%, #090e10 100%)",
-          borderBottom: "1px solid #1a0d2e",
-          height: "52px",
-        }}
+        style={{ height: "52px" }}
       >
         {/* Logo */}
         <button onClick={() => navigate("/dashboard")} className="flex items-center">
           <SiemLogo />
         </button>
 
-        <div className="w-px h-6 flex-shrink-0" style={{ background: "#2d1860" }} />
+        <div className="w-px h-6 flex-shrink-0 app-separator" />
 
         {/* Main navigation */}
         <nav className="flex flex-1 h-full">
@@ -90,9 +94,9 @@ function AppLayout() {
                 to={tab.to}
                 className="relative flex items-center px-4 h-full text-xs font-medium tracking-wide transition-colors"
                 style={{
-                  color: active ? "#BF40BF" : "#94a3b8",
-                  background: active ? "rgba(106,13,173,0.12)" : "transparent",
-                  borderBottom: active ? "2px solid #BF40BF" : "2px solid transparent",
+                  color: active ? "var(--accent)" : "var(--text-muted)",
+                  background: active ? "color-mix(in srgb, var(--accent) 13%, transparent)" : "transparent",
+                  borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
                 }}
               >
                 {tab.label}
@@ -105,9 +109,9 @@ function AppLayout() {
             to="/dashboard"
             className="relative flex items-center px-3 h-full text-xs font-medium tracking-wide transition-colors ml-auto"
             style={({ isActive }) => ({
-              color: isActive ? "#BF40BF" : "#64748b",
-              background: isActive ? "rgba(106,13,173,0.12)" : "transparent",
-              borderBottom: isActive ? "2px solid #BF40BF" : "2px solid transparent",
+              color: isActive ? "var(--accent)" : "var(--text-soft)",
+              background: isActive ? "color-mix(in srgb, var(--accent) 13%, transparent)" : "transparent",
+              borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
             })}
           >
             Дашборд
@@ -116,18 +120,29 @@ function AppLayout() {
 
         {/* Right side */}
         <div className="flex items-center gap-3 flex-shrink-0">
+          <button
+            onClick={onThemeToggle}
+            className="theme-toggle-btn"
+            title={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"}
+          >
+            {theme === "dark" ? "Light" : "Dark"}
+          </button>
           <span
             className="text-[10px] px-2 py-0.5 rounded uppercase tracking-widest font-medium"
-            style={{ background: "rgba(106,13,173,0.2)", color: "#8b20d1", border: "1px solid #2d1860" }}
+            style={{
+              background: "color-mix(in srgb, var(--accent-secondary) 20%, transparent)",
+              color: "var(--accent-secondary)",
+              border: "1px solid var(--border-strong)",
+            }}
           >
             {role}
           </span>
           <button
             onClick={handleLogout}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-            style={{ color: "#64748b", border: "1px solid #1a0d2e" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "#7f1d1d"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#1a0d2e"; }}
+            style={{ color: "var(--text-soft)", border: "1px solid var(--border)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#7f1d1d"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-soft)"; e.currentTarget.style.borderColor = "var(--border)"; }}
           >
             Выход
           </button>
@@ -151,6 +166,18 @@ function AppLayout() {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === "light" ? "light" : "dark";
+  });
+
+  useEffect(() => {
+    applyTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -158,7 +185,7 @@ export default function App() {
         path="/*"
         element={
           <PrivateRoute>
-            <AppLayout />
+            <AppLayout theme={theme} onThemeToggle={toggleTheme} />
           </PrivateRoute>
         }
       />
