@@ -39,9 +39,9 @@ export default function Login() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <img src="/logo.png" alt="URSUS" className="w-10 h-10 object-contain"
+              <img src="/logo_app.png" alt="URSUS" className="w-12 h-12 object-contain"
                 onError={(e) => { e.currentTarget.style.display = "none"; (e.currentTarget.nextSibling as HTMLElement).style.display = "block"; }} />
-              <span style={{ display: "none", fontSize: "36px" }}>🐻</span>
+              <span style={{ display: "none", fontSize: "42px" }}>🐻</span>
               <div className="text-left">
                 <div className="text-xl font-bold tracking-widest leading-none" style={{ color: "#BF40BF" }}>URSUS</div>
                 <div className="text-[10px] tracking-[0.3em] font-light leading-none" style={{ color: "#6A0DAD" }}>INSIGHT</div>

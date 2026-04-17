@@ -9,14 +9,14 @@ import Login from "./pages/Login";
 import { getToken, clearToken, isAdmin, getRole } from "./api/client";
 
 // Bear emoji logo — используется как заглушка при отсутствии файла логотипа
-const LOGO_PATH = "/logo.png"; // если файл отсутствует — покажем мишку
+const LOGO_PATH = "/logo_app.png"; // если файл отсутствует — покажем мишку
 function SiemLogo() {
   return (
     <div className="flex items-center gap-2 select-none flex-shrink-0">
       <img
         src={LOGO_PATH}
         alt="URSUS Insight"
-        className="w-7 h-7 object-contain"
+        className="w-10 h-10 object-contain"
         onError={(e) => {
           const el = e.currentTarget;
           el.style.display = "none";
@@ -24,7 +24,7 @@ function SiemLogo() {
           if (span) span.style.display = "inline";
         }}
       />
-      <span style={{ display: "none", fontSize: "24px" }} role="img" aria-label="bear">🐻</span>
+      <span style={{ display: "none", fontSize: "48px" }} role="img" aria-label="bear">🐻</span>
       <div className="leading-none">
         <div className="text-sm font-bold tracking-widest" style={{ color: "#58a6ff" }}>URSUS</div>
         <div className="text-[9px] tracking-[0.2em] font-light" style={{ color: "#388bfd" }}>INSIGHT</div>
