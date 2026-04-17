@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, isAdmin } from "../api/client";
 import type { UserInfo, ApiKey } from "../api/client";
+import Reports from "./Reports";
 
 const SUB_TABS = [
   { id: "access",    label: "Права доступа" },
@@ -299,31 +300,7 @@ function ManagementTab() {
 // ── Reports Tab ───────────────────────────────────────────────────────────────
 
 function ReportsTab() {
-  return (
-    <div className="p-6 space-y-5 overflow-y-auto h-full">
-      <div>
-        <h3 className="text-base font-semibold text-gray-200">Отчёты</h3>
-        <p className="text-xs text-gray-600 mt-0.5">Формирование и выгрузка отчётов</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {[
-          { title: "Ежедневный отчёт по инцидентам", desc: "Все инциденты за последние 24ч", icon: "📋" },
-          { title: "Топ угроз за неделю", desc: "Распределение по критичности и статусу", icon: "📊" },
-          { title: "Активность агентов", desc: "Состояние и статистика по агентам", icon: "📡" },
-          { title: "Аудит доступа", desc: "Действия пользователей в системе", icon: "🔐" },
-        ].map((r) => (
-          <div key={r.title} className="siem-card p-4 flex items-start gap-3 hover:scale-[1.01] transition-transform cursor-pointer">
-            <span className="text-2xl">{r.icon}</span>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-200">{r.title}</div>
-              <div className="text-[10px] text-gray-600 mt-0.5">{r.desc}</div>
-            </div>
-            <button className="siem-btn-ghost text-xs px-3 py-1.5 mt-0.5">Скачать</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <Reports />;
 }
 
 // ── Policies Tab ──────────────────────────────────────────────────────────────
