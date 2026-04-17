@@ -7,6 +7,8 @@ import {
   getFieldsets, saveFieldsets, getQueryHistory, addQueryHistory, clearQueryHistory,
 } from "../api/client";
 import type { Fieldset, QueryHistoryItem } from "../api/client";
+import GroupingConfig from "../components/GroupingConfig";
+import AggregateSelector from "../components/AggregateSelector";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -747,12 +749,14 @@ function mergeIntoWhereOrFilter(pdql: string, token: string): string | null {
 }
 
 /** Добавляет group | aggregate | sort | limit к запросу канала (если выбраны поля). */
-function buildChannelPdql(raw: string, groupFields: string[]): string {
+function buildChannelPdql(raw: string, groupFields: string[], aggFuncs: string[] = []): string {
   const base = buildPipelinePdql(raw);
   const fields = groupFields.map((f) => f.trim()).filter(Boolean);
   if (!fields.length) return base;
   if (/\bgroup\s*\(/i.test(raw.trim())) return base;
-  return `${base} | group(${fields.join(", ")}) | aggregate(count()) | sort(count desc) | limit(500)`;
+  const aggs = aggFuncs.length > 0 ? aggFuncs.join(", ") : "count()";
+  const sortField = aggFuncs.includes("count()") || aggFuncs.length === 0 ? "count" : aggFuncs[0].replace("()", "");
+  return `${base} | group(${fields.join(", ")}) | aggregate(${aggs}) | sort(${sortField} desc) | limit(500)`;
 }
 
 export default function Events() {
@@ -767,6 +771,7 @@ export default function Events() {
   // PDQL (channel bar — commas or | between commands; where() = filter())
   const [pdqlFilter, setPdqlFilter]   = useState("sort(time desc)");
   const [groupByFields, setGroupByFields] = useState<string[]>([]);
+  const [aggFuncs, setAggFuncs] = useState<string[]>(["count()"]);
   const [showPdqlModal, setShowPdqlModal] = useState(false);
 
   // Fieldsets
@@ -922,7 +927,7 @@ export default function Events() {
     const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
     const from = useCustom ? fromDt : nowMinus(rangeMs);
     const to   = useCustom ? toDt   : new Date().toISOString();
-    const pdql = buildChannelPdql(pdqlFilter, groupByFields);
+    const pdql = buildChannelPdql(pdqlFilter, groupByFields, aggFuncs);
     setSortField("");
     setAppliedChannel({ pdql, rawFilter: pdqlFilter, from, to, size: PAGE_SIZE });
     addQueryHistory({
@@ -932,7 +937,7 @@ export default function Events() {
         : { type: "relative", relative: quickRange },
       fieldsetId: currentFsId,
     });
-  }, [pdqlFilter, groupByFields, quickRange, fromDt, toDt, useCustom, currentFsId]);
+  }, [pdqlFilter, groupByFields, aggFuncs, quickRange, fromDt, toDt, useCustom, currentFsId]);
 
   const handleAddFilter = (key: string, value: string) => {
     const token = buildFilterToken(key, value);
@@ -1100,29 +1105,17 @@ export default function Events() {
           </div>
 
           {/* Group by */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-xs text-gray-500 flex-shrink-0">Группировка:</span>
-            <select
-              multiple
-              className="siem-input text-xs py-1 rounded-md min-h-[72px] max-w-md"
-              style={{ minWidth: "220px" }}
-              value={groupByFields}
-              onChange={(e) => {
-                setGroupByFields([...e.target.selectedOptions].map((o) => o.value));
-              }}
-            >
-              {GROUP_BY_FIELDS.map((f) => (
-                <option key={f.value} value={f.value}>{f.label}</option>
-              ))}
-            </select>
-            <span className="text-[10px] text-gray-600 max-w-[180px] leading-tight">
-              Ctrl/Cmd + клик — несколько полей. К запросу добавляется group → aggregate(count).
-            </span>
+            <GroupingConfig fields={groupByFields} onChange={setGroupByFields} />
+            {groupByFields.length > 0 && (
+              <AggregateSelector selected={aggFuncs} onChange={setAggFuncs} />
+            )}
             {groupByFields.length > 0 && (
               <button
                 type="button"
                 className="text-[10px] text-gray-500 hover:text-gray-300 underline"
-                onClick={() => setGroupByFields([])}
+                onClick={() => { setGroupByFields([]); setAggFuncs(["count()"]); }}
               >
                 сбросить
               </button>
