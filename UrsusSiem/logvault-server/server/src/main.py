@@ -15,7 +15,9 @@ from server.src.routers import (
     ingest, integrations, logs, metrics, ml, search, stats, users_router,
 )
 from server.src.routers import api_keys as api_keys_router
+from server.src.routers import sigma_rules as sigma_rules_router
 from server.src.services.alerting import alert_loop
+from server.src.services import sigma_rules as sigma_rules_svc
 from server.src.services.correlator import correlation_loop
 from server.src.services.ml_engine import MLEngine
 from server.src.services.pipeline import IngestPipeline
@@ -74,6 +76,10 @@ async def lifespan(app: FastAPI):
         registry.register(cls())
     app.state.integration_registry = registry
 
+    # SIGMA Rules - load from disk on startup
+    loaded = sigma_rules_svc.load_rules_from_disk()
+    logger.info("SIGMA rules loaded: %d", loaded)
+
     # System Health
     system_health = SystemHealth(db_service)
     app.state.system_health = system_health
@@ -119,6 +125,7 @@ app.include_router(ml.router)
 app.include_router(integrations.router)
 app.include_router(agent_deploy.router)
 app.include_router(api_keys_router.router)
+app.include_router(sigma_rules_router.router)
 
 
 @app.get("/health")

@@ -1,0 +1,33 @@
+title: Cross-Site Scripting (XSS) Attempt
+id: web-xss-001
+status: stable
+description: Detects cross-site scripting attempts in web request logs.
+author: URSUS SIEM
+date: 2024-01-01
+category: web_attacks
+severity: medium
+tags:
+  - attack.initial_access
+  - attack.t1190
+logsource:
+  category: webserver
+detection:
+  selection:
+    message|contains|any:
+      - "<script>"
+      - "</script>"
+      - "javascript:"
+      - "onerror="
+      - "onload="
+      - "alert("
+      - "document.cookie"
+      - "eval("
+  condition: selection
+fields:
+  - src.ip
+  - message
+  - host
+falsepositives:
+  - Security testing
+  - Legitimate HTML content in POST bodies
+level: medium

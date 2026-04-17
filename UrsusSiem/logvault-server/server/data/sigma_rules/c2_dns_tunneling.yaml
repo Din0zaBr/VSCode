@@ -1,0 +1,29 @@
+title: DNS Tunneling - C2 Communication
+id: c2-dns-001
+status: stable
+description: Detects DNS tunneling patterns used for command & control communication by malware.
+author: URSUS SIEM
+date: 2024-01-01
+category: command_and_control
+severity: high
+tags:
+  - attack.command_and_control
+  - attack.t1071.004
+logsource:
+  category: dns
+detection:
+  selection_long:
+    message|re: '[a-z0-9]{30,}\.'
+  selection_volume:
+    protocol: udp
+    dst.port: 53
+  condition: (selection_long and selection_volume) | count(dst.ip) by src.ip > 30 within 60s
+fields:
+  - src.ip
+  - dst.ip
+  - message
+  - protocol
+falsepositives:
+  - CDN providers with long subdomain names
+  - Some legitimate applications using long DNS names
+level: high

@@ -1,0 +1,29 @@
+title: Large Data Upload - Potential Exfiltration
+id: exfil-001
+status: stable
+description: Detects unusually large outbound data transfers that may indicate data exfiltration.
+author: URSUS SIEM
+date: 2024-01-01
+category: data_exfiltration
+severity: high
+tags:
+  - attack.exfiltration
+  - attack.t1048
+logsource:
+  category: network
+  service: firewall
+detection:
+  selection:
+    count.bytes|gte: 100000000
+    direction: outbound
+  condition: selection
+fields:
+  - src.ip
+  - dst.ip
+  - count.bytes
+  - protocol
+  - subject.name
+falsepositives:
+  - Legitimate large file transfers (backups, software deployments)
+  - Cloud synchronization services
+level: high

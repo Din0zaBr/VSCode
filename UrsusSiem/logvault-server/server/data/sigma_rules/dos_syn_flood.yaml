@@ -1,0 +1,29 @@
+title: TCP SYN Flood - DoS Detection
+id: dos-syn-001
+status: stable
+description: Detects high volume of TCP SYN packets from single source, indicating SYN flood attack.
+author: URSUS SIEM
+date: 2024-01-01
+category: service_disruption
+severity: critical
+tags:
+  - attack.impact
+  - attack.t1498.001
+logsource:
+  category: network
+  service: firewall
+detection:
+  selection:
+    protocol: tcp
+    action:
+      - "syn"
+      - "new_connection"
+  condition: selection | count() by src.ip > 1000 within 10s
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - count.bytes
+falsepositives:
+  - High-traffic legitimate web services during traffic spikes
+level: critical

@@ -1,0 +1,29 @@
+title: Network Port Scan Detection
+id: net-scan-001
+status: stable
+description: Detects horizontal or vertical port scanning activity from a single source IP.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: medium
+tags:
+  - attack.discovery
+  - attack.t1046
+logsource:
+  category: network
+detection:
+  selection:
+    action:
+      - "denied"
+      - "blocked"
+      - "reject"
+  condition: selection | count(dst.port) by src.ip > 20 within 60s
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - protocol
+falsepositives:
+  - Network monitoring tools
+  - Vulnerability scanners in authorized scans
+level: medium

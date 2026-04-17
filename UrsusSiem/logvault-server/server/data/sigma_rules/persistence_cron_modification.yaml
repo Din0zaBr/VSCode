@@ -1,0 +1,35 @@
+title: Suspicious Cron Job Modification
+id: persist-cron-001
+status: stable
+description: Detects creation or modification of cron jobs, which may indicate persistence mechanism installation.
+author: URSUS SIEM
+date: 2024-01-01
+category: persistence
+severity: medium
+tags:
+  - attack.persistence
+  - attack.t1053.003
+logsource:
+  service: cron
+detection:
+  selection:
+    object.path|contains:
+      - "/etc/cron"
+      - "/var/spool/cron"
+    action:
+      - "modified"
+      - "created"
+  selection_msg:
+    message|contains:
+      - "CRON["
+      - "crontab"
+  condition: selection or selection_msg
+fields:
+  - object.path
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legitimate software installation adding cron jobs
+  - System maintenance tasks
+level: medium

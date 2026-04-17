@@ -1,0 +1,30 @@
+title: Suspicious Sudo Usage
+id: pe-sudo-001
+status: stable
+description: Detects privilege escalation via sudo to root or execution of sensitive commands.
+author: URSUS SIEM
+date: 2024-01-01
+category: privilege_escalation
+severity: medium
+tags:
+  - attack.privilege_escalation
+  - attack.t1548.003
+logsource:
+  service: sudo
+detection:
+  selection:
+    message|contains:
+      - "sudo"
+    level:
+      - ERROR
+      - WARNING
+  selection_root:
+    message|contains: "COMMAND=/bin/bash"
+  condition: selection or selection_root
+fields:
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Authorized administrators using sudo for legitimate tasks
+level: medium
