@@ -630,13 +630,13 @@ export default function DataStorage() {
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
       {/* Sub-nav */}
-      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "#21262d", background: "#161b22" }}>
+      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0"
             style={{
-              color: activeTab === t.id ? "#58a6ff" : "#6e7681",
-              borderBottom: activeTab === t.id ? "2px solid #58a6ff" : "2px solid transparent",
+              color: activeTab === t.id ? "#BF40BF" : "#64748b",
+              borderBottom: activeTab === t.id ? "2px solid #BF40BF" : "2px solid transparent",
             }}>
             {t.label}
           </button>

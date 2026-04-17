@@ -77,11 +77,11 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
       <button
         ref={triggerRef}
         onClick={handleToggle}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border"
         style={{
-          background: isActive ? "rgba(56,139,253,0.12)" : "transparent",
-          borderColor: isActive ? "#388bfd" : "#30363d",
-          color: isActive ? "#58a6ff" : "#8b949e",
+          background: isActive ? "rgba(106,13,173,0.18)" : "rgba(45,24,96,0.18)",
+          borderColor: isActive ? "#6A0DAD" : "#2d1860",
+          color: isActive ? "#BF40BF" : "#94a3b8",
         }}
         title="Настройка группировки"
       >
@@ -95,7 +95,7 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
         {isActive && (
           <span
             className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
-            style={{ background: "#1f6feb", color: "#fff" }}
+            style={{ background: "#6A0DAD", color: "#fff" }}
           >
             {fields.length}
           </span>
@@ -111,26 +111,26 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
       {open && (
         <div
           ref={panelRef}
-          className="absolute left-0 top-full mt-1.5 z-50 rounded-lg border shadow-2xl"
+          className="absolute left-0 top-full mt-1.5 z-50 rounded-xl border shadow-2xl"
           style={{
-            background: "#161b22",
-            borderColor: "#30363d",
+            background: "#0d0f18",
+            borderColor: "#2d1860",
             minWidth: "260px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(45,24,96,0.4)",
           }}
         >
-          <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: "#21262d" }}>
-            <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "#8b949e" }}>
+          <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: "#1a0d2e" }}>
+            <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "#8b20d1" }}>
               Поля группировки
             </span>
-            <span className="text-[10px]" style={{ color: "#484f58" }}>
+            <span className="text-[10px]" style={{ color: "#4a3670" }}>
               {draft.length} / {AVAILABLE_FIELDS.length}
             </span>
           </div>
 
           <div className="p-2 space-y-1.5">
             {draft.length === 0 && (
-              <div className="text-center py-3 text-xs" style={{ color: "#484f58" }}>
+              <div className="text-center py-3 text-xs" style={{ color: "#4a3670" }}>
                 Нет полей — нажмите +
               </div>
             )}
@@ -139,19 +139,19 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
               const options = AVAILABLE_FIELDS.filter((f) => !taken.has(f));
               return (
                 <div key={idx} className="flex items-center gap-1.5">
-                  <span className="text-[10px] w-4 text-right flex-shrink-0 select-none" style={{ color: "#484f58" }}>
+                  <span className="text-[10px] w-4 text-right flex-shrink-0 select-none" style={{ color: "#4a3670" }}>
                     {idx + 1}
                   </span>
                   <select
                     value={field}
                     onChange={(e) => handleFieldChange(idx, e.target.value)}
                     className="flex-1 rounded-md px-2 py-1 text-xs font-mono appearance-none focus:outline-none transition-colors cursor-pointer"
-                    style={{ background: "#1c2128", border: "1px solid #30363d", color: "#79c0ff" }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#388bfd"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "#30363d"; }}
+                    style={{ background: "#161622", border: "1px solid #2d1860", color: "#BF40BF" }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#6A0DAD"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "#2d1860"; }}
                   >
                     {options.map((opt) => (
-                      <option key={opt} value={opt} style={{ background: "#161b22", color: "#e6edf3" }}>
+                      <option key={opt} value={opt} style={{ background: "#0d0f18", color: "#BF40BF" }}>
                         {opt}
                       </option>
                     ))}
@@ -160,9 +160,9 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
                     onClick={() => handleRemove(idx)}
                     title="Удалить поле"
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded transition-colors text-xs"
-                    style={{ color: "#6e7681", background: "transparent" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "#f85149"; e.currentTarget.style.background = "rgba(248,81,73,0.1)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "#6e7681"; e.currentTarget.style.background = "transparent"; }}
+                    style={{ color: "#64748b", background: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
                   >
                     ×
                   </button>
@@ -176,9 +176,9 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
               <button
                 onClick={handleAdd}
                 className="w-full flex items-center justify-center gap-1.5 py-1 rounded-md text-xs transition-colors border border-dashed"
-                style={{ borderColor: "#30363d", color: "#6e7681", background: "transparent" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#388bfd"; e.currentTarget.style.color = "#58a6ff"; e.currentTarget.style.background = "rgba(56,139,253,0.06)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#30363d"; e.currentTarget.style.color = "#6e7681"; e.currentTarget.style.background = "transparent"; }}
+                style={{ borderColor: "#2d1860", color: "#64748b", background: "transparent" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#6A0DAD"; e.currentTarget.style.color = "#BF40BF"; e.currentTarget.style.background = "rgba(106,13,173,0.08)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2d1860"; e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
               >
                 <span className="text-base leading-none mb-px">+</span>
                 Добавить поле
@@ -186,22 +186,22 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
             </div>
           )}
 
-          <div className="px-3 py-2 flex items-center justify-end gap-2 border-t" style={{ borderColor: "#21262d" }}>
+          <div className="px-3 py-2 flex items-center justify-end gap-2 border-t" style={{ borderColor: "#1a0d2e" }}>
             <button
               onClick={handleReset}
               className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
-              style={{ background: "transparent", border: "1px solid #30363d", color: "#8b949e" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#f85149"; e.currentTarget.style.borderColor = "#6e1c19"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#8b949e"; e.currentTarget.style.borderColor = "#30363d"; }}
+              style={{ background: "rgba(45,24,96,0.2)", border: "1px solid #2d1860", color: "#94a3b8" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "#7f1d1d"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.borderColor = "#2d1860"; }}
             >
               Сбросить
             </button>
             <button
               onClick={handleApply}
-              className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
-              style={{ background: "#1f6feb", color: "#fff" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#388bfd"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#1f6feb"; }}
+              className="px-3 py-1 rounded-md text-xs font-medium transition-all"
+              style={{ background: "linear-gradient(135deg, #6A0DAD, #8b20d1)", color: "#fff" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #8b20d1, #BF40BF)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #6A0DAD, #8b20d1)"; }}
             >
               Применить
             </button>
