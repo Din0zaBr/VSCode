@@ -18,6 +18,7 @@ from server.src.routers import api_keys as api_keys_router
 from server.src.routers import sigma_rules as sigma_rules_router
 from server.src.services.alerting import alert_loop
 from server.src.services import sigma_rules as sigma_rules_svc
+from server.src.tasks.sync_integrations import integration_sync_loop
 from server.src.services.correlator import correlation_loop
 from server.src.services.ml_engine import MLEngine
 from server.src.services.pipeline import IngestPipeline
@@ -88,6 +89,12 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=alert_loop, args=(db_service,), daemon=True).start()
     threading.Thread(target=correlation_loop, args=(db_service,), daemon=True).start()
     threading.Thread(target=health_loop, args=(system_health,), daemon=True).start()
+    threading.Thread(
+        target=integration_sync_loop,
+        args=(registry, app.state.pipeline),
+        kwargs={"interval": 300},
+        daemon=True,
+    ).start()
 
     logger.info("URSUS SIEM started, PG at %s", settings.DATABASE_URL.split("@")[-1])
     yield
