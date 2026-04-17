@@ -610,6 +610,319 @@ function SourceMonitoringTab() {
   );
 }
 
+// ── References Tab (Incident Scenarios) ───────────────────────────────────────
+
+interface Scenario {
+  id: string;
+  name: string;
+  customer: string;
+  criticality: "Критический" | "Высокий" | "Средний" | "Низкий";
+  description: string;
+  detection_method: string;
+  root_cause: string;
+  recommendations: string;
+  notes: string;
+  created_at: string;
+}
+
+function ReferencesTab() {
+  const SCENARIOS_KEY = "ursus_scenarios";
+  const [scenarios, setScenarios] = useState<Scenario[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(SCENARIOS_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<Scenario>({
+    id: "",
+    name: "",
+    customer: "",
+    criticality: "Высокий",
+    description: "",
+    detection_method: "",
+    root_cause: "",
+    recommendations: "",
+    notes: "",
+    created_at: new Date().toISOString(),
+  });
+
+  const saveScenarios = (updated: Scenario[]) => {
+    setScenarios(updated);
+    localStorage.setItem(SCENARIOS_KEY, JSON.stringify(updated));
+  };
+
+  const handleNew = () => {
+    setForm({
+      id: `scenario-${Date.now()}`,
+      name: "",
+      customer: "",
+      criticality: "Высокий",
+      description: "",
+      detection_method: "",
+      root_cause: "",
+      recommendations: "",
+      notes: "",
+      created_at: new Date().toISOString(),
+    });
+    setSelectedId(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (s: Scenario) => {
+    setForm({ ...s });
+    setSelectedId(s.id);
+    setShowForm(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name) return;
+    if (selectedId) {
+      saveScenarios(scenarios.map((s) => (s.id === selectedId ? form : s)));
+    } else {
+      saveScenarios([form, ...scenarios]);
+    }
+    setShowForm(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Удалить сценарий?")) {
+      saveScenarios(scenarios.filter((s) => s.id !== id));
+      setSelectedId(null);
+    }
+  };
+
+  const selected = scenarios.find((s) => s.id === selectedId);
+
+  const CRIT_COLORS: Record<string, string> = {
+    "Критический": "#f87171",
+    "Высокий": "#fb923c",
+    "Средний": "#facc15",
+    "Низкий": "#60a5fa",
+  };
+
+  return (
+    <div className="flex gap-4 h-full overflow-hidden">
+      {/* List */}
+      <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <span className="text-xs font-bold" style={{ color: "#BF40BF" }}>
+            Сценарии ({scenarios.length})
+          </span>
+          <button onClick={handleNew} className="siem-btn text-xs py-1 px-3">
+            + Новый
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {scenarios.length === 0 && (
+            <div className="text-center text-gray-600 py-8 text-sm">Нет сценариев</div>
+          )}
+          {scenarios.map((s) => (
+            <div
+              key={s.id}
+              className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
+              style={{ borderColor: "#1a0d2e", background: selectedId === s.id ? "rgba(106,13,173,0.12)" : "transparent" }}
+              onClick={() => setSelectedId(s.id)}
+            >
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CRIT_COLORS[s.criticality] }} />
+                <span className="text-xs font-medium text-gray-200 truncate">{s.name}</span>
+              </div>
+              <div className="text-[10px] text-gray-600 ml-3">{s.customer || "—"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {showForm ? (
+          <>
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+              <span className="text-sm font-semibold text-gray-200">
+                {selectedId ? "Редактировать сценарий" : "Новый сценарий"}
+              </span>
+              <div className="flex gap-2">
+                <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-3 py-1.5">
+                  Отмена
+                </button>
+                {selectedId && (
+                  <button
+                    onClick={() => { handleDelete(selectedId); setShowForm(false); }}
+                    className="text-xs px-3 py-1.5 rounded-lg"
+                    style={{ background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}
+                  >
+                    Удалить
+                  </button>
+                )}
+                <button onClick={handleSave} className="siem-btn text-xs px-4 py-1.5">
+                  Сохранить
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                    Название
+                  </label>
+                  <input
+                    className="siem-input w-full text-sm"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                    Клиент
+                  </label>
+                  <input
+                    className="siem-input w-full text-sm"
+                    value={form.customer}
+                    onChange={(e) => setForm({ ...form, customer: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Критичность
+                </label>
+                <select
+                  className="siem-input w-full text-sm"
+                  value={form.criticality}
+                  onChange={(e) => setForm({ ...form, criticality: e.target.value as Scenario["criticality"] })}
+                >
+                  <option>Критический</option>
+                  <option>Высокий</option>
+                  <option>Средний</option>
+                  <option>Низкий</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Описание
+                </label>
+                <textarea
+                  className="siem-input w-full text-sm resize-none"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Метод обнаружения
+                </label>
+                <textarea
+                  className="siem-input w-full text-sm resize-none"
+                  rows={2}
+                  value={form.detection_method}
+                  onChange={(e) => setForm({ ...form, detection_method: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Первопричина
+                </label>
+                <textarea
+                  className="siem-input w-full text-sm resize-none"
+                  rows={2}
+                  value={form.root_cause}
+                  onChange={(e) => setForm({ ...form, root_cause: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Рекомендации
+                </label>
+                <textarea
+                  className="siem-input w-full text-sm resize-none"
+                  rows={2}
+                  value={form.recommendations}
+                  onChange={(e) => setForm({ ...form, recommendations: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  Заметки
+                </label>
+                <textarea
+                  className="siem-input w-full text-sm resize-none"
+                  rows={2}
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                />
+              </div>
+            </div>
+          </>
+        ) : selected ? (
+          <>
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-200">{selected.name}</h3>
+                <p className="text-xs text-gray-600 mt-0.5">{selected.customer}</p>
+              </div>
+              <div className="flex gap-2">
+                <span
+                  className="text-xs px-2 py-1 rounded"
+                  style={{ background: `${CRIT_COLORS[selected.criticality]}33`, color: CRIT_COLORS[selected.criticality] }}
+                >
+                  {selected.criticality}
+                </span>
+                <button onClick={() => handleEdit(selected)} className="siem-btn-ghost text-xs px-3 py-1.5">
+                  Редактировать
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {selected.description && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Описание</h4>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.description}</p>
+                </div>
+              )}
+              {selected.detection_method && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Обнаружено</h4>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.detection_method}</p>
+                </div>
+              )}
+              {selected.root_cause && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Причина</h4>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.root_cause}</p>
+                </div>
+              )}
+              {selected.recommendations && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Рекомендации</h4>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.recommendations}</p>
+                </div>
+              )}
+              {selected.notes && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Заметки</h4>
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.notes}</p>
+                </div>
+              )}
+              <div className="text-xs text-gray-600 pt-4 border-t" style={{ borderColor: "#1a0d2e" }}>
+                Создан: {new Date(selected.created_at).toLocaleString("ru-RU")}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center flex-col gap-3">
+            <div className="text-5xl">📚</div>
+            <div className="text-gray-500 text-sm font-medium">Выберите или создайте сценарий</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Stub tabs ─────────────────────────────────────────────────────────────────
 
 function StubTab({ label, icon = "📋" }: { label: string; icon?: string }) {
@@ -649,7 +962,7 @@ export default function DataStorage() {
         {activeTab === "exclusions"        && <ExclusionsTab />}
         {activeTab === "accounts"          && <AccountsTab />}
         {activeTab === "enrichment-rules"  && <StubTab label="Правила обогащения" icon="🔀" />}
-        {activeTab === "references"        && <StubTab label="Справочники" icon="📚" />}
+        {activeTab === "references"        && <ReferencesTab />}
         {activeTab === "table-lists"       && <StubTab label="Табличные списки" icon="📊" />}
         {activeTab === "profiles"          && <StubTab label="Профили" icon="👤" />}
         {activeTab === "infrastructure"    && <StubTab label="Инфраструктура" icon="🏗️" />}
