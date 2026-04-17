@@ -4,125 +4,123 @@
 
 @layer base {
   html, body, #root {
-    background-color: #08090e;
-    color: #e2e8f0;
+    background-color: #0d1117;
+    color: #e6edf3;
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0d0f18; }
-  ::-webkit-scrollbar-thumb { background: #2d1860; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #6A0DAD; }
+  ::-webkit-scrollbar-track { background: #161b22; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #388bfd; }
 }
 
 @layer components {
   /* SIEM Card */
   .siem-card {
-    @apply rounded-xl border bg-siem-surface;
-    border-color: #1a0d2e;
-    box-shadow: 0 0 24px rgba(106,13,173,0.08), 0 2px 8px rgba(0,0,0,0.5);
+    @apply rounded-lg border bg-siem-surface;
+    border-color: #21262d;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
 
   /* SIEM Input */
   .siem-input {
-    @apply bg-siem-surface2 border rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none transition-colors;
-    border-color: #2d1860;
+    @apply bg-siem-surface2 border rounded-md px-3 py-2 text-sm text-gray-200 focus:outline-none transition-colors;
+    border-color: #30363d;
   }
   .siem-input:focus {
-    border-color: #6A0DAD;
-    box-shadow: 0 0 0 2px rgba(106,13,173,0.2);
+    border-color: #388bfd;
+    box-shadow: 0 0 0 2px rgba(56,139,253,0.15);
   }
-  .siem-input::placeholder { color: #64748b; }
+  .siem-input::placeholder { color: #484f58; }
 
   /* SIEM Button primary */
   .siem-btn {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150;
-    background: linear-gradient(135deg, #6A0DAD, #8b20d1);
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150;
+    background: #1f6feb;
     color: #fff;
-    box-shadow: 0 0 12px rgba(106,13,173,0.3);
   }
   .siem-btn:hover {
-    background: linear-gradient(135deg, #8b20d1, #BF40BF);
-    box-shadow: 0 0 20px rgba(191,64,191,0.4);
+    background: #388bfd;
   }
 
   /* SIEM Button ghost */
   .siem-btn-ghost {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
-    background: rgba(45,24,96,0.3);
-    border: 1px solid #2d1860;
-    color: #b266ff;
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+    background: transparent;
+    border: 1px solid #30363d;
+    color: #8b949e;
   }
   .siem-btn-ghost:hover {
-    background: rgba(106,13,173,0.2);
-    border-color: #6A0DAD;
-    color: #d060d0;
+    background: #21262d;
+    border-color: #388bfd;
+    color: #e6edf3;
   }
 
   /* SIEM Table */
   .siem-table thead tr {
-    border-bottom: 1px solid #1a0d2e;
+    border-bottom: 1px solid #21262d;
   }
   .siem-table thead th {
     @apply text-xs uppercase tracking-wider px-3 py-2;
-    color: #64748b;
+    color: #6e7681;
   }
   .siem-table tbody tr {
-    border-bottom: 1px solid rgba(26,13,46,0.5);
+    border-bottom: 1px solid rgba(33,38,45,0.6);
     transition: background 0.1s;
   }
   .siem-table tbody tr:hover {
-    background: rgba(106,13,173,0.08);
+    background: #1c2128;
   }
   .siem-table tbody td {
     @apply px-3 py-2 text-sm;
-    color: #cbd5e1;
+    color: #c9d1d9;
   }
 
   /* Nav link active */
   .nav-active {
-    background: rgba(106,13,173,0.2);
-    color: #BF40BF;
-    border-bottom: 2px solid #BF40BF;
+    background: rgba(56,139,253,0.15);
+    color: #58a6ff;
+    border-bottom: 2px solid #58a6ff;
   }
 
   /* Severity badges */
-  .badge-critical { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-critical { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(239,68,68,0.15); color: #f85149; border: 1px solid rgba(239,68,68,0.3); }
   .badge-high     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
-  .badge-medium   { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
-  .badge-low      { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(106,13,173,0.15); color: #b266ff; border: 1px solid rgba(106,13,173,0.3); }
+  .badge-medium   { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(234,179,8,0.15); color: #e3b341; border: 1px solid rgba(234,179,8,0.3); }
+  .badge-low      { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(56,139,253,0.15); color: #58a6ff; border: 1px solid rgba(56,139,253,0.3); }
+  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(110,118,129,0.15); color: #8b949e; border: 1px solid rgba(110,118,129,0.3); }
 
   /* Status badges */
-  .badge-open         { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-investigating{ background: rgba(234,179,8,0.12); color: #facc15; border: 1px solid rgba(234,179,8,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-resolved     { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-fp           { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-open         { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-investigating{ background: rgba(227,179,65,0.12); color: #e3b341; border: 1px solid rgba(227,179,65,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-resolved     { background: rgba(52,211,153,0.12); color: #3fb950; border: 1px solid rgba(52,211,153,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-fp           { background: rgba(110,118,129,0.12); color: #6e7681; border: 1px solid rgba(110,118,129,0.25); @apply text-xs px-2 py-0.5 rounded; }
 
   /* Criticality dot */
   .crit-dot { @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .crit-dot-critical { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.8); }
-  .crit-dot-high     { background: #f97316; box-shadow: 0 0 6px rgba(249,115,22,0.6); }
-  .crit-dot-medium   { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.5); }
-  .crit-dot-low      { background: #3b82f6; box-shadow: 0 0 4px rgba(59,130,246,0.4); }
-  .crit-dot-info     { background: #e2e8f0; }
+  .crit-dot-critical { background: #f85149; }
+  .crit-dot-high     { background: #fb923c; }
+  .crit-dot-medium   { background: #e3b341; }
+  .crit-dot-low      { background: #58a6ff; }
+  .crit-dot-info     { background: #6e7681; }
 
   /* Correlation star */
-  .corr-star { color: #ef4444; font-size: 11px; line-height: 1; }
+  .corr-star { color: #f85149; font-size: 11px; line-height: 1; }
 
   /* PDQL input area */
   .pdql-bar {
-    background: rgba(13,15,24,0.9);
-    border: 1px solid #2d1860;
-    border-radius: 8px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 12px;
-    color: #BF40BF;
+    color: #79c0ff;
   }
   .pdql-bar:focus {
-    border-color: #6A0DAD;
+    border-color: #388bfd;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(106,13,173,0.25);
+    box-shadow: 0 0 0 2px rgba(56,139,253,0.15);
   }
 
   /* Detail panel field row */
@@ -131,10 +129,10 @@
     transition: background 0.1s;
   }
   .field-row:hover {
-    background: rgba(106,13,173,0.12);
+    background: rgba(56,139,253,0.08);
   }
   .field-row:hover .field-add-btn { @apply visible; }
-  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: #BF40BF; background: rgba(191,64,191,0.15); }
+  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: #58a6ff; background: rgba(88,166,255,0.12); }
 }
 
 /* Print styles for incident PDF */

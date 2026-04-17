@@ -908,10 +908,14 @@ export default function Events() {
     }
   };
 
-  // Restore from search params (e.g. from incidents page)
+  // Restore from search params (e.g. from incidents page) and auto-execute
   useEffect(() => {
     const q = searchParams.get("q");
-    if (q) setPdqlFilter(q);
+    if (q) {
+      setPdqlFilter(q);
+      const pdql = buildChannelPdql(q, []);
+      setAppliedChannel({ pdql, rawFilter: q, from: nowMinus(86_400_000), to: new Date().toISOString(), size: PAGE_SIZE });
+    }
   }, [searchParams]);
 
   const handleApply = useCallback(() => {

@@ -1,0 +1,190 @@
+# LogVault Agent — Windows Compliance configuration
+#
+# USE CASE: Comprehensive event collection for regulatory compliance audit trails.
+#           Suitable for PCI-DSS, HIPAA, SOC 2, ISO 27001, CIS Controls, and
+#           NIST SP 800-53 logging requirements.
+#
+# COMPLIANCE MAPPING:
+#   PCI-DSS  10.2 — Log all access to system components, authentication events,
+#                   privilege escalation, audit log access/changes, and system init.
+#   HIPAA    § 164.312(b) — Audit controls on ePHI systems.
+#   SOC 2 CC6–CC9 — Logical access controls, change management, incident response.
+#   NIST 800-53 AU-2/AU-3 — Audit events: logon, account management, object access,
+#                            policy change, privilege use, process tracking.
+#
+# FOCUSES ON:
+#   - Full authentication and session lifecycle (Security)
+#   - Account and group management changes (Security)
+#   - Audit and policy change events (Security)
+#   - Object / file access events (Security — requires SACL on objects)
+#   - Application errors and crashes (Application)
+#   - System health and service lifecycle (System)
+#
+# REQUIREMENTS:
+#   - Agent must run as SYSTEM for Security channel access.
+#   - Enable object access auditing if you need file/registry access events (4663):
+#       auditpol /set /subcategory:"File System" /success:enable /failure:enable
+#   - Configure SACLs on sensitive files/directories via Explorer or icacls.
+#
+# NOTE ON VOLUME:
+#   Compliance configurations intentionally capture more event categories than
+#   security-alert configs. On domain controllers or file servers, event volumes
+#   can be high — tune flush_interval and batch_size accordingly, or add
+#   event_ids filters per-source to trim noise.
+#
+# Copy to: C:\ProgramData\logvault-agent\config.yaml
+# Install : .\install-windows.ps1 -ServerUrl <url> -ApiKey <key>
+# ─────────────────────────────────────────────────────────────────────────────
+
+server_url: "http://localhost:8000"   # replace with your LogVault server URL
+agent_id:   "win-compliance-01"       # unique per host
+api_key:    "changeme-agent-key"      # must match AGENT_API_KEY on the server
+hostname:   ""                        # leave blank to auto-detect
+
+batch_size:     500    # larger batches reduce per-request overhead on high-volume hosts
+flush_interval: 5.0    # 5 s acceptable for compliance audit trails (not real-time alerting)
+retry_base:     1.0
+retry_max:      120.0  # longer back-off ceiling for compliance — never drop events
+buffer_db:      "C:/ProgramData/logvault-agent/buffer.db"
+verify_ssl:     false  # set true when server uses a valid trusted certificate
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Log sources
+# ─────────────────────────────────────────────────────────────────────────────
+sources:
+
+  # ── Windows Security Event Log ──────────────────────────────────────────────
+  # Comprehensive coverage across all major compliance audit categories.
+  - type: winevent
+    channel: "Security"
+    service: "windows-security"
+    event_ids:
+      # ── Logon / Logoff  (PCI 10.2.4, 10.2.5 / NIST AU-2) ───────────────────
+      - 4624   # Successful logon
+      - 4625   # Failed logon
+      - 4634   # Logoff
+      - 4647   # User-initiated logoff
+      - 4648   # Explicit credential logon (RunAs)
+      - 4675   # SIDs filtered
+      - 4778   # Session reconnected (RDP / Terminal Services)
+      - 4779   # Session disconnected
+
+      # ── Privilege use  (PCI 10.2.2 / NIST AU-2) ─────────────────────────────
+      - 4672   # Special privileges assigned to new logon
+      - 4673   # Privileged service called
+      - 4674   # Operation attempted on privileged object
+
+      # ── Account management  (PCI 10.2.5 / HIPAA / NIST AC-2) ────────────────
+      - 4720   # User account created
+      - 4722   # User account enabled
+      - 4723   # Password change attempted
+      - 4724   # Password reset attempted
+      - 4725   # User account disabled
+      - 4726   # User account deleted
+      - 4727   # Security-enabled global group created
+      - 4728   # Member added to security-enabled global group
+      - 4729   # Member removed from security-enabled global group
+      - 4730   # Security-enabled global group deleted
+      - 4731   # Security-enabled local group created
+      - 4732   # Member added to security-enabled local group
+      - 4733   # Member removed from security-enabled local group
+      - 4734   # Security-enabled local group deleted
+      - 4738   # User account changed
+      - 4740   # Account locked out
+      - 4741   # Computer account created
+      - 4743   # Computer account deleted
+      - 4754   # Security-enabled universal group created
+      - 4756   # Member added to security-enabled universal group
+      - 4757   # Member removed from security-enabled universal group
+      - 4758   # Security-enabled universal group deleted
+      - 4767   # Account unlocked
+      - 4781   # Account name changed
+
+      # ── Object / file access  (PCI 10.2.3 / HIPAA § 164.312(b)) ─────────────
+      # Requires SACL on objects and "Object Access" audit policy enabled:
+      #   auditpol /set /subcategory:"File System" /success:enable /failure:enable
+      - 4656   # Handle to an object was requested (access check)
+      - 4660   # Object deleted
+      - 4663   # Attempt to access object (read/write/delete — most relevant)
+      - 4670   # Object permissions changed
+
+      # ── Audit policy changes  (PCI 10.2.6 / NIST AU-9) ──────────────────────
+      - 4715   # Audit policy on object changed
+      - 4719   # System audit policy changed
+      - 4817   # Auditing settings on object changed
+      - 4902   # Per-user audit policy table created
+      - 4904   # Attempt to register security event source
+      - 4906   # CrashOnAuditFail value changed
+      - 4907   # Auditing settings on object changed (new object)
+      - 4908   # Special groups logon table modified
+      - 4912   # Per-user audit policy changed
+
+      # ── Authentication policy  (SOC 2 CC6) ──────────────────────────────────
+      - 4768   # Kerberos TGT requested
+      - 4769   # Kerberos service ticket requested
+      - 4771   # Kerberos pre-auth failed
+      - 4776   # NTLM authentication
+
+      # ── System events  (PCI 10.2.7) ─────────────────────────────────────────
+      - 4608   # Windows starting up
+      - 4609   # Windows shutting down
+      - 4616   # System time changed (critical for log integrity)
+      - 4621   # Administrator recovered system from CrashOnAuditFail
+
+      # ── Process tracking  (NIST AU-2 / CIS Control 8) ───────────────────────
+      - 4688   # Process creation (requires Process Creation audit policy)
+      - 4689   # Process exit
+
+      # ── Persistence  (PCI 10.2.7 / CIS Control 10) ──────────────────────────
+      - 4698   # Scheduled task created
+      - 4699   # Scheduled task deleted
+      - 4700   # Scheduled task enabled
+      - 4701   # Scheduled task disabled
+      - 4702   # Scheduled task updated
+      - 7045   # New service installed
+
+  # ── Windows Application Event Log ───────────────────────────────────────────
+  # Application errors, crashes, and warnings — required for availability
+  # and service continuity records under SOC 2 Availability criteria.
+  # No event_ids filter: capture all Application log entries (Warning+Error).
+  # The winevent reader forwards all levels; server-side filtering can be applied
+  # via LogVault ingestion rules if you want only Warning/Error.
+  - type: winevent
+    channel: "Application"
+    service: "windows-app"
+    # Common high-value Application event sources for compliance:
+    #   MSI Installer  (EventID 1033 / 1034 — software install/uninstall)
+    #   Windows Error  (EventID 1001 — application crash)
+    #   .NET Runtime   (EventID 1026 — .NET exception)
+    #   MSSQLSERVER    (SQL Server audit events)
+    #   Security-SPP   (Software Protection Platform — license state)
+
+  # ── Windows System Event Log ────────────────────────────────────────────────
+  # Hardware, driver, and service-level events for system health records.
+  - type: winevent
+    channel: "System"
+    service: "windows-system"
+    event_ids:
+      # ── Boot and shutdown timeline ───────────────────────────────────────────
+      - 6005   # Event Log service started  (= system boot marker)
+      - 6006   # Event Log service stopped  (= clean shutdown marker)
+      - 6008   # Previous shutdown unexpected (dirty shutdown / crash / power loss)
+      - 6009   # Windows version logged at startup
+      - 6013   # System uptime (seconds since last boot)
+      - 41     # Kernel-Power: system rebooted without clean shutdown
+      - 1074   # User-initiated shutdown / restart
+
+      # ── Service lifecycle ────────────────────────────────────────────────────
+      - 7034   # Service crashed unexpectedly
+      - 7035   # Service control manager sent start/stop control
+      - 7036   # Service entered running/stopped state
+      - 7040   # Service start type changed
+      - 7045   # New service installed (belt-and-suspenders with Security 7045)
+
+      # ── Hardware / driver ────────────────────────────────────────────────────
+      - 55     # NTFS: file system structure corruption detected
+      - 1001   # BugCheck / BSOD (Windows Error Reporting)
+
+      # ── Time service ─────────────────────────────────────────────────────────
+      - 37     # W32tm: time-sync error (log integrity risk)
+      - 129    # W32tm: NTP peer unreachable

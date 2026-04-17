@@ -26,8 +26,8 @@ function SiemLogo() {
       />
       <span style={{ display: "none", fontSize: "24px" }} role="img" aria-label="bear">🐻</span>
       <div className="leading-none">
-        <div className="text-sm font-bold tracking-widest" style={{ color: "#BF40BF" }}>URSUS</div>
-        <div className="text-[9px] tracking-[0.2em] font-light" style={{ color: "#8b20d1" }}>INSIGHT</div>
+        <div className="text-sm font-bold tracking-widest" style={{ color: "#58a6ff" }}>URSUS</div>
+        <div className="text-[9px] tracking-[0.2em] font-light" style={{ color: "#388bfd" }}>INSIGHT</div>
       </div>
     </div>
   );
@@ -63,13 +63,13 @@ function AppLayout() {
   const isTabActive = (to: string) => location.pathname.startsWith(to);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#08090e" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#0d1117" }}>
       {/* ── Top Header ──────────────────────────────────────────────────── */}
       <header
         className="flex items-center gap-4 px-4 py-0 flex-shrink-0"
         style={{
-          background: "linear-gradient(90deg, #08090e 0%, #0f0d1a 50%, #090e10 100%)",
-          borderBottom: "1px solid #1a0d2e",
+          background: "#161b22",
+          borderBottom: "1px solid #21262d",
           height: "52px",
         }}
       >
@@ -78,7 +78,7 @@ function AppLayout() {
           <SiemLogo />
         </button>
 
-        <div className="w-px h-6 flex-shrink-0" style={{ background: "#2d1860" }} />
+        <div className="w-px h-6 flex-shrink-0" style={{ background: "#30363d" }} />
 
         {/* Main navigation */}
         <nav className="flex flex-1 h-full">
@@ -90,9 +90,9 @@ function AppLayout() {
                 to={tab.to}
                 className="relative flex items-center px-4 h-full text-xs font-medium tracking-wide transition-colors"
                 style={{
-                  color: active ? "#BF40BF" : "#94a3b8",
-                  background: active ? "rgba(106,13,173,0.12)" : "transparent",
-                  borderBottom: active ? "2px solid #BF40BF" : "2px solid transparent",
+                  color: active ? "#58a6ff" : "#8b949e",
+                  background: active ? "rgba(56,139,253,0.1)" : "transparent",
+                  borderBottom: active ? "2px solid #58a6ff" : "2px solid transparent",
                 }}
               >
                 {tab.label}
@@ -105,9 +105,9 @@ function AppLayout() {
             to="/dashboard"
             className="relative flex items-center px-3 h-full text-xs font-medium tracking-wide transition-colors ml-auto"
             style={({ isActive }) => ({
-              color: isActive ? "#BF40BF" : "#64748b",
-              background: isActive ? "rgba(106,13,173,0.12)" : "transparent",
-              borderBottom: isActive ? "2px solid #BF40BF" : "2px solid transparent",
+              color: isActive ? "#58a6ff" : "#6e7681",
+              background: isActive ? "rgba(56,139,253,0.1)" : "transparent",
+              borderBottom: isActive ? "2px solid #58a6ff" : "2px solid transparent",
             })}
           >
             Дашборд
@@ -118,16 +118,16 @@ function AppLayout() {
         <div className="flex items-center gap-3 flex-shrink-0">
           <span
             className="text-[10px] px-2 py-0.5 rounded uppercase tracking-widest font-medium"
-            style={{ background: "rgba(106,13,173,0.2)", color: "#8b20d1", border: "1px solid #2d1860" }}
+            style={{ background: "rgba(56,139,253,0.12)", color: "#58a6ff", border: "1px solid rgba(56,139,253,0.25)" }}
           >
             {role}
           </span>
           <button
             onClick={handleLogout}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-            style={{ color: "#64748b", border: "1px solid #1a0d2e" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "#7f1d1d"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#1a0d2e"; }}
+            className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+            style={{ color: "#6e7681", border: "1px solid #30363d" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#f85149"; e.currentTarget.style.borderColor = "#6e1c19"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "#6e7681"; e.currentTarget.style.borderColor = "#30363d"; }}
           >
             Выход
           </button>

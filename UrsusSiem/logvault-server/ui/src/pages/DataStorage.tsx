@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, isAdmin } from "../api/client";
 import type { Exclusion, CorrelationRule } from "../api/client";
@@ -338,6 +338,278 @@ function AccountsTab() {
   );
 }
 
+// ── Source Monitoring Tab ─────────────────────────────────────────────────────
+
+function ProgressBar({ value, color = "#58a6ff" }: { value: number; color?: string }) {
+  const clamped = Math.min(100, Math.max(0, value));
+  const barColor = clamped >= 90 ? "#f85149" : clamped >= 70 ? "#e3b341" : color;
+  return (
+    <div className="relative w-full rounded-full overflow-hidden" style={{ height: 6, background: "#21262d" }}>
+      <div
+        style={{ width: `${clamped}%`, background: barColor, height: "100%", borderRadius: "inherit", transition: "width 0.4s ease" }}
+      />
+    </div>
+  );
+}
+
+function MetricRow({ label, value, unit, percent }: { label: string; value: string; unit?: string; percent: number }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-gray-500">{label}</span>
+        <span className="text-[11px] font-mono" style={{ color: "#c9d1d9" }}>
+          {value}{unit ? <span className="text-gray-600 ml-0.5">{unit}</span> : null}
+          <span className="text-gray-600 ml-1.5">{percent.toFixed(1)}%</span>
+        </span>
+      </div>
+      <ProgressBar value={percent} />
+    </div>
+  );
+}
+
+function isAgentOnline(timestamp: string): boolean {
+  if (!timestamp) return false;
+  const ts = new Date(timestamp).getTime();
+  return Date.now() - ts < 2 * 60 * 1000;
+}
+
+function SourceMonitoringTab() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ["agent-metrics-latest"],
+    queryFn: () => api.latestAgentMetrics() as unknown as import("../api/client").AgentMetrics[],
+    refetchInterval: 30000,
+  });
+
+  const agents = metrics ?? [];
+  const selected = agents.find((a) => a.agent_id === selectedId) ?? (agents.length > 0 ? agents[0] : null);
+
+  return (
+    <div className="flex h-full overflow-hidden" style={{ background: "#0d1117" }}>
+      {/* Agent list */}
+      <div
+        className="w-64 flex flex-col flex-shrink-0 border-r overflow-hidden"
+        style={{ borderColor: "#21262d", background: "#0d1117" }}
+      >
+        <div
+          className="px-4 py-3 border-b flex items-center justify-between flex-shrink-0"
+          style={{ borderColor: "#21262d" }}
+        >
+          <span className="text-xs font-semibold" style={{ color: "#8b949e" }}>
+            АГЕНТЫ ({agents.length})
+          </span>
+          {isLoading && (
+            <span className="text-[10px]" style={{ color: "#58a6ff" }}>обновление...</span>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {agents.length === 0 && !isLoading && (
+            <div className="text-center py-10 text-xs" style={{ color: "#484f58" }}>
+              Нет данных от агентов
+            </div>
+          )}
+          {agents.map((agent) => {
+            const online = isAgentOnline(agent.timestamp);
+            const isActive = (selectedId ?? agents[0]?.agent_id) === agent.agent_id;
+            return (
+              <button
+                key={agent.agent_id}
+                onClick={() => setSelectedId(agent.agent_id)}
+                className="w-full text-left px-4 py-3 border-b transition-colors"
+                style={{
+                  borderColor: "#21262d",
+                  background: isActive ? "#161b22" : "transparent",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ background: online ? "#3fb950" : "#484f58", boxShadow: online ? "0 0 5px #3fb95066" : "none" }}
+                  />
+                  <span className="text-xs font-medium truncate" style={{ color: "#e6edf3" }}>
+                    {agent.host || agent.agent_id}
+                  </span>
+                </div>
+                <div className="ml-4 flex items-center gap-2">
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    style={{
+                      background: online ? "rgba(63,185,80,0.12)" : "rgba(72,79,88,0.3)",
+                      color: online ? "#3fb950" : "#484f58",
+                    }}
+                  >
+                    {online ? "онлайн" : "офлайн"}
+                  </span>
+                  {agent.cpu && (
+                    <span className="text-[10px]" style={{ color: "#484f58" }}>
+                      CPU {(agent.cpu as { usage_percent: number }).usage_percent.toFixed(0)}%
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Detail panel */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ background: "#0d1117" }}>
+        {!selected ? (
+          <div className="flex h-full items-center justify-center flex-col gap-3">
+            <div className="text-4xl" style={{ color: "#21262d" }}>📡</div>
+            <div className="text-sm" style={{ color: "#484f58" }}>Нет данных от агентов</div>
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div
+              className="rounded-xl p-4 border flex items-start justify-between"
+              style={{ background: "#161b22", borderColor: "#21262d" }}
+            >
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{
+                      background: isAgentOnline(selected.timestamp) ? "#3fb950" : "#484f58",
+                      boxShadow: isAgentOnline(selected.timestamp) ? "0 0 6px #3fb95077" : "none",
+                    }}
+                  />
+                  <span className="text-base font-semibold" style={{ color: "#e6edf3" }}>
+                    {selected.host || selected.agent_id}
+                  </span>
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    style={{
+                      background: isAgentOnline(selected.timestamp) ? "rgba(63,185,80,0.12)" : "rgba(72,79,88,0.25)",
+                      color: isAgentOnline(selected.timestamp) ? "#3fb950" : "#6e7681",
+                    }}
+                  >
+                    {isAgentOnline(selected.timestamp) ? "онлайн" : "офлайн"}
+                  </span>
+                </div>
+                <div className="text-[11px] space-y-0.5 ml-5" style={{ color: "#6e7681" }}>
+                  <div>ID: <span style={{ color: "#8b949e" }}>{selected.agent_id}</span></div>
+                  {selected.distro && (
+                    <div>
+                      ОС: <span style={{ color: "#8b949e" }}>
+                        {selected.distro.name} {selected.distro.version}
+                      </span>
+                    </div>
+                  )}
+                  {selected.uptime && (
+                    <div>
+                      Uptime: <span style={{ color: "#8b949e" }}>{selected.uptime.human}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] mb-0.5" style={{ color: "#484f58" }}>последнее обновление</div>
+                <div className="text-xs font-mono" style={{ color: "#6e7681" }}>
+                  {selected.timestamp
+                    ? new Date(selected.timestamp).toLocaleString("ru-RU")
+                    : "—"}
+                </div>
+              </div>
+            </div>
+
+            {/* CPU */}
+            {selected.cpu && (
+              <div
+                className="rounded-xl p-4 border space-y-3"
+                style={{ background: "#161b22", borderColor: "#21262d" }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                    Процессор
+                  </span>
+                  <span className="text-[10px]" style={{ color: "#484f58" }}>
+                    {selected.cpu.cores} ядер
+                  </span>
+                </div>
+                <MetricRow
+                  label="Использование CPU"
+                  value={selected.cpu.usage_percent.toFixed(1)}
+                  unit="%"
+                  percent={selected.cpu.usage_percent}
+                />
+                {selected.load_average && (
+                  <div className="flex gap-6 pt-1">
+                    {(["1m", "5m", "15m"] as const).map((k) => (
+                      <div key={k}>
+                        <div className="text-[10px] mb-0.5" style={{ color: "#484f58" }}>{k}</div>
+                        <div className="text-xs font-mono" style={{ color: "#c9d1d9" }}>
+                          {selected.load_average[k].toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="text-[10px] self-end mb-0.5 ml-1" style={{ color: "#484f58" }}>load avg</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Memory */}
+            {selected.memory && (
+              <div
+                className="rounded-xl p-4 border space-y-3"
+                style={{ background: "#161b22", borderColor: "#21262d" }}
+              >
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                  Память
+                </span>
+                <MetricRow
+                  label="Оперативная память"
+                  value={`${(selected.memory.used_mb / 1024).toFixed(1)} / ${(selected.memory.total_mb / 1024).toFixed(1)}`}
+                  unit="ГБ"
+                  percent={selected.memory.usage_percent}
+                />
+                {selected.memory.swap_total_mb > 0 && (
+                  <MetricRow
+                    label="Swap"
+                    value={`${(selected.memory.swap_used_mb / 1024).toFixed(1)} / ${(selected.memory.swap_total_mb / 1024).toFixed(1)}`}
+                    unit="ГБ"
+                    percent={(selected.memory.swap_used_mb / selected.memory.swap_total_mb) * 100}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Disk */}
+            {selected.disk && selected.disk.length > 0 && (
+              <div
+                className="rounded-xl p-4 border space-y-4"
+                style={{ background: "#161b22", borderColor: "#21262d" }}
+              >
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                  Диски
+                </span>
+                {selected.disk.map((d, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-mono" style={{ color: "#58a6ff" }}>{d.mount}</span>
+                      <span className="text-[10px]" style={{ color: "#484f58" }}>{d.device}</span>
+                      <span className="text-[10px]" style={{ color: "#484f58" }}>{d.fs_type}</span>
+                    </div>
+                    <MetricRow
+                      label=""
+                      value={`${d.used_gb.toFixed(1)} / ${d.total_gb.toFixed(1)}`}
+                      unit="ГБ"
+                      percent={d.usage_percent}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Stub tabs ─────────────────────────────────────────────────────────────────
 
 function StubTab({ label, icon = "📋" }: { label: string; icon?: string }) {
@@ -358,13 +630,13 @@ export default function DataStorage() {
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
       {/* Sub-nav */}
-      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "#21262d", background: "#161b22" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0"
             style={{
-              color: activeTab === t.id ? "#BF40BF" : "#64748b",
-              borderBottom: activeTab === t.id ? "2px solid #BF40BF" : "2px solid transparent",
+              color: activeTab === t.id ? "#58a6ff" : "#6e7681",
+              borderBottom: activeTab === t.id ? "2px solid #58a6ff" : "2px solid transparent",
             }}>
             {t.label}
           </button>
