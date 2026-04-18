@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../api/client";
 
 interface SigmaRule {
   id: string;
@@ -11,114 +12,54 @@ interface SigmaRule {
   created_at: string;
 }
 
-const EXAMPLE_RULES: SigmaRule[] = [
-  {
-    id: "rule-001",
-    title: "Brute Force Login Attempt",
-    description: "Detects multiple failed login attempts from a single source",
-    severity: "HIGH",
-    category: "Credential Access",
-    yaml: `title: Brute Force Login Attempt
-id: rule-brute-force-001
-status: experimental
-logsource:
-  category: authentication
-detection:
-  selection:
-    action: failure
-    reason: invalid_credentials
-  condition: selection | count(src.ip) > 5 | timeframe 5m
-level: high`,
-    enabled: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "rule-002",
-    title: "Privilege Escalation",
-    description: "Detects privilege escalation attempts",
-    severity: "CRITICAL",
-    category: "Privilege Escalation",
-    yaml: `title: Privilege Escalation
-id: rule-priv-esc-001
-status: experimental
-logsource:
-  category: process_creation
-detection:
-  selection:
-    action: execute
-    privilege_level: admin
-  condition: selection
-level: critical`,
-    enabled: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "rule-003",
-    title: "Suspicious Process Execution",
-    description: "Detects execution of suspicious processes",
-    severity: "MEDIUM",
-    category: "Execution",
-    yaml: `title: Suspicious Process Execution
-id: rule-susp-proc-001
-status: experimental
-logsource:
-  category: process_creation
-detection:
-  selection:
-    process_name|endswith:
-      - powershell.exe
-      - cmd.exe
-  filter:
-    parent_process: explorer.exe
-  condition: selection and not filter
-level: medium`,
-    enabled: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "rule-004",
-    title: "Data Exfiltration",
-    description: "Detects potential data exfiltration",
-    severity: "HIGH",
-    category: "Exfiltration",
-    yaml: `title: Data Exfiltration
-id: rule-exfil-001
-status: experimental
-logsource:
-  category: network_connection
-detection:
-  selection:
-    destination_port: 443
-    traffic_volume_bytes: '>1000000'
-  condition: selection
-level: high`,
-    enabled: false,
-    created_at: new Date().toISOString(),
-  },
-];
-
 export default function SigmaRulesAdmin() {
-  const RULES_KEY = "ursus_sigma_rules";
-  const [rules, setRules] = useState<SigmaRule[]>(() => {
-    try {
-      const stored = localStorage.getItem(RULES_KEY);
-      return stored ? JSON.parse(stored) : EXAMPLE_RULES;
-    } catch {
-      return EXAMPLE_RULES;
-    }
-  });
-  const [selectedId, setSelectedId] = useState<string | null>(rules[0]?.id || null);
+  const [rules, setRules] = useState<SigmaRule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<SigmaRule>(EXAMPLE_RULES[0]);
+  const [form, setForm] = useState<SigmaRule>({
+    id: "",
+    title: "",
+    description: "",
+    severity: "MEDIUM",
+    category: "",
+    yaml: "",
+    enabled: true,
+    created_at: new Date().toISOString(),
+  });
+  const [searchFilter, setSearchFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [severityFilter, setSeverityFilter] = useState("");
 
-  const saveRules = (updated: SigmaRule[]) => {
-    setRules(updated);
-    localStorage.setItem(RULES_KEY, JSON.stringify(updated));
-  };
+  useEffect(() => {
+    const loadRules = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await api.listSigmaRules({
+          category: categoryFilter || undefined,
+          search: searchFilter || undefined,
+          severity: severityFilter || undefined,
+        });
+        const rulesArray = Array.isArray(response) ? response : response.data || [];
+        setRules(rulesArray);
+        if (rulesArray.length > 0 && !selectedId) {
+          setSelectedId(rulesArray[0].id);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load SIGMA rules");
+        setRules([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadRules();
+  }, [searchFilter, categoryFilter, severityFilter]);
 
   const handleNew = () => {
     setForm({
-      id: `rule-${Date.now()}`,
+      id: "",
       title: "",
       description: "",
       severity: "MEDIUM",
@@ -137,25 +78,50 @@ export default function SigmaRulesAdmin() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title || !form.yaml) return;
-    if (selectedId && rules.find((r) => r.id === selectedId)) {
-      saveRules(rules.map((r) => (r.id === selectedId ? form : r)));
-    } else {
-      saveRules([form, ...rules]);
+    try {
+      if (selectedId && rules.find((r) => r.id === selectedId)) {
+        // Update existing rule
+        await api.updateSigmaRule(selectedId, form);
+        setRules(rules.map((r) => (r.id === selectedId ? form : r)));
+      } else {
+        // Create new rule
+        const newRule = await api.createSigmaRule(form);
+        setRules([newRule, ...rules]);
+        setSelectedId(newRule.id);
+      }
+      setShowForm(false);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save rule");
     }
-    setShowForm(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Удалить правило?")) {
-      saveRules(rules.filter((r) => r.id !== id));
-      setSelectedId(null);
+      try {
+        await api.deleteSigmaRule(id);
+        setRules(rules.filter((r) => r.id !== id));
+        setSelectedId(null);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to delete rule");
+      }
     }
   };
 
-  const toggleEnabled = (id: string) => {
-    saveRules(rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)));
+  const toggleEnabled = async (id: string) => {
+    try {
+      const rule = rules.find((r) => r.id === id);
+      if (rule) {
+        await api.toggleSigmaRule(id, !rule.enabled);
+        setRules(rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)));
+        setError(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to toggle rule");
+    }
   };
 
   const selected = rules.find((r) => r.id === selectedId);
@@ -167,14 +133,70 @@ export default function SigmaRulesAdmin() {
     LOW: "#60a5fa",
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin mb-3">⏳</div>
+          <p className="text-gray-500">Загрузка SIGMA правил...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto">
       <div>
         <h2 className="text-2xl font-bold text-gray-100 mb-1">SIGMA Правила</h2>
-        <p className="text-sm text-gray-500">Управление правилами корреляции для обнаружения угроз</p>
+        <p className="text-sm text-gray-500">Управление {rules.length} правилами корреляции для обнаружения угроз</p>
       </div>
 
+      {error && (
+        <div className="p-3 rounded border" style={{ borderColor: "#f87171", backgroundColor: "rgba(248, 113, 113, 0.1)", color: "#f87171" }}>
+          <div className="text-sm font-medium">{error}</div>
+        </div>
+      )}
+
       <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 flex gap-2">
+            <input
+              type="text"
+              placeholder="Поиск правил..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="siem-input text-sm flex-1"
+            />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="siem-input text-sm"
+            >
+              <option value="">Все категории</option>
+              <option value="Credential Access">Credential Access</option>
+              <option value="Privilege Escalation">Privilege Escalation</option>
+              <option value="Execution">Execution</option>
+              <option value="Exfiltration">Exfiltration</option>
+              <option value="Command and Control">Command and Control</option>
+              <option value="Impact">Impact</option>
+            </select>
+            <select
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value)}
+              className="siem-input text-sm"
+            >
+              <option value="">Все критичности</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+          </div>
+          <button onClick={handleNew} className="siem-btn text-xs px-4 py-2 whitespace-nowrap">
+            + Новое правило
+          </button>
+        </div>
+
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-gray-300">
             Правила ({rules.length})
@@ -182,9 +204,6 @@ export default function SigmaRulesAdmin() {
               ({rules.filter((r) => r.enabled).length} активно)
             </span>
           </span>
-          <button onClick={handleNew} className="siem-btn text-xs px-4 py-2">
-            + Новое правило
-          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
