@@ -4,23 +4,23 @@
 
 :root {
   /* Backgrounds */
-  --bg: #090b12;
-  --bg-gradient-start: #090b12;
-  --bg-gradient-mid: #121124;
-  --bg-gradient-end: #0d1117;
-  --surface: #11141d;
-  --surface-2: #161b28;
+  --bg: #111827;
+  --bg-gradient-start: #111827;
+  --bg-gradient-mid: #1f2937;
+  --bg-gradient-end: #111827;
+  --surface: #1f2937;
+  --surface-2: #374151;
   /* Borders */
-  --border: #26223a;
-  --border-strong: #352a5a;
+  --border: #4b5563;
+  --border-strong: #6b7280;
   /* Typography */
-  --text: #e6e9f2;
-  --text-soft: #8f97aa;
-  --text-muted: #a7afc2;
-  /* Accent (purple) */
-  --accent: #c26af7;
-  --accent-secondary: #a44fe0;
-  --accent-glow: rgba(194, 106, 247, 0.28);
+  --text: #f3f4f6;
+  --text-soft: #9ca3af;
+  --text-muted: #d1d5db;
+  /* Accent (professional purple) */
+  --accent: #a78bfa;
+  --accent-secondary: #8b5cf6;
+  --accent-glow: rgba(167, 139, 250, 0.1);
   /* Spacing scale */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -28,9 +28,9 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 24px var(--accent-glow);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-glow: 0 1px 3px rgba(0,0,0,0.1);
   /* Border radius */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -38,20 +38,20 @@
 }
 
 [data-theme="light"] {
-  --bg: #f5f2fb;
-  --bg-gradient-start: #f7f4fc;
-  --bg-gradient-mid: #eee8f8;
-  --bg-gradient-end: #f9f6ff;
+  --bg: #f9fafb;
+  --bg-gradient-start: #f9fafb;
+  --bg-gradient-mid: #f3f4f6;
+  --bg-gradient-end: #f9fafb;
   --surface: #ffffff;
-  --surface-2: #f2ecfb;
-  --border: #dfd5ef;
-  --border-strong: #cab9e6;
-  --text: #312843;
-  --text-soft: #74668e;
-  --text-muted: #5f5872;
-  --accent: #9e62d9;
-  --accent-secondary: #b27be6;
-  --accent-glow: rgba(158, 98, 217, 0.2);
+  --surface-2: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-soft: #6b7280;
+  --text-muted: #4b5563;
+  --accent: #8b5cf6;
+  --accent-secondary: #7c3aed;
+  --accent-glow: rgba(139, 92, 246, 0.1);
 }
 
 @layer base {
@@ -84,62 +84,65 @@
   }
 
   .theme-toggle-btn {
-    @apply px-3 py-1.5 rounded-lg text-xs font-medium transition-all;
+    @apply px-3 py-1.5 rounded-lg text-xs font-medium transition-colors;
     color: var(--text-muted);
     border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-2) 74%, transparent);
+    background: var(--surface-2);
   }
 
   .theme-toggle-btn:hover {
     color: var(--accent);
-    border-color: var(--accent-secondary);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-secondary) 35%, transparent), 0 6px 20px var(--accent-glow);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
 
   /* SIEM Card */
   .siem-card {
-    @apply rounded-xl border bg-siem-surface;
+    @apply rounded-lg border;
     border-color: var(--border);
-    background: color-mix(in srgb, var(--surface) 90%, transparent);
-    box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 10%, transparent), 0 2px 8px rgba(0,0,0,0.25);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
   }
 
   /* SIEM Input */
   .siem-input {
     @apply border rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors;
     color: var(--text);
-    border-color: var(--border-strong);
-    background: color-mix(in srgb, var(--surface-2) 95%, transparent);
+    border-color: var(--border);
+    background: var(--surface-2);
   }
   .siem-input:focus {
-    border-color: var(--accent-secondary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-secondary) 25%, transparent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
   }
   .siem-input::placeholder { color: var(--text-soft); }
 
   /* SIEM Button primary */
   .siem-btn {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150;
-    background: linear-gradient(135deg, var(--accent-secondary), var(--accent));
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150;
+    background: var(--accent);
     color: #fff;
-    box-shadow: 0 0 14px var(--accent-glow);
+    border: none;
   }
   .siem-btn:hover {
-    filter: brightness(1.05);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 55%, transparent);
+    background: var(--accent-secondary);
+  }
+  .siem-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* SIEM Button ghost */
   .siem-btn-ghost {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
-    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
-    border: 1px solid var(--border-strong);
-    color: var(--accent);
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors border;
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
   }
   .siem-btn-ghost:hover {
-    background: color-mix(in srgb, var(--accent-secondary) 16%, transparent);
-    border-color: var(--accent-secondary);
-    color: var(--accent-secondary);
+    background: var(--surface-2);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   /* SIEM Table */
@@ -164,9 +167,9 @@
 
   /* Nav link active */
   .nav-active {
-    background: rgba(106,13,173,0.2);
-    color: #BF40BF;
-    border-bottom: 2px solid #BF40BF;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
   }
 
   /* Severity badges */
@@ -184,28 +187,28 @@
 
   /* Criticality dot */
   .crit-dot { @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .crit-dot-critical { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.8); }
-  .crit-dot-high     { background: #f97316; box-shadow: 0 0 6px rgba(249,115,22,0.6); }
-  .crit-dot-medium   { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.5); }
-  .crit-dot-low      { background: #3b82f6; box-shadow: 0 0 4px rgba(59,130,246,0.4); }
-  .crit-dot-info     { background: #e2e8f0; }
+  .crit-dot-critical { background: #ef4444; }
+  .crit-dot-high     { background: #f97316; }
+  .crit-dot-medium   { background: #eab308; }
+  .crit-dot-low      { background: #3b82f6; }
+  .crit-dot-info     { background: #9ca3af; }
 
   /* Correlation star */
   .corr-star { color: #ef4444; font-size: 11px; line-height: 1; }
 
   /* PDQL input area */
   .pdql-bar {
-    background: rgba(13,15,24,0.9);
-    border: 1px solid #2d1860;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
     border-radius: 8px;
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 12px;
-    color: #BF40BF;
+    color: var(--text);
   }
   .pdql-bar:focus {
-    border-color: #6A0DAD;
+    border-color: var(--accent);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(106,13,173,0.25);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
   }
 
   /* Detail panel field row */
@@ -214,10 +217,10 @@
     transition: background 0.1s;
   }
   .field-row:hover {
-    background: rgba(106,13,173,0.12);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
   .field-row:hover .field-add-btn { @apply visible; }
-  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: #BF40BF; background: rgba(191,64,191,0.15); }
+  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
 
   /* Page header / section title */
   .siem-page-title {

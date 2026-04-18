@@ -4,60 +4,54 @@ export default {
   theme: {
     extend: {
       colors: {
-        // URSUS Insight SIEM — Modern Cyberpunk in the Forest
+        // URSUS SIEM — Apple Minimalism Style with Purple Accent
         vault: {
-          50:  "#f3e8ff",
-          100: "#e5ccff",
-          200: "#cc99ff",
-          300: "#b266ff",
-          400: "#BF40BF",   // Neon Violet accent
-          500: "#8b20d1",
-          600: "#6A0DAD",   // Deep Purple — main
-          700: "#520a88",
-          800: "#3a0763",
-          900: "#28054a",
-          950: "#0e0220",
+          50:  "#f9f5ff",
+          100: "#f3e8ff",
+          200: "#e9d5ff",
+          300: "#d8b4fe",
+          400: "#a78bfa",   // Professional purple accent
+          500: "#9f7aea",
+          600: "#8b5cf6",
+          700: "#7c3aed",
+          800: "#6d28d9",
+          900: "#5b21b6",
+          950: "#3f0f62",
         },
         siem: {
-          bg:          "#08090e",
-          surface:     "#0d0f18",
-          surface2:    "#111520",
-          border:      "#1a0d2e",
-          "border-2":  "#2d1860",
-          purple:      "#6A0DAD",
-          "purple-l":  "#8b20d1",
-          "purple-d":  "#4a0878",
-          violet:      "#BF40BF",
-          "violet-l":  "#d060d0",
-          "violet-d":  "#9a2e9a",
-          slate:       "#2F4F4F",
-          "slate-l":   "#3d6565",
-          "slate-d":   "#1e3333",
-          glow:        "rgba(106,13,173,0.18)",
-          "glow-v":    "rgba(191,64,191,0.15)",
+          bg:          "#111827",   // Lighter dark background
+          surface:     "#1f2937",   // Card surface
+          surface2:    "#374151",   // Hover surface
+          border:      "#4b5563",   // Neutral gray border
+          "border-2":  "#6b7280",   // Lighter border
+          purple:      "#a78bfa",   // Professional purple
+          "purple-l":  "#c4b5fd",
+          "purple-d":  "#8b5cf6",
+          violet:      "#a78bfa",   // No more neon
+          "violet-l":  "#c4b5fd",
+          "violet-d":  "#8b5cf6",
+          slate:       "#6b7280",
+          "slate-l":   "#9ca3af",
+          "slate-d":   "#4b5563",
+          glow:        "rgba(167, 139, 250, 0.08)",
+          "glow-v":    "rgba(167, 139, 250, 0.08)",
         },
       },
       boxShadow: {
-        siem:    "0 0 24px rgba(106,13,173,0.18), 0 2px 8px rgba(0,0,0,0.6)",
-        "siem-v":"0 0 24px rgba(191,64,191,0.18), 0 2px 8px rgba(0,0,0,0.6)",
-        "siem-inner": "inset 0 1px 0 rgba(191,64,191,0.08)",
+        siem:    "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
+        "siem-v":"0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
+        "siem-inner": "inset 0 1px 0 rgba(255,255,255,0.05)",
       },
       backgroundImage: {
-        "siem-gradient": "linear-gradient(135deg, #08090e 0%, #0d0a18 50%, #090e10 100%)",
-        "siem-card":     "linear-gradient(145deg, #0d0f18 0%, #111520 100%)",
-        "siem-purple":   "linear-gradient(135deg, #6A0DAD 0%, #BF40BF 100%)",
-        "siem-header":   "linear-gradient(90deg, #08090e 0%, #0f0d1a 50%, #090e10 100%)",
+        "siem-gradient": "linear-gradient(135deg, #111827 0%, #1f2937 100%)",
+        "siem-card":     "linear-gradient(145deg, #1f2937 0%, #111827 100%)",
+        "siem-purple":   "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)",
+        "siem-header":   "linear-gradient(90deg, #111827 0%, #1f2937 100%)",
       },
       animation: {
         "pulse-slow": "pulse 3s ease-in-out infinite",
-        "glow-pulse": "glowPulse 2s ease-in-out infinite",
       },
-      keyframes: {
-        glowPulse: {
-          "0%, 100%": { boxShadow: "0 0 5px rgba(106,13,173,0.3)" },
-          "50%":      { boxShadow: "0 0 20px rgba(106,13,173,0.7)" },
-        },
-      },
+      keyframes: {},
     },
   },
   plugins: [],
