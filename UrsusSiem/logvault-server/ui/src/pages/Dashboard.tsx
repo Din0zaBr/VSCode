@@ -9,6 +9,13 @@ import {
 } from "recharts";
 import { useState } from "react";
 
+const TIME_RANGES = [
+  { label: "24 часа",   value: "1d" },
+  { label: "7 дней",    value: "7d" },
+  { label: "30 дней",   value: "30d" },
+  { label: "3 месяца",  value: "90d" },
+];
+
 const TIME_STEPS = [
   { label: "15 минут", value: "15m" },
   { label: "30 минут", value: "30m" },
@@ -59,14 +66,32 @@ function SiemTooltip({ active, payload, label }: any) {
   );
 }
 
+function msToDateRange(daysStr: string): { from: string; to: string } {
+  const now = new Date();
+  const from = new Date(now);
+
+  const value = parseInt(daysStr);
+  if (daysStr.endsWith("d")) {
+    from.setDate(from.getDate() - value);
+  }
+
+  return {
+    from: from.toISOString(),
+    to: now.toISOString(),
+  };
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [timeRange, setTimeRange] = useState("7d");
   const [step, setStep] = useState("1h");
   const [chartView, setChartView] = useState("count");
 
+  const { from, to } = msToDateRange(timeRange);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["stats", step],
-    queryFn: () => api.stats({ interval: step }),
+    queryKey: ["stats", step, timeRange],
+    queryFn: () => api.stats({ interval: step, from, to }),
     refetchInterval: 30_000,
   });
 
@@ -104,7 +129,8 @@ export default function Dashboard() {
 
   const timelineData = (data?.over_time ?? []).map((b) => {
     const byLevel = Object.fromEntries((b.by_level?.buckets ?? []).map((l) => [l.key, l.doc_count]));
-    const label = new Date(b.key).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    const d = new Date(b.key);
+    const label = d.toLocaleString("ru-RU", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     return { label, total: b.doc_count, ...byLevel };
   });
 
@@ -146,9 +172,8 @@ export default function Dashboard() {
         {/* Event Stream - Primary Feature */}
         <Card
           title="Поток событий"
-          sub={stepLabel}
           extra={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Chart view tabs */}
               <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "var(--border)" }}>
                 {CHART_VIEWS.map((v) => (
@@ -166,6 +191,18 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
+
+              {/* Time range selector */}
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="siem-input text-xs py-1"
+                style={{ minWidth: "100px" }}
+              >
+                {TIME_RANGES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
 
               {/* Step dropdown */}
               <select
