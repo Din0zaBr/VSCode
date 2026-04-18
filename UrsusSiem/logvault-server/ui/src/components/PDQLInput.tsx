@@ -102,8 +102,6 @@ function getSuggestions(val: string, cursorPos: number): SuggestionItem[] {
   const tokens = upToCursor.split(/[\s()|,=<>!]+/);
   const lastToken = tokens[tokens.length - 1]?.toLowerCase() || "";
 
-  if (lastToken.length === 0) return [];
-
   // Detect context: are we after a field name and operator (in value position)?
   const valueContext = /[\w.]+\s+(?:=|!=|contains|startswith|endswith|match|in)\s+"?$/.test(upToCursor);
   if (valueContext) {
@@ -225,8 +223,7 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
             onBlur={() => setTimeout(() => { setShowSuggestions(false); setShowExamples(false); }, 200)}
             placeholder='filter(level = "ERROR") | sort(time desc) | limit(100)'
             rows={2}
-            className="w-full bg-gray-900 border rounded-lg px-4 py-2.5 text-sm
-                       text-green-300 font-mono placeholder-gray-600 focus:outline-none
+            className="siem-input w-full font-mono text-sm focus:outline-none
                        resize-none transition-colors"
             style={{ borderColor: validationError ? "rgba(239,68,68,0.6)" : undefined }}
           />
@@ -245,14 +242,14 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
           {/* Enhanced suggestions dropdown */}
           {showSuggestions && suggestions.length > 0 && (
             <div
-              className="absolute z-20 left-0 right-0 mt-1 rounded-lg shadow-xl overflow-hidden"
-              style={{ background: "#0d1117", border: "1px solid #1a0d2e", maxHeight: "260px", overflowY: "auto" }}
+              className="absolute z-20 left-0 right-0 mt-1 rounded-lg shadow-lg overflow-hidden border"
+              style={{ background: "var(--surface)", borderColor: "var(--border)", maxHeight: "260px", overflowY: "auto" }}
             >
               {Object.entries(grouped).map(([cat, items]) => (
                 <div key={cat}>
                   <div
                     className="px-3 py-1 text-[9px] uppercase tracking-widest font-medium"
-                    style={{ color: "#3d4557", borderBottom: "1px solid #1a0d2e", background: "#080b12" }}
+                    style={{ color: "var(--text-soft)", borderBottom: "1px solid var(--border)", background: "var(--surface-2)" }}
                   >
                     {cat}
                   </div>
@@ -265,10 +262,10 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
                         onMouseEnter={() => setSelectedIdx(globalIdx)}
                         className="w-full text-left px-3 py-1.5 flex items-center gap-2 transition-colors"
                         style={{
-                          background: globalIdx === selectedIdx ? "rgba(106,13,173,0.2)" : "transparent",
+                          background: globalIdx === selectedIdx ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "transparent",
                         }}
                       >
-                        <span className="font-mono text-sm text-gray-200 flex-1 truncate">{s.label}</span>
+                        <span className="font-mono text-sm text-current flex-1 truncate">{s.label}</span>
                         {s.type && s.type !== "func" && s.type !== "kw" && s.type !== "value" && (
                           <span
                             className="text-[9px] px-1 py-0.5 rounded flex-shrink-0"
@@ -281,7 +278,7 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
                           </span>
                         )}
                         {s.type === "func" && (
-                          <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0" style={{ background: "rgba(191,64,191,0.15)", color: "#BF40BF" }}>fn</span>
+                          <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>fn</span>
                         )}
                         {s.hint && (
                           <span className="text-[9px] text-gray-600 truncate max-w-[120px] flex-shrink-0">{s.hint}</span>
@@ -291,7 +288,7 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
                   })}
                 </div>
               ))}
-              <div className="px-3 py-1 text-[9px] text-gray-700" style={{ borderTop: "1px solid #1a0d2e" }}>
+              <div className="px-3 py-1 text-[9px]" style={{ borderTop: "1px solid var(--border)", color: "var(--text-soft)" }}>
                 ↑↓ выбор · Tab/Enter применить · Esc закрыть
               </div>
             </div>
@@ -299,16 +296,17 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
 
           {/* Examples dropdown */}
           {showExamples && !value && (
-            <div className="absolute z-20 left-0 right-0 mt-1 rounded-lg shadow-xl overflow-hidden"
-              style={{ background: "#0d1117", border: "1px solid #1a0d2e", maxHeight: "260px", overflowY: "auto" }}>
-              <div className="px-4 py-2 text-[9px] uppercase tracking-widest text-gray-600" style={{ borderBottom: "1px solid #1a0d2e" }}>
+            <div className="absolute z-20 left-0 right-0 mt-1 rounded-lg shadow-lg overflow-hidden border"
+              style={{ background: "var(--surface)", borderColor: "var(--border)", maxHeight: "260px", overflowY: "auto" }}>
+              <div className="px-4 py-2 text-[9px] uppercase tracking-widest" style={{ borderBottom: "1px solid var(--border)", color: "var(--text-soft)" }}>
                 Примеры PDQL-запросов
               </div>
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex}
                   onMouseDown={() => { onChange(ex); setShowExamples(false); }}
-                  className="w-full text-left px-4 py-2 text-sm font-mono text-green-400 hover:bg-white/5 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm font-mono hover:bg-siem-surface2 transition-colors"
+                  style={{ color: "var(--accent)" }}
                 >
                   {ex}
                 </button>
