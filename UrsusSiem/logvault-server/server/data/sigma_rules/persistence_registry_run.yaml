@@ -1,0 +1,44 @@
+title: Suspicious Registry Run Key Persistence
+id: persist-reg-001
+status: stable
+description: Detects suspicious modifications to Windows registry Run keys used by attackers to establish persistence across reboots.
+author: URSUS SIEM
+date: 2024-01-01
+category: persistence
+severity: high
+tags:
+  - attack.persistence
+  - attack.t1547.001
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection:
+    EventID: 13
+    object.path|contains:
+      - "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\"
+      - "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\"
+      - "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Run\\"
+      - "HKLM\\SYSTEM\\CurrentControlSet\\Services\\"
+  selection_val:
+    message|contains:
+      - "\\Temp\\"
+      - "\\Users\\Public\\"
+      - "\\ProgramData\\"
+      - "powershell"
+      - "wscript"
+      - "cscript"
+      - "mshta"
+      - "regsvr32"
+      - "rundll32"
+      - "base64"
+  condition: selection and selection_val
+fields:
+  - object.path
+  - message
+  - host
+  - subject.name
+falsepositives:
+  - Legitimate software using Run keys for startup
+  - Administrative scripts configuring startup programs
+level: high

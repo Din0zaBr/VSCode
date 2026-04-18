@@ -1,0 +1,42 @@
+title: Pass-the-Hash Attack Indicators
+id: lm-pth-001
+status: stable
+description: Detects pass-the-hash (PtH) attacks where an attacker uses an NTLM hash instead of a plaintext password to authenticate, indicated by NTLM logon with no prior interactive logon and blank password fields.
+author: URSUS SIEM
+date: 2024-01-01
+category: lateral_movement
+severity: critical
+tags:
+  - attack.lateral_movement
+  - attack.t1550.002
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4624
+    LogonType: 3
+    message|contains:
+      - "NTLM"
+      - "NtLmSsp"
+  selection_no_kerberos:
+    EventID: 4624
+    LogonType:
+      - 3
+      - 9
+    message|contains: "NTLM"
+    message|not|contains: "Kerberos"
+  selection_anon:
+    EventID: 4624
+    LogonType: 3
+    subject.name|contains: "ANONYMOUS"
+  condition: (selection and selection_no_kerberos) or selection_anon
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legacy applications using NTLM authentication
+  - Workgroup environments without Kerberos
+level: critical

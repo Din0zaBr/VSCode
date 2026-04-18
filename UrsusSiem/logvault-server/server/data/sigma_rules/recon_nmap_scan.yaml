@@ -1,0 +1,49 @@
+title: Nmap Network Fingerprinting Scan Detected
+id: recon-nmap-001
+status: stable
+description: Detects Nmap scanning activity via characteristic probe patterns, version detection attempts, and OS fingerprinting signatures in network and web logs.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: medium
+tags:
+  - attack.discovery
+  - attack.t1046
+logsource:
+  category: network
+  service: firewall
+detection:
+  selection_ua:
+    message|contains:
+      - "Nmap Scripting Engine"
+      - "nmap"
+      - "Mozilla/5.0 (compatible; Nmap Scripting Engine"
+  selection_probe:
+    message|contains:
+      - "NMAP"
+      - "nmapNFO"
+      - "nmapOSScan"
+  selection_pattern:
+    action:
+      - "denied"
+      - "blocked"
+    dst.port:
+      - 21
+      - 22
+      - 23
+      - 25
+      - 80
+      - 443
+      - 445
+      - 3389
+  condition: selection_ua or selection_probe or (selection_pattern | count(dst.port) by src.ip > 15 within 30s)
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - message
+  - host
+falsepositives:
+  - Authorized vulnerability assessments
+  - Network inventory tools
+level: medium

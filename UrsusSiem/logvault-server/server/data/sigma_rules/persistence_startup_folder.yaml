@@ -1,0 +1,41 @@
+title: Startup Folder Persistence Modification
+id: persist-startup-001
+status: stable
+description: Detects file creation or modification in Windows Startup folders, a common persistence technique used by malware to survive reboots.
+author: URSUS SIEM
+date: 2024-01-01
+category: persistence
+severity: high
+tags:
+  - attack.persistence
+  - attack.t1547.001
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection:
+    EventID:
+      - 11
+      - 2
+    object.path|contains:
+      - "\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\"
+      - "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\"
+      - "\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\"
+  selection_suspicious:
+    object.path|endswith:
+      - ".exe"
+      - ".bat"
+      - ".vbs"
+      - ".ps1"
+      - ".lnk"
+      - ".com"
+  condition: selection and selection_suspicious
+fields:
+  - object.path
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legitimate software placing shortcuts in the startup folder
+  - IT deployment scripts adding startup items
+level: high

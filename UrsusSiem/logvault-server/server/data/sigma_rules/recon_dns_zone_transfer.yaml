@@ -1,0 +1,38 @@
+title: DNS Zone Transfer Attempt (AXFR)
+id: recon-dnszt-001
+status: stable
+description: Detects DNS AXFR zone transfer requests which allow an attacker to enumerate all DNS records for a domain, exposing internal network topology.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: medium
+tags:
+  - attack.discovery
+  - attack.t1590.002
+logsource:
+  category: dns
+  service: named
+detection:
+  selection:
+    message|contains:
+      - "AXFR"
+      - "zone transfer"
+      - "transfer of zone"
+    dst.port: 53
+  selection_denied:
+    message|contains:
+      - "denied"
+      - "refused"
+      - "not authoritative"
+    message|contains:
+      - "AXFR"
+  condition: selection or selection_denied
+fields:
+  - src.ip
+  - dst.ip
+  - message
+  - host
+falsepositives:
+  - Legitimate secondary DNS server zone transfers
+  - Authorized DNS replication between servers
+level: medium
