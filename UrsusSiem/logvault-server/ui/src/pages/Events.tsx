@@ -826,7 +826,7 @@ export default function Events() {
 
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
 
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
     queryKey: ["events-channel", appliedChannel, internalPage],
     queryFn: () =>
       api.pdqlSearch(appliedChannel.pdql, internalPage, appliedChannel.size, {
@@ -834,6 +834,7 @@ export default function Events() {
         to: appliedChannel.to,
       }),
     refetchInterval: isAutoRefresh ? 10_000 : false,
+    retry: false,
   });
 
   // When appliedChannel changes (new search) → reset accumulated data
@@ -1239,7 +1240,21 @@ export default function Events() {
 
         {/* ── Event Table ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-auto">
-          {isLoading && loadedCount === 0 ? (
+          {isError ? (
+            <div className="flex items-center justify-center h-full p-8">
+              <div className="text-center max-w-lg">
+                <div className="text-3xl mb-3">⚠</div>
+                <div className="text-sm font-medium mb-1" style={{ color: "#f87171" }}>Ошибка выполнения запроса</div>
+                <div className="text-xs px-4 py-2 rounded font-mono text-left mt-2"
+                  style={{ background: "rgba(239,68,68,0.08)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
+                  {error instanceof Error ? error.message : "Неверный PDQL-запрос или ошибка сервера"}
+                </div>
+                <div className="text-xs mt-2" style={{ color: "var(--text-soft)" }}>
+                  Проверьте синтаксис запроса или используйте конструктор запросов
+                </div>
+              </div>
+            </div>
+          ) : isLoading && loadedCount === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
           ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) && !isFetching ? (
             <div className="flex items-center justify-center h-full text-gray-600">
