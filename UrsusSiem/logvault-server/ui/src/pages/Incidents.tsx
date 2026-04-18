@@ -50,7 +50,7 @@ function printIncident(alert: CorrelationAlert, extra: IncidentExtra) {
   table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
   td, th { border: 1px solid #ddd; padding: 6px 10px; font-size: 12px; text-align: left; }
   th { background: #f0e6ff; font-weight: bold; }
-  .section { font-size: 14px; font-weight: bold; margin: 16px 0 8px; color: #6A0DAD; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  .section { font-size: 14px; font-weight: bold; margin: 16px 0 8px; color: #8b5cf6; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
   .badge-critical { background: #fee2e2; color: #991b1b; }
   .badge-open { background: #fef9c3; color: #854d0e; }
@@ -175,9 +175,9 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="w-[720px] max-h-[90vh] flex flex-col rounded-2xl border overflow-hidden" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+      <div className="w-[720px] max-h-[90vh] flex flex-col rounded-2xl border overflow-hidden" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-start justify-between px-5 py-4 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-mono text-gray-500">#{alert.id}</span>
@@ -205,15 +205,15 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
         </div>
 
         {/* Sub-tabs */}
-        <div className="flex border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
           {MODAL_TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className="px-4 py-2.5 text-xs font-medium transition-colors"
               style={{
-                color: activeTab === t.id ? "#BF40BF" : "#64748b",
-                borderBottom: activeTab === t.id ? "2px solid #BF40BF" : "2px solid transparent",
+                color: activeTab === t.id ? "#a78bfa" : "#64748b",
+                borderBottom: activeTab === t.id ? "2px solid #a78bfa" : "2px solid transparent",
               }}
             >
               {t.label}
@@ -235,7 +235,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
                   { key: "type",     label: "Тип",           options: TYPE_OPTIONS },
                   { key: "impact",   label: "Влияние",       options: IMPACT_OPTIONS },
                 ] as const).map(({ key, label, options }) => (
-                  <div key={key} className="rounded-lg p-3 border" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+                  <div key={key} className="rounded-lg p-3 border" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                     <div className="text-[10px] text-gray-600 mb-1 uppercase tracking-wider">{label}</div>
                     {editField === key ? (
                       <div className="flex gap-1">
@@ -247,7 +247,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
                         ) : (
                           <input className="siem-input flex-1 text-xs py-1" value={editVal} onChange={(e) => setEditVal(e.target.value)} />
                         )}
-                        <button onClick={saveEdit} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(106,13,173,0.3)", color: "#BF40BF" }}>✓</button>
+                        <button onClick={saveEdit} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(167,139,250,0.3)", color: "#a78bfa" }}>✓</button>
                         <button onClick={() => setEditField(null)} className="text-xs px-1.5 text-gray-500">✕</button>
                       </div>
                     ) : (
@@ -264,7 +264,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
               </div>
 
               {/* Alert info */}
-              <div className="rounded-lg p-3 border space-y-2" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+              <div className="rounded-lg p-3 border space-y-2" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                 <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Технические данные</div>
                 {[
                   { label: "Источник IP", value: alert.source_ip },
@@ -280,7 +280,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
 
               {/* Base events */}
               {eventIds.length > 0 && (
-                <div className="rounded-lg p-3 border" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+                <div className="rounded-lg p-3 border" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                   <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Базовые события ({eventIds.length})</div>
                   <div className="flex flex-wrap gap-2">
                     {eventIds.map((eid) => (
@@ -288,7 +288,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
                         key={eid}
                         onClick={() => navigate(`/events?q=event_id = "${eid}"`)}
                         className="text-[11px] font-mono px-2 py-1 rounded hover:opacity-80 transition-opacity"
-                        style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+                        style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
                       >
                         {eid}
                       </button>
@@ -298,7 +298,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
               )}
 
               {/* Status actions */}
-              <div className="rounded-lg p-3 border" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+              <div className="rounded-lg p-3 border" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                 <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Действия</div>
                 <div className="flex flex-wrap gap-2">
                   {alert.status !== "INVESTIGATING" && (
@@ -312,7 +312,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
                     </button>
                   )}
                   {alert.status !== "FALSE_POSITIVE" && (
-                    <button onClick={() => statusAction("FALSE_POSITIVE")} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(100,116,139,0.12)", color: "#94a3b8", border: "1px solid rgba(100,116,139,0.25)" }}>
+                    <button onClick={() => statusAction("FALSE_POSITIVE")} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(100,116,139,0.12)", color: "var(--text-muted)", border: "1px solid rgba(100,116,139,0.25)" }}>
                       Ложное срабатывание
                     </button>
                   )}
@@ -341,7 +341,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
               </div>
               {extra.tasks.length === 0 && <div className="text-center text-gray-600 py-8 text-sm">Нет задач</div>}
               {extra.tasks.map((task) => (
-                <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+                <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                   <input
                     type="checkbox"
                     checked={task.done}
@@ -370,7 +370,7 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
               </div>
               {extra.notes.length === 0 && <div className="text-center text-gray-600 py-8 text-sm">Нет заметок</div>}
               {[...extra.notes].reverse().map((note) => (
-                <div key={note.id} className="p-3 rounded-lg border" style={{ background: "#111520", borderColor: "#1a0d2e" }}>
+                <div key={note.id} className="p-3 rounded-lg border" style={{ background: "#1f2937", borderColor: "var(--border)" }}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] text-gray-600">{fmtDt(note.created_at)}{note.author ? ` · ${note.author}` : ""}</span>
                     <button onClick={() => deleteNote(note.id)} className="text-red-500/40 hover:text-red-400 text-xs">✕</button>
@@ -388,8 +388,8 @@ function IncidentDetailModal({ alert, onClose, onStatusChange }: {
               {[...extra.history].reverse().map((h, idx) => (
                 <div key={h.id} className="flex gap-3 items-start pb-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-2.5 h-2.5 rounded-full mt-0.5 flex-shrink-0" style={{ background: "#6A0DAD" }} />
-                    {idx < extra.history.length - 1 && <div className="w-px flex-1 mt-1" style={{ background: "#1a0d2e", minHeight: "20px" }} />}
+                    <div className="w-2.5 h-2.5 rounded-full mt-0.5 flex-shrink-0" style={{ background: "#8b5cf6" }} />
+                    {idx < extra.history.length - 1 && <div className="w-px flex-1 mt-1" style={{ background: "#374151", minHeight: "20px" }} />}
                   </div>
                   <div>
                     <div className="text-xs text-gray-300">{h.event}</div>
@@ -437,9 +437,9 @@ function CreateIncidentModal({ onClose }: { onClose: (refresh?: boolean) => void
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[480px] rounded-2xl border" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
-        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-          <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>Создать инцидент вручную</span>
+      <div className="w-[480px] rounded-2xl border" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>Создать инцидент вручную</span>
           <button onClick={() => onClose()} className="text-gray-500 hover:text-gray-200">✕</button>
         </div>
         <div className="p-5 space-y-4">
@@ -488,7 +488,7 @@ function StatsTab({ alerts }: { alerts: CorrelationAlert[] }) {
     <div className="p-6 space-y-8">
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Всего", value: alerts.length, color: "#BF40BF" },
+          { label: "Всего", value: alerts.length, color: "#a78bfa" },
           { label: "Открытых", value: alerts.filter((a) => a.status === "OPEN").length, color: "#ef4444" },
           { label: "Расследуется", value: alerts.filter((a) => a.status === "INVESTIGATING").length, color: "#eab308" },
           { label: "Закрыто", value: alerts.filter((a) => a.status === "RESOLVED").length, color: "#4ade80" },
@@ -507,7 +507,7 @@ function StatsTab({ alerts }: { alerts: CorrelationAlert[] }) {
             {bySeverity.map((b) => (
               <div key={b.label} className="flex items-center gap-3">
                 <span className="text-xs w-20 flex-shrink-0" style={{ color: colorS[b.label] }}>{b.label}</span>
-                <div className="flex-1 h-5 rounded-sm overflow-hidden" style={{ background: "#111520" }}>
+                <div className="flex-1 h-5 rounded-sm overflow-hidden" style={{ background: "#1f2937" }}>
                   <div className="h-full rounded-sm transition-all duration-500"
                     style={{ width: `${(b.count / maxS) * 100}%`, background: colorS[b.label], opacity: 0.8 }} />
                 </div>
@@ -523,7 +523,7 @@ function StatsTab({ alerts }: { alerts: CorrelationAlert[] }) {
             {byStatus.map((b) => (
               <div key={b.label} className="flex items-center gap-3">
                 <span className="text-xs w-32 flex-shrink-0 truncate" style={{ color: colorSt[b.label] ?? "#94a3b8" }}>{b.label}</span>
-                <div className="flex-1 h-5 rounded-sm overflow-hidden" style={{ background: "#111520" }}>
+                <div className="flex-1 h-5 rounded-sm overflow-hidden" style={{ background: "#1f2937" }}>
                   <div className="h-full rounded-sm transition-all duration-500"
                     style={{ width: `${(b.count / maxSt) * 100}%`, background: colorSt[b.label] ?? "#94a3b8", opacity: 0.7 }} />
                 </div>
@@ -568,14 +568,14 @@ function TasksOverviewTab() {
       </div>
 
       <div className="siem-card overflow-hidden">
-        <div className="px-4 py-3 border-b text-sm font-semibold text-gray-300" style={{ borderColor: "#1a0d2e" }}>
+        <div className="px-4 py-3 border-b text-sm font-semibold text-gray-300" style={{ borderColor: "var(--border)" }}>
           Все задачи по инцидентам
         </div>
         {tasksWithIncident.length === 0 && (
           <div className="text-center text-gray-600 py-8 text-sm">Нет задач</div>
         )}
         {tasksWithIncident.map((t) => (
-          <div key={t.id} className="flex items-center gap-3 px-4 py-2.5 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <div key={t.id} className="flex items-center gap-3 px-4 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
             <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${t.done ? "bg-green-500" : "bg-yellow-500"}`} />
             <span className={`flex-1 text-sm ${t.done ? "line-through text-gray-600" : "text-gray-200"}`}>{t.title}</span>
             <span className="text-[10px] text-gray-600">#{t.incidentId} · {t.incidentName}</span>
@@ -624,7 +624,7 @@ function IncidentsList() {
   return (
     <>
       {/* Filters */}
-      <div className="px-4 py-3 border-b flex items-center gap-3 flex-wrap flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+      <div className="px-4 py-3 border-b flex items-center gap-3 flex-wrap flex-shrink-0" style={{ borderColor: "var(--border)" }}>
         <input
           className="siem-input text-xs py-1.5 flex-1 min-w-[200px]"
           placeholder="Поиск по названию, ID..."
@@ -648,12 +648,12 @@ function IncidentsList() {
           <div className="text-center text-gray-600 py-16">Загрузка...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center text-gray-600 py-16">
-            <div className="text-3xl mb-2" style={{ color: "#2d1860" }}>⚠</div>
+            <div className="text-3xl mb-2" style={{ color: "#4b5563" }}>⚠</div>
             <div>Инцидентов не найдено</div>
           </div>
         ) : (
           <table className="w-full siem-table">
-            <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+            <thead className="sticky top-0" style={{ background: "#1f2937" }}>
               <tr>
                 <th>ID</th>
                 <th>Название</th>
@@ -712,7 +712,7 @@ function IncidentsList() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-center justify-between px-4 py-2 border-t flex-shrink-0" style={{ borderColor: "var(--border)" }}>
           <span className="text-xs text-gray-600">{total} инцидентов</span>
           <div className="flex gap-2">
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="siem-btn-ghost text-xs px-3 py-1 disabled:opacity-30">←</button>
@@ -750,15 +750,15 @@ export default function Incidents() {
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
       {/* Section header + sub-tabs */}
-      <div className="flex items-center gap-0 border-b flex-shrink-0 px-4" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+      <div className="flex items-center gap-0 border-b flex-shrink-0 px-4" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className="px-5 py-3 text-sm font-medium transition-colors"
             style={{
-              color: tab === t ? "#BF40BF" : "#64748b",
-              borderBottom: tab === t ? "2px solid #BF40BF" : "2px solid transparent",
+              color: tab === t ? "#a78bfa" : "#64748b",
+              borderBottom: tab === t ? "2px solid #a78bfa" : "2px solid transparent",
             }}
           >
             {t}

@@ -73,7 +73,7 @@ export default function SystemHealth() {
               <div className="text-xs text-red-400">Критических: {stats.critical_24h ?? 0}</div>
             </MetricCard>
             <MetricCard title="Активные агенты">
-              <div className="text-3xl font-bold text-green-400">{agents.active ?? 0}</div>
+              <div className="text-3xl font-bold text-purple-300">{agents.active ?? 0}</div>
               <div className="text-xs text-gray-500">Неактивных: {agents.inactive ?? 0} · Всего: {agents.total ?? 0}</div>
             </MetricCard>
             <MetricCard title="База данных">

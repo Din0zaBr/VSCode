@@ -51,8 +51,8 @@ export default function QueryConditionRow({
   const operators = OPERATORS_FOR[fieldMeta.type] ?? OPERATORS_FOR.string;
 
   const inputStyle = {
-    background: "#0d1117",
-    border: "1px solid #1a0d2e",
+    background: "#1f2937",
+    border: "1px solid #374151",
     color: "#e2e8f0",
     borderRadius: "6px",
     padding: "4px 8px",

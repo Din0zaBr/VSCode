@@ -70,7 +70,7 @@ export default function LiveLogs() {
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-gray-100">Логи в реальном времени</h2>
           <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
-            connected ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+            connected ? "bg-green-500/20 text-purple-300" : "bg-red-500/20 text-red-400"
           }`}>
             <span className={`w-2 h-2 rounded-full ${connected ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
             {connected ? "Подключено" : "Отключено"}
@@ -186,7 +186,7 @@ function LogLine({ log, expanded, onToggle }: { log: LogEvent; expanded: boolean
         <span className="text-gray-300 break-all">{log.message}</span>
       </div>
       {expanded && (
-        <div className="ml-2 mb-1 px-3 py-2 rounded-lg border-l-2" style={{ background: "rgba(13,11,22,0.6)", borderLeftColor: "#6A0DAD" }}>
+        <div className="ml-2 mb-1 px-3 py-2 rounded-lg border-l-2" style={{ background: "rgba(13,11,22,0.6)", borderLeftColor: "#8b5cf6" }}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-[11px]">
             <Field label="ID события" value={log.event_id} />
             <Field label="Время" value={log.timestamp} />

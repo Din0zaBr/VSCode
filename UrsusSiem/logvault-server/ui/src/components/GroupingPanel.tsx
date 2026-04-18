@@ -72,8 +72,8 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
     <div
       className="flex flex-col rounded-xl border overflow-hidden"
       style={{
-        background: "#0d0f18",
-        borderColor: "#2d1860",
+        background: "#1f2937",
+        borderColor: "#4b5563",
         boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)",
         minWidth: "360px",
       }}
@@ -82,8 +82,8 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
       <div
         className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b"
         style={{
-          background: "linear-gradient(90deg, #0d0f18 0%, #12101e 100%)",
-          borderColor: "#1a0d2e",
+          background: "linear-gradient(90deg, #1f2937 0%, #12101e 100%)",
+          borderColor: "var(--border)",
         }}
       >
         <div className="flex items-center gap-2">
@@ -94,12 +94,12 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
             <rect x="0.5" y="7.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
             <rect x="7.5" y="7.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
           </svg>
-          <span className="text-xs font-medium" style={{ color: "#BF40BF" }}>
+          <span className="text-xs font-medium" style={{ color: "#a78bfa" }}>
             Результаты группировки
           </span>
           <span
             className="text-[10px] px-1.5 py-0.5 rounded"
-            style={{ background: "rgba(106,13,173,0.2)", color: "#8b20d1", border: "1px solid #2d1860" }}
+            style={{ background: "rgba(167,139,250,0.2)", color: "#8b20d1", border: "1px solid #4b5563" }}
           >
             {rows.length}
           </span>
@@ -108,7 +108,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
           onClick={onClose}
           title="Закрыть панель"
           className="flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors"
-          style={{ color: "#64748b", border: "1px solid transparent" }}
+          style={{ color: "var(--text-soft)", border: "1px solid transparent" }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = "#f87171";
             e.currentTarget.style.borderColor = "#7f1d1d";
@@ -136,7 +136,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
         <div className="overflow-auto flex-1">
           <table className="w-full text-xs border-collapse">
             <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
-              <tr style={{ background: "#0a0b12", borderBottom: "1px solid #1a0d2e" }}>
+              <tr style={{ background: "#111827", borderBottom: "1px solid #374151" }}>
                 {columns.map((col) => (
                   <th
                     key={col}
@@ -144,7 +144,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                     className="px-3 py-2 text-left font-medium uppercase tracking-wider
                                cursor-pointer select-none transition-colors whitespace-nowrap"
                     style={{
-                      color: sortCol === col ? "#BF40BF" : "#64748b",
+                      color: sortCol === col ? "#a78bfa" : "#64748b",
                       borderRight: "1px solid rgba(26,13,46,0.5)",
                     }}
                     onMouseEnter={(e) => { if (sortCol !== col) (e.currentTarget as HTMLElement).style.color = "#94a3b8"; }}
@@ -168,7 +168,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                   onClick={() => onDrillDown(row)}
                   className="cursor-pointer transition-colors"
                   style={{ borderBottom: "1px solid rgba(26,13,46,0.4)" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(106,13,173,0.08)"; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.08)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
                   {columns.map((col) => {
@@ -189,7 +189,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                         }}
                       >
                         {isAgg && col.startsWith("count")
-                          ? <span className="font-semibold" style={{ color: "#BF40BF" }}>{text}</span>
+                          ? <span className="font-semibold" style={{ color: "#a78bfa" }}>{text}</span>
                           : truncate(text)
                         }
                       </td>
@@ -211,7 +211,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
       {/* Footer hint */}
       <div
         className="px-4 py-1.5 flex-shrink-0 border-t flex items-center gap-1.5"
-        style={{ borderColor: "#1a0d2e", background: "#09090e" }}
+        style={{ borderColor: "var(--border)", background: "#111827" }}
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
           <circle cx="5" cy="5" r="4" stroke="#4a3670" strokeWidth="1.2" />

@@ -177,7 +177,7 @@
   .badge-high     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
   .badge-medium   { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
   .badge-low      { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(106,13,173,0.15); color: #b266ff; border: 1px solid rgba(106,13,173,0.3); }
+  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
 
   /* Status badges */
   .badge-open         { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); @apply text-xs px-2 py-0.5 rounded; }

@@ -123,7 +123,7 @@ export default function CustomFieldsAdmin() {
                     </div>
                     <div className="text-[11px] text-gray-600 space-y-0.5">
                       <div>
-                        Ключ: <span style={{ color: "#BF40BF", fontFamily: "monospace" }}>{f.name}</span>
+                        Ключ: <span style={{ color: "#a78bfa", fontFamily: "monospace" }}>{f.name}</span>
                       </div>
                       <div>Тип: {TYPE_LABELS[f.type]}</div>
                       {f.description && <div>{f.description}</div>}
@@ -164,7 +164,7 @@ export default function CustomFieldsAdmin() {
             className="siem-card w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
               <h3 className="text-lg font-semibold text-gray-200">
                 {editId ? "Редактировать поле" : "Новое поле"}
               </h3>
@@ -276,7 +276,7 @@ export default function CustomFieldsAdmin() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "var(--border)" }}>
               <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-4 py-2">
                 Отмена
               </button>

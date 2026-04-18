@@ -111,21 +111,21 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="siem-card w-full max-w-xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
           <h3 className="text-sm font-semibold text-gray-200">Сохранённые запросы</h3>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-400">✕</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
           {(["presets", "saved"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className="px-5 py-2 text-xs font-medium transition-colors"
               style={{
-                color: activeTab === tab ? "#BF40BF" : "#64748b",
-                borderBottom: activeTab === tab ? "2px solid #BF40BF" : "2px solid transparent",
+                color: activeTab === tab ? "#a78bfa" : "#64748b",
+                borderBottom: activeTab === tab ? "2px solid #a78bfa" : "2px solid transparent",
               }}
             >
               {tab === "presets" ? "Шаблоны" : `Мои запросы (${userQueries.length})`}
@@ -135,7 +135,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
 
         {/* Save form */}
         {activeTab === "saved" && (
-          <div className="flex-shrink-0 px-5 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+          <div className="flex-shrink-0 px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
             {showSaveForm ? (
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
@@ -164,7 +164,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
                 />
                 <div
                   className="font-mono text-[10px] px-2 py-1 rounded truncate"
-                  style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #1a0d2e" }}
+                  style={{ background: "#111827", color: "#a78bfa", border: "1px solid #374151" }}
                 >
                   {currentPdql || "— пустой запрос —"}
                 </div>
@@ -192,7 +192,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
               <div
                 key={q.id}
                 className="px-5 py-3 border-b hover:bg-white/[0.02] transition-colors"
-                style={{ borderColor: "#1a0d2e" }}
+                style={{ borderColor: "var(--border)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -209,7 +209,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
                       <span className="text-xs font-semibold text-gray-200">{q.name}</span>
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded flex-shrink-0"
-                        style={{ background: "rgba(191,64,191,0.15)", color: "#BF40BF" }}
+                        style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}
                       >
                         {q.timeRange}
                       </span>
@@ -219,7 +219,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
                     )}
                     <div
                       className="font-mono text-[10px] mt-1 truncate px-1.5 py-0.5 rounded"
-                      style={{ background: "#08090e", color: "#6b7280" }}
+                      style={{ background: "#111827", color: "#6b7280" }}
                     >
                       {q.pdql}
                     </div>

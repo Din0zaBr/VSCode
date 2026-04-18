@@ -214,8 +214,8 @@ export default function SigmaRulesAdmin() {
                 key={r.id}
                 className="siem-card p-3 cursor-pointer transition-all hover:scale-[1.02]"
                 style={{
-                  background: selectedId === r.id ? "rgba(106,13,173,0.15)" : undefined,
-                  borderColor: selectedId === r.id ? "#BF40BF" : undefined,
+                  background: selectedId === r.id ? "rgba(167,139,250,0.15)" : undefined,
+                  borderColor: selectedId === r.id ? "#a78bfa" : undefined,
                 }}
                 onClick={() => setSelectedId(r.id)}
               >
@@ -278,7 +278,7 @@ export default function SigmaRulesAdmin() {
                   <label className="text-xs text-gray-600 uppercase block mb-2">YAML</label>
                   <div
                     className="bg-gray-900 border rounded p-3 font-mono text-[11px] overflow-x-auto max-h-48 overflow-y-auto"
-                    style={{ borderColor: "#1a0d2e", color: "#c9d1d9" }}
+                    style={{ borderColor: "var(--border)", color: "#c9d1d9" }}
                   >
                     {selected.yaml.split("\n").map((line, i) => (
                       <div key={i}>{line}</div>
@@ -286,7 +286,7 @@ export default function SigmaRulesAdmin() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "#1a0d2e" }}>
+                <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                   <button onClick={() => handleEdit(selected)} className="siem-btn-ghost text-xs px-3 py-1.5 flex-1">
                     Редактировать
                   </button>
@@ -321,7 +321,7 @@ export default function SigmaRulesAdmin() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="siem-card w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
               <h3 className="text-lg font-semibold text-gray-200">
                 {selectedId ? "Редактировать правило" : "Новое правило"}
               </h3>
@@ -398,7 +398,7 @@ export default function SigmaRulesAdmin() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "var(--border)" }}>
               <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-4 py-2">
                 Отмена
               </button>

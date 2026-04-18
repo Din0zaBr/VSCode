@@ -7,7 +7,7 @@ const RISK_COLORS: Record<string, string> = {
   CRITICAL: "text-red-400",
   HIGH: "text-orange-400",
   ELEVATED: "text-yellow-400",
-  NORMAL: "text-green-400",
+  NORMAL: "text-purple-300",
 };
 
 export default function Accounts() {

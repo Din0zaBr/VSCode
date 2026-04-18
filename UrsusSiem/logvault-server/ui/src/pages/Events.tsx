@@ -265,23 +265,23 @@ function PDQLModal({ value, onSave, onClose }: { value: string; onSave: (v: stri
   const [text, setText] = useState(value);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[700px] max-h-[80vh] flex flex-col rounded-2xl border" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
-        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+      <div className="w-[700px] max-h-[80vh] flex flex-col rounded-2xl border" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>⚡ PDQL Редактор</span>
+            <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>⚡ PDQL Редактор</span>
             <span className="text-xs text-gray-500">Полный запрос к каналу событий</span>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-200 text-lg">✕</button>
         </div>
-        <div className="px-4 py-2 text-xs text-gray-500 border-b" style={{ borderColor: "#1a0d2e" }}>
+        <div className="px-4 py-2 text-xs text-gray-500 border-b" style={{ borderColor: "var(--border)" }}>
           Команды через запятую или <code className="text-gray-400">|</code>:{" "}
           <span style={{ color: "#8b20d1" }}>filter</span>/<span style={{ color: "#8b20d1" }}>where</span>(предикаты),{" "}
-          <span style={{ color: "#BF40BF" }}>select</span>(поля), <span style={{ color: "#6A0DAD" }}>sort</span>, <span style={{ color: "#3d6565" }}>limit</span>.
+          <span style={{ color: "#a78bfa" }}>select</span>(поля), <span style={{ color: "#8b5cf6" }}>sort</span>, <span style={{ color: "#3d6565" }}>limit</span>.
           Операторы: <code className="text-gray-400">= != contains</code> и др.
         </div>
         <textarea
           className="flex-1 m-4 rounded-lg p-3 text-sm font-mono resize-none focus:outline-none"
-          style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860", minHeight: "300px" }}
+          style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563", minHeight: "300px" }}
           value={text}
           onChange={(e) => setText(e.target.value)}
           spellCheck={false}
@@ -353,12 +353,12 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[800px] max-h-[85vh] flex rounded-2xl border overflow-hidden" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
+      <div className="w-[800px] max-h-[85vh] flex rounded-2xl border overflow-hidden" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
         {/* Left: fieldset list */}
-        <div className="w-56 border-r flex flex-col" style={{ borderColor: "#1a0d2e" }}>
-          <div className="flex items-center justify-between px-3 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-            <span className="text-xs font-bold" style={{ color: "#BF40BF" }}>Филдсеты</span>
-            <button onClick={startCreate} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF" }}>+ Новый</button>
+        <div className="w-56 border-r flex flex-col" style={{ borderColor: "var(--border)" }}>
+          <div className="flex items-center justify-between px-3 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+            <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>Филдсеты</span>
+            <button onClick={startCreate} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>+ Новый</button>
           </div>
           <div className="flex-1 overflow-y-auto">
             {fieldsets.map((fs) => (
@@ -366,11 +366,11 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
                 key={fs.id}
                 className="flex items-center justify-between px-3 py-2 cursor-pointer border-b"
                 style={{
-                  borderColor: "#1a0d2e",
-                  background: fs.id === currentFieldsetId ? "rgba(106,13,173,0.15)" : "transparent",
+                  borderColor: "var(--border)",
+                  background: fs.id === currentFieldsetId ? "rgba(167,139,250,0.15)" : "transparent",
                 }}
               >
-                <button onClick={() => onSelect(fs)} className="flex-1 text-left text-xs truncate" style={{ color: fs.id === currentFieldsetId ? "#BF40BF" : "#94a3b8" }}>
+                <button onClick={() => onSelect(fs)} className="flex-1 text-left text-xs truncate" style={{ color: fs.id === currentFieldsetId ? "#a78bfa" : "#94a3b8" }}>
                   {fs.name}
                 </button>
                 <div className="flex gap-1">
@@ -380,7 +380,7 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
               </div>
             ))}
           </div>
-          <div className="p-3 border-t" style={{ borderColor: "#1a0d2e" }}>
+          <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
             <button onClick={onClose} className="w-full siem-btn-ghost text-xs py-1.5">Закрыть</button>
           </div>
         </div>
@@ -389,7 +389,7 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
         <div className="flex-1 flex flex-col overflow-hidden">
           {editing ? (
             <>
-              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
                 <span className="text-xs text-gray-400">Название:</span>
                 <input
                   className="siem-input text-xs py-1 flex-1"
@@ -407,11 +407,11 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
                       onChange={() => toggleField(key)}
                       className="accent-violet-500 w-3 h-3"
                     />
-                    <span className="text-[11px] font-mono truncate" style={{ color: checkedFields.includes(key) ? "#BF40BF" : "#64748b" }}>{key}</span>
+                    <span className="text-[11px] font-mono truncate" style={{ color: checkedFields.includes(key) ? "#a78bfa" : "#64748b" }}>{key}</span>
                   </label>
                 ))}
               </div>
-              <div className="flex justify-end gap-2 px-4 pb-4 border-t pt-3" style={{ borderColor: "#1a0d2e" }}>
+              <div className="flex justify-end gap-2 px-4 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <button onClick={() => setEditing(null)} className="siem-btn-ghost text-xs px-3 py-1.5">Отмена</button>
                 <button onClick={save} className="siem-btn text-xs px-3 py-1.5">Сохранить</button>
               </div>
@@ -436,9 +436,9 @@ function QueryHistoryModal({ onClose, onRestore }: {
   const [history, setHistory] = useState<QueryHistoryItem[]>(getQueryHistory());
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-end bg-black/40">
-      <div className="w-[420px] h-full flex flex-col border-l" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-          <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>История запросов</span>
+      <div className="w-[420px] h-full flex flex-col border-l" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>История запросов</span>
           <div className="flex gap-2">
             <button onClick={() => { clearQueryHistory(); setHistory([]); }} className="text-xs text-gray-500 hover:text-red-400">Очистить</button>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
@@ -450,11 +450,11 @@ function QueryHistoryModal({ onClose, onRestore }: {
             <div
               key={item.id}
               className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
-              style={{ borderColor: "#1a0d2e" }}
+              style={{ borderColor: "var(--border)" }}
               onClick={() => { onRestore(item); onClose(); }}
             >
               <div className="text-[11px] text-gray-500 mb-1">{fmtTime(item.timestamp)}</div>
-              <div className="text-xs font-mono truncate" style={{ color: "#BF40BF" }}>{item.pdql}</div>
+              <div className="text-xs font-mono truncate" style={{ color: "#a78bfa" }}>{item.pdql}</div>
               {item.label && <div className="text-[11px] text-gray-400 mt-0.5">{item.label}</div>}
               <div className="text-[10px] text-gray-600 mt-0.5">
                 {item.timeRange.type === "relative" ? `Последние: ${item.timeRange.relative}` : `${item.timeRange.from} → ${item.timeRange.to}`}
@@ -479,21 +479,21 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
   const crit = deriveCriticality(event);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden border-r" style={{ borderColor: "#1a0d2e", background: "#0d0f18", width: "360px", flexShrink: 0 }}>
+    <div className="flex flex-col h-full overflow-hidden border-r" style={{ borderColor: "var(--border)", background: "#1f2937", width: "360px", flexShrink: 0 }}>
       {/* Header */}
-      <div className="flex items-start justify-between px-3 py-2 border-b" style={{ borderColor: "#1a0d2e" }}>
+      <div className="flex items-start justify-between px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
         <div className="flex-1 pr-2">
           <div className="flex items-center gap-2 mb-1">
             <span className={critDotClass(crit)} />
             {isCorrelationEvent(event) && <span className="corr-star">★</span>}
-            <span className="text-[10px] uppercase tracking-wider" style={{ color: "#64748b" }}>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>
               {event.level || "—"}
             </span>
           </div>
           <div className="text-xs font-medium leading-snug" style={{ color: "#e2e8f0" }}>
             {event.message || "(нет сообщения)"}
           </div>
-          <div className="text-[10px] mt-1" style={{ color: "#64748b" }}>{fmtTime(event.timestamp)}</div>
+          <div className="text-[10px] mt-1" style={{ color: "var(--text-soft)" }}>{fmtTime(event.timestamp)}</div>
         </div>
         <button onClick={onClose} className="text-gray-600 hover:text-gray-300 text-sm flex-shrink-0 mt-0.5">✕</button>
       </div>
@@ -513,7 +513,7 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
         ))}
 
         {/* Divider */}
-        <div className="my-1 mx-2 border-t" style={{ borderColor: "#1a0d2e" }} />
+        <div className="my-1 mx-2 border-t" style={{ borderColor: "var(--border)" }} />
 
         {/* SIEM parsed fields */}
         {DETAIL_FIELDS.map(({ key, label }) => {
@@ -527,13 +527,13 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
           <button
             onClick={() => setShowRaw((s) => !s)}
             className="text-[11px] flex items-center gap-1 mb-1"
-            style={{ color: "#6A0DAD" }}
+            style={{ color: "#8b5cf6" }}
           >
             <span>{showRaw ? "▾" : "▸"}</span> Исходное событие (raw)
           </button>
           {showRaw && (
             <pre className="text-[10px] font-mono p-2 rounded leading-relaxed overflow-auto max-h-64"
-              style={{ background: "#08090e", color: "#94a3b8", border: "1px solid #1a0d2e" }}>
+              style={{ background: "#111827", color: "var(--text-muted)", border: "1px solid #374151" }}>
               {JSON.stringify({ ...event }, null, 2)}
             </pre>
           )}
@@ -541,11 +541,11 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
       </div>
 
       {/* Actions */}
-      <div className="px-3 py-2 border-t flex gap-2" style={{ borderColor: "#1a0d2e" }}>
+      <div className="px-3 py-2 border-t flex gap-2" style={{ borderColor: "var(--border)" }}>
         <button
           onClick={() => onLinkIncident(event)}
           className="flex-1 text-xs py-1.5 rounded-lg transition-colors"
-          style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+          style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
         >
           + В инцидент
         </button>
@@ -560,7 +560,7 @@ function FieldRow({ fieldKey, label, value, onAddFilter }: {
 }) {
   return (
     <div className="field-row group" onClick={() => onAddFilter(fieldKey, value)}>
-      <span className="text-[10px] font-mono w-32 flex-shrink-0 truncate" style={{ color: "#6A0DAD" }} title={label}>{label}</span>
+      <span className="text-[10px] font-mono w-32 flex-shrink-0 truncate" style={{ color: "#8b5cf6" }} title={label}>{label}</span>
       <span className="text-[11px] flex-1 break-all leading-tight" style={{ color: "#cbd5e1" }}>{value}</span>
       <span className="field-add-btn">+ фильтр</span>
     </div>
@@ -580,9 +580,9 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[480px] rounded-2xl border" style={{ background: "#0d0f18", borderColor: "#2d1860" }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-          <span className="text-sm font-bold" style={{ color: "#BF40BF" }}>Привязка к инциденту</span>
+      <div className="w-[480px] rounded-2xl border" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>Привязка к инциденту</span>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
         </div>
         <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
@@ -591,7 +591,7 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
             <div
               key={a.id}
               className="flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-purple-900/10 border"
-              style={{ borderColor: "#1a0d2e" }}
+              style={{ borderColor: "var(--border)" }}
             >
               <div>
                 <div className="text-xs font-medium text-gray-200">#{a.id} — {a.rule_name}</div>
@@ -599,7 +599,7 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
               </div>
               <button
                 className="text-xs px-2 py-1 rounded"
-                style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF" }}
+                style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}
                 onClick={() => { navigate(`/incidents?id=${a.id}`); onClose(); }}
               >
                 Привязать
@@ -607,7 +607,7 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
             </div>
           ))}
         </div>
-        <div className="px-4 pb-4 border-t pt-3" style={{ borderColor: "#1a0d2e" }}>
+        <div className="px-4 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
           <div className="text-xs text-gray-400 mb-2">Или создать новый инцидент:</div>
           <div className="flex gap-2">
             <input
@@ -1034,19 +1034,19 @@ export default function Events() {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ── Control Bar ─────────────────────────────────────────────── */}
-        <div className="px-4 pt-3 pb-2 border-b flex-shrink-0 space-y-2" style={{ borderColor: "#1a0d2e" }}>
+        <div className="px-4 pt-3 pb-2 border-b flex-shrink-0 space-y-2" style={{ borderColor: "var(--border)" }}>
 
           {/* Row 1: Time + Quick ranges */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-gray-500 flex-shrink-0">Период:</span>
-            <div className="flex gap-0.5 bg-siem-surface2 rounded-lg p-0.5 border" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex gap-0.5 bg-siem-surface2 rounded-lg p-0.5 border" style={{ borderColor: "var(--border)" }}>
               {QUICK_RANGES.map((r) => (
                 <button
                   key={r.value}
                   onClick={() => { setQuickRange(r.value); setUseCustom(false); }}
                   className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
                   style={{
-                    background: !useCustom && quickRange === r.value ? "#6A0DAD" : "transparent",
+                    background: !useCustom && quickRange === r.value ? "#8b5cf6" : "transparent",
                     color: !useCustom && quickRange === r.value ? "#fff" : "#64748b",
                   }}
                 >
@@ -1057,7 +1057,7 @@ export default function Events() {
                 onClick={() => setUseCustom(true)}
                 className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
                 style={{
-                  background: useCustom ? "#6A0DAD" : "transparent",
+                  background: useCustom ? "#8b5cf6" : "transparent",
                   color: useCustom ? "#fff" : "#64748b",
                 }}
               >
@@ -1102,7 +1102,7 @@ export default function Events() {
             <button
               onClick={() => setShowHistory(true)}
               className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
-              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
               title="История запросов"
             >
               ↺ История
@@ -1111,7 +1111,7 @@ export default function Events() {
             <button
               onClick={() => setShowSavedQueries(true)}
               className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
-              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
               title="Сохранённые запросы и шаблоны"
             >
               ☆ Запросы
@@ -1142,7 +1142,7 @@ export default function Events() {
             <button
               onClick={() => setShowPdqlModal(true)}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
-              style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
               title="Открыть полный PDQL редактор"
             >
               ⚡
@@ -1152,7 +1152,7 @@ export default function Events() {
             <button
               onClick={() => setShowQueryBuilder(true)}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
-              style={{ background: "rgba(106,13,173,0.2)", color: "#BF40BF", border: "1px solid #2d1860" }}
+              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
               title="Визуальный конструктор запросов"
             >
               🔧
@@ -1183,7 +1183,7 @@ export default function Events() {
               <button
                 onClick={() => setShowFsManager(true)}
                 className="text-xs px-2 py-1.5 rounded-lg"
-                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
                 title="Управление филдсетами"
               >
                 ⚙
@@ -1195,9 +1195,9 @@ export default function Events() {
               onClick={() => setHideEmpty((v: boolean) => !v)}
               className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 transition-colors"
               style={{
-                background: hideEmpty ? "rgba(191,64,191,0.2)" : "rgba(45,24,96,0.3)",
-                color: hideEmpty ? "#BF40BF" : "#8b20d1",
-                border: hideEmpty ? "1px solid #BF40BF" : "1px solid #2d1860",
+                background: hideEmpty ? "rgba(167,139,250,0.2)" : "rgba(45,24,96,0.3)",
+                color: hideEmpty ? "#a78bfa" : "#8b20d1",
+                border: hideEmpty ? "1px solid #a78bfa" : "1px solid #4b5563",
               }}
               title={hideEmpty ? "Показать все столбцы" : "Скрыть пустые столбцы"}
             >
@@ -1209,14 +1209,14 @@ export default function Events() {
               <button
                 onClick={() => setShowExport((s) => !s)}
                 className="text-xs px-3 py-1.5 rounded-lg"
-                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #2d1860" }}
+                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
               >
                 ↓ Экспорт
               </button>
               {showExport && (
                 <div
                   className="absolute right-0 top-8 z-30 rounded-xl border py-1 shadow-xl"
-                  style={{ background: "#0d0f18", borderColor: "#2d1860", minWidth: "120px" }}
+                  style={{ background: "#1f2937", borderColor: "#4b5563", minWidth: "120px" }}
                 >
                   {[
                     { label: "CSV", fn: handleExportCSV },
@@ -1227,7 +1227,7 @@ export default function Events() {
                       key={label}
                       onClick={() => { fn(); setShowExport(false); }}
                       className="w-full text-left px-4 py-1.5 text-xs hover:bg-purple-900/20 transition-colors"
-                      style={{ color: "#BF40BF" }}
+                      style={{ color: "#a78bfa" }}
                     >
                       {label}
                     </button>
@@ -1259,7 +1259,7 @@ export default function Events() {
           ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) && !isFetching ? (
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
-                <div className="text-4xl mb-2" style={{ color: "#2d1860" }}>◎</div>
+                <div className="text-4xl mb-2" style={{ color: "#4b5563" }}>◎</div>
                 <div>{isGrouped ? "Нет групп по текущему фильтру" : "Нет событий за выбранный период"}</div>
                 <div className="text-xs text-gray-700 mt-1">Измените фильтр или временной диапазон</div>
               </div>
@@ -1269,7 +1269,7 @@ export default function Events() {
               {/* Grouped aggregation table */}
               <div className="overflow-auto" style={{ flex: drillDownRow ? "0 0 40%" : "1 1 0" }}>
                 <table className="w-full siem-table text-xs">
-                  <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+                  <thead className="sticky top-0" style={{ background: "#1f2937" }}>
                     <tr>
                       {groupedCols.map((col) => (
                         <th key={col} className="text-left font-mono">{col}</th>
@@ -1282,8 +1282,8 @@ export default function Events() {
                         key={i}
                         className="cursor-pointer"
                         style={{
-                          background: drillDownRow === row ? "rgba(106,13,173,0.18)" : undefined,
-                          borderLeft: drillDownRow === row ? "2px solid #6A0DAD" : "2px solid transparent",
+                          background: drillDownRow === row ? "rgba(167,139,250,0.18)" : undefined,
+                          borderLeft: drillDownRow === row ? "2px solid #8b5cf6" : "2px solid transparent",
                         }}
                         onClick={() => setDrillDownRow(drillDownRow === row ? null : row)}
                       >
@@ -1300,13 +1300,13 @@ export default function Events() {
 
               {/* Drill-down: event stream for the selected group row */}
               {drillDownRow && (
-                <div className="flex flex-col border-t overflow-hidden" style={{ flex: "1 1 0", borderColor: "#2d1860" }}>
+                <div className="flex flex-col border-t overflow-hidden" style={{ flex: "1 1 0", borderColor: "#4b5563" }}>
                   <div
                     className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-                    style={{ borderColor: "#1a0d2e", background: "#08090e" }}
+                    style={{ borderColor: "var(--border)", background: "#111827" }}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-bold flex-shrink-0" style={{ color: "#BF40BF" }}>
+                      <span className="text-xs font-bold flex-shrink-0" style={{ color: "#a78bfa" }}>
                         ▸ События группы:
                       </span>
                       <span className="text-xs font-mono text-gray-400 truncate">
@@ -1330,7 +1330,7 @@ export default function Events() {
                       <div className="flex items-center justify-center h-full text-gray-600 text-sm">Нет событий для этой группы</div>
                     ) : (
                       <table className="w-full siem-table text-xs">
-                        <thead className="sticky top-0" style={{ background: "#08090e" }}>
+                        <thead className="sticky top-0" style={{ background: "#111827" }}>
                           <tr>
                             {activeFields.map((f: string) => (
                               <th key={f} className="text-left select-none">
@@ -1349,8 +1349,8 @@ export default function Events() {
                                 key={event.event_id || i}
                                 className="cursor-pointer"
                                 style={{
-                                  background: isSelected ? "rgba(106,13,173,0.15)" : undefined,
-                                  borderLeft: isSelected ? "2px solid #6A0DAD" : "2px solid transparent",
+                                  background: isSelected ? "rgba(167,139,250,0.15)" : undefined,
+                                  borderLeft: isSelected ? "2px solid #8b5cf6" : "2px solid transparent",
                                 }}
                                 onClick={() => setSelectedEvent(isSelected ? null : event)}
                               >
@@ -1381,7 +1381,7 @@ export default function Events() {
                       </table>
                     )}
                   </div>
-                  <div className="px-3 py-1 border-t flex-shrink-0 text-xs text-gray-600" style={{ borderColor: "#1a0d2e" }}>
+                  <div className="px-3 py-1 border-t flex-shrink-0 text-xs text-gray-600" style={{ borderColor: "var(--border)" }}>
                     {drillEvents.length} событий (первые 300)
                   </div>
                 </div>
@@ -1389,7 +1389,7 @@ export default function Events() {
             </div>
           ) : (
             <table className="w-full siem-table text-xs">
-              <thead className="sticky top-0" style={{ background: "#0d0f18" }}>
+              <thead className="sticky top-0" style={{ background: "#1f2937" }}>
                 <tr>
                   {activeFields.map((f: string) => (
                     <th
@@ -1400,7 +1400,7 @@ export default function Events() {
                     >
                       {f === "criticality" ? "⬤" : f === "text" ? "Сообщение" : f}
                       {sortField === f && f !== "criticality" && (
-                        <span className="ml-1" style={{ color: "#BF40BF" }}>
+                        <span className="ml-1" style={{ color: "#a78bfa" }}>
                           {sortDir === "asc" ? "↑" : "↓"}
                         </span>
                       )}
@@ -1419,8 +1419,8 @@ export default function Events() {
                       onClick={() => setSelectedEvent(isSelected ? null : event)}
                       className="cursor-pointer"
                       style={{
-                        background: isSelected ? "rgba(106,13,173,0.15)" : undefined,
-                        borderLeft: isSelected ? "2px solid #6A0DAD" : "2px solid transparent",
+                        background: isSelected ? "rgba(167,139,250,0.15)" : undefined,
+                        borderLeft: isSelected ? "2px solid #8b5cf6" : "2px solid transparent",
                       }}
                     >
                       {activeFields.map((f: string) => (
@@ -1454,7 +1454,7 @@ export default function Events() {
         </div>
 
         {/* ── Status bar ──────────────────────────────────────────────── */}
-        <div className="px-4 py-2 border-t flex-shrink-0 flex items-center gap-3" style={{ borderColor: "#1a0d2e" }}>
+        <div className="px-4 py-2 border-t flex-shrink-0 flex items-center gap-3" style={{ borderColor: "var(--border)" }}>
           <span className="text-xs text-gray-600">
             {isGrouped
               ? allGroupedRows.length.toLocaleString() + " групп"

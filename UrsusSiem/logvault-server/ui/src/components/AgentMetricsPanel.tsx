@@ -13,7 +13,7 @@ function gaugeColor(pct: number): string {
 function gaugeTextColor(pct: number): string {
   if (pct >= 85) return "text-red-400";
   if (pct >= 60) return "text-yellow-400";
-  return "text-green-400";
+  return "text-purple-300";
 }
 
 function GaugeBar({ label, percent, detail }: { label: string; percent: number; detail: string }) {

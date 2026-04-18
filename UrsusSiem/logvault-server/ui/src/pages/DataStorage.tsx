@@ -93,9 +93,9 @@ function CorrelationRulesTab() {
   return (
     <div className="flex gap-4 h-full overflow-hidden">
       {/* List */}
-      <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-          <span className="text-xs font-bold" style={{ color: "#BF40BF" }}>Правила ({rules?.length ?? 0})</span>
+      <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>Правила ({rules?.length ?? 0})</span>
           {isAdmin() && <button onClick={openCreate} className="siem-btn text-xs py-1 px-3">+ Новое</button>}
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -104,7 +104,7 @@ function CorrelationRulesTab() {
             <div
               key={r.id}
               className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
-              style={{ borderColor: "#1a0d2e", background: editRule?.id === r.id ? "rgba(106,13,173,0.12)" : "transparent" }}
+              style={{ borderColor: "var(--border)", background: editRule?.id === r.id ? "rgba(167,139,250,0.12)" : "transparent" }}
               onClick={() => openEdit(r)}
             >
               <div className="flex items-center gap-2 mb-0.5">
@@ -124,7 +124,7 @@ function CorrelationRulesTab() {
       <div className="flex-1 overflow-hidden flex flex-col">
         {showForm ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
               <span className="text-sm font-semibold text-gray-200">{editRule ? "Редактировать правило" : "Новое правило Sigma"}</span>
               <div className="flex gap-2">
                 <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-3 py-1.5">Отмена</button>
@@ -169,7 +169,7 @@ function CorrelationRulesTab() {
                 </div>
                 <textarea
                   className="w-full p-3 rounded-xl text-xs font-mono resize-none focus:outline-none"
-                  style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860", minHeight: "380px", lineHeight: "1.6" }}
+                  style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563", minHeight: "380px", lineHeight: "1.6" }}
                   value={form.sigma_rule}
                   onChange={(e) => setForm((f) => ({ ...f, sigma_rule: e.target.value }))}
                   spellCheck={false}
@@ -179,7 +179,7 @@ function CorrelationRulesTab() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center flex-col gap-3">
-            <div className="text-5xl" style={{ color: "#1a0d2e" }}>⚡</div>
+            <div className="text-5xl" style={{ color: "#374151" }}>⚡</div>
             <div className="text-gray-600 text-sm">Выберите правило или создайте новое</div>
           </div>
         )}
@@ -246,7 +246,7 @@ function ExclusionsTab() {
           </div>
           <div><label className="text-[10px] text-gray-600 mb-1 block">Описание</label><input className="siem-input w-full text-sm" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} /></div>
           <div><label className="text-[10px] text-gray-600 mb-1 block">Условия (JSON)</label>
-            <textarea className="siem-input w-full font-mono text-xs min-h-[80px] resize-none" value={form.condRaw} onChange={(e) => setForm((f) => ({ ...f, condRaw: e.target.value }))} style={{ color: "#BF40BF" }} />
+            <textarea className="siem-input w-full font-mono text-xs min-h-[80px] resize-none" value={form.condRaw} onChange={(e) => setForm((f) => ({ ...f, condRaw: e.target.value }))} style={{ color: "#a78bfa" }} />
           </div>
           <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.enabled} onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))} className="w-4 h-4 accent-violet-500" /><span className="text-sm text-gray-300">Включено</span></label>
         </div>
@@ -386,11 +386,11 @@ function SourceMonitoringTab() {
   const selected = agents.find((a) => a.agent_id === selectedId) ?? (agents.length > 0 ? agents[0] : null);
 
   return (
-    <div className="flex h-full overflow-hidden" style={{ background: "#0d1117" }}>
+    <div className="flex h-full overflow-hidden" style={{ background: "#1f2937" }}>
       {/* Agent list */}
       <div
         className="w-64 flex flex-col flex-shrink-0 border-r overflow-hidden"
-        style={{ borderColor: "#21262d", background: "#0d1117" }}
+        style={{ borderColor: "#21262d", background: "#1f2937" }}
       >
         <div
           className="px-4 py-3 border-b flex items-center justify-between flex-shrink-0"
@@ -454,7 +454,7 @@ function SourceMonitoringTab() {
       </div>
 
       {/* Detail panel */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ background: "#0d1117" }}>
+      <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ background: "#1f2937" }}>
         {!selected ? (
           <div className="flex h-full items-center justify-center flex-col gap-3">
             <div className="text-4xl" style={{ color: "#21262d" }}>📡</div>
@@ -706,9 +706,9 @@ function ReferencesTab() {
   return (
     <div className="flex gap-4 h-full overflow-hidden">
       {/* List */}
-      <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
-          <span className="text-xs font-bold" style={{ color: "#BF40BF" }}>
+      <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>
             Сценарии ({scenarios.length})
           </span>
           <button onClick={handleNew} className="siem-btn text-xs py-1 px-3">
@@ -723,7 +723,7 @@ function ReferencesTab() {
             <div
               key={s.id}
               className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
-              style={{ borderColor: "#1a0d2e", background: selectedId === s.id ? "rgba(106,13,173,0.12)" : "transparent" }}
+              style={{ borderColor: "var(--border)", background: selectedId === s.id ? "rgba(167,139,250,0.12)" : "transparent" }}
               onClick={() => setSelectedId(s.id)}
             >
               <div className="flex items-center gap-2 mb-0.5">
@@ -740,7 +740,7 @@ function ReferencesTab() {
       <div className="flex-1 overflow-hidden flex flex-col">
         {showForm ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
               <span className="text-sm font-semibold text-gray-200">
                 {selectedId ? "Редактировать сценарий" : "Новый сценарий"}
               </span>
@@ -859,7 +859,7 @@ function ReferencesTab() {
           </>
         ) : selected ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
               <div>
                 <h3 className="text-sm font-semibold text-gray-200">{selected.name}</h3>
                 <p className="text-xs text-gray-600 mt-0.5">{selected.customer}</p>
@@ -907,7 +907,7 @@ function ReferencesTab() {
                   <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.notes}</p>
                 </div>
               )}
-              <div className="text-xs text-gray-600 pt-4 border-t" style={{ borderColor: "#1a0d2e" }}>
+              <div className="text-xs text-gray-600 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
                 Создан: {new Date(selected.created_at).toLocaleString("ru-RU")}
               </div>
             </div>
@@ -943,13 +943,13 @@ export default function DataStorage() {
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
       {/* Sub-nav */}
-      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0"
             style={{
-              color: activeTab === t.id ? "#BF40BF" : "#64748b",
-              borderBottom: activeTab === t.id ? "2px solid #BF40BF" : "2px solid transparent",
+              color: activeTab === t.id ? "#a78bfa" : "#64748b",
+              borderBottom: activeTab === t.id ? "2px solid #a78bfa" : "2px solid transparent",
             }}>
             {t.label}
           </button>

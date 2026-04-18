@@ -129,7 +129,7 @@ export default function Exclusions() {
             </div>
             {isAdmin() && (
               <div className="flex gap-2">
-                <button onClick={() => toggleMutation.mutate(ex)} className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${ex.enabled ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-green-900/40 hover:bg-green-800/40 text-green-400"}`}>
+                <button onClick={() => toggleMutation.mutate(ex)} className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${ex.enabled ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-green-900/40 hover:bg-green-800/40 text-purple-300"}`}>
                   {ex.enabled ? "Отключить" : "Включить"}
                 </button>
                 <button onClick={() => openEdit(ex)} className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors">Изменить</button>

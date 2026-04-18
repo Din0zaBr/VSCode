@@ -44,7 +44,7 @@ function AgentsTab() {
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-500">Сервер:</span>
-          <code className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860" }}>{serverBase}</code>
+          <code className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563" }}>{serverBase}</code>
         </div>
         <div className="mt-2 text-xs text-gray-600">
           Установка агента:{" "}
@@ -65,7 +65,7 @@ function AgentsTab() {
         <div className="text-center text-gray-600 py-8">Загрузка...</div>
       ) : (agents ?? []).length === 0 ? (
         <div className="text-center text-gray-600 py-12">
-          <div className="text-4xl mb-3" style={{ color: "#1a0d2e" }}>◎</div>
+          <div className="text-4xl mb-3" style={{ color: "#374151" }}>◎</div>
           <div className="text-sm">Нет подключённых агентов</div>
           <div className="text-xs text-gray-700 mt-1">Используйте команду выше для подключения первого агента</div>
         </div>
@@ -94,7 +94,7 @@ function AgentsTab() {
                     {memPct !== null && (
                       <span>RAM: <span className={memPct > 85 ? "text-red-400" : "text-gray-300"}>{memPct.toFixed(1)}%</span></span>
                     )}
-                    <span>Посл. сигнал: <span className={isOnline ? "text-green-400" : "text-yellow-500"}>{lastSeen.toLocaleString("ru-RU")}</span></span>
+                    <span>Посл. сигнал: <span className={isOnline ? "text-purple-300" : "text-yellow-500"}>{lastSeen.toLocaleString("ru-RU")}</span></span>
                     <span className={isOnline ? "badge-resolved" : "badge-fp"}>{isOnline ? "Online" : "Offline"}</span>
                   </div>
                 </div>
@@ -268,13 +268,13 @@ export default function Assets() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
-      <div className="flex border-b flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+      <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
         {(["assets", "agents"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className="px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-colors"
             style={{
-              color: tab === t ? "#BF40BF" : "#64748b",
-              borderBottom: tab === t ? "2px solid #BF40BF" : "2px solid transparent",
+              color: tab === t ? "#a78bfa" : "#64748b",
+              borderBottom: tab === t ? "2px solid #a78bfa" : "2px solid transparent",
             }}>
             {t === "assets" ? "Активы (хосты)" : "Агенты"}
           </button>

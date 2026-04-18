@@ -30,7 +30,7 @@ const TYPE_META: Record<IntegrationType, { label: string; icon: string; color: s
   elastic:     { label: "Elasticsearch", icon: "🔍", color: "#34d399", description: "Синхронизация с Elastic/OpenSearch" },
   splunk:      { label: "Splunk",        icon: "📊", color: "#60a5fa", description: "Интеграция с Splunk SIEM" },
   webhook:     { label: "Webhook",       icon: "🔗", color: "#facc15", description: "Входящие webhook от любых сервисов" },
-  rest_generic:{ label: "REST API",      icon: "⚙", color: "#94a3b8", description: "Универсальный HTTP REST коннектор" },
+  rest_generic:{ label: "REST API",      icon: "⚙", color: "var(--text-muted)", description: "Универсальный HTTP REST коннектор" },
 };
 
 const STATUS_LABELS: Record<IntegrationStatus, { label: string; color: string }> = {
@@ -193,8 +193,8 @@ export default function Integrations() {
                   key={item.id}
                   className="siem-card p-3 cursor-pointer transition-all hover:scale-[1.01]"
                   style={{
-                    background: selectedId === item.id ? "rgba(106,13,173,0.15)" : undefined,
-                    borderColor: selectedId === item.id ? "#BF40BF" : undefined,
+                    background: selectedId === item.id ? "rgba(167,139,250,0.15)" : undefined,
+                    borderColor: selectedId === item.id ? "#a78bfa" : undefined,
                   }}
                   onClick={() => setSelectedId(item.id)}
                 >
@@ -251,7 +251,7 @@ export default function Integrations() {
                 <div><span className="text-gray-600">Создан: </span><span className="text-gray-300">{new Date(selected.created_at).toLocaleString("ru-RU")}</span></div>
               </div>
 
-              <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "#1a0d2e" }}>
+              <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                 <button onClick={() => handleEdit(selected)} className="siem-btn-ghost text-xs px-3 py-1.5 flex-1">Редактировать</button>
                 <button onClick={() => toggleStatus(selected.id)} className="siem-btn-ghost text-xs px-3 py-1.5">
                   {selected.status === "enabled" ? "Отключить" : "Включить"}
@@ -280,7 +280,7 @@ export default function Integrations() {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="siem-card w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
               <h3 className="text-lg font-semibold text-gray-200">{editId ? "Редактировать интеграцию" : "Новая интеграция"}</h3>
               <button onClick={() => setShowForm(false)} className="text-gray-600 hover:text-gray-400">✕</button>
             </div>
@@ -298,7 +298,7 @@ export default function Integrations() {
                       className="p-2 rounded-lg text-center text-[11px] transition-all"
                       style={{
                         background: form.type === type ? `${meta.color}22` : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${form.type === type ? meta.color : "#1a0d2e"}`,
+                        border: `1px solid ${form.type === type ? meta.color : "#374151"}`,
                         color: form.type === type ? meta.color : "#6b7280",
                       }}
                     >
@@ -405,7 +405,7 @@ export default function Integrations() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "#1a0d2e" }}>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t" style={{ borderColor: "var(--border)" }}>
               <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-4 py-2">Отмена</button>
               <button
                 onClick={handleSave}

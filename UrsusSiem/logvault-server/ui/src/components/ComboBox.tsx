@@ -64,7 +64,7 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
           id={listId}
           role="listbox"
           className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-auto rounded-lg shadow-xl"
-          style={{ background: "#0d1117", border: "1px solid #1a0d2e" }}
+          style={{ background: "#1f2937", border: "1px solid #374151" }}
         >
           {filtered.map((opt) => (
             <li
@@ -77,7 +77,7 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
                 setOpen(false);
               }}
               className="px-3 py-1.5 text-sm cursor-pointer transition-colors text-gray-300"
-              style={opt === value ? { background: "rgba(106,13,173,0.2)", color: "#BF40BF" } : undefined}
+              style={opt === value ? { background: "rgba(167,139,250,0.2)", color: "#a78bfa" } : undefined}
               onMouseEnter={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = "rgba(255,255,255,0.04)"; }}
               onMouseLeave={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = ""; }}
             >

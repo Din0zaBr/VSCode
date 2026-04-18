@@ -53,7 +53,7 @@ export default function Reports() {
             <div className="space-y-6">
               <div className="grid grid-cols-4 gap-4">
                 <div className="siem-card p-4">
-                  <div className="text-2xl font-bold" style={{ color: "#BF40BF" }}>{alertCount}</div>
+                  <div className="text-2xl font-bold" style={{ color: "#a78bfa" }}>{alertCount}</div>
                   <div className="text-xs text-gray-500 mt-1">Всего алертов</div>
                 </div>
                 <div className="siem-card p-4">
@@ -65,7 +65,7 @@ export default function Reports() {
                   <div className="text-xs text-gray-500 mt-1">Высоких</div>
                 </div>
                 <div className="siem-card p-4">
-                  <div className="text-2xl font-bold text-green-400">0</div>
+                  <div className="text-2xl font-bold text-purple-300">0</div>
                   <div className="text-xs text-gray-500 mt-1">Разрешено</div>
                 </div>
               </div>
@@ -73,7 +73,7 @@ export default function Reports() {
                 <h3 className="text-sm font-semibold mb-3">Алерты по правилам</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {(alerts?.alerts ?? []).slice(0, 20).map((a) => (
-                    <div key={a.id} className="flex items-center justify-between text-xs p-2 rounded" style={{ background: "rgba(106,13,173,0.1)" }}>
+                    <div key={a.id} className="flex items-center justify-between text-xs p-2 rounded" style={{ background: "rgba(167,139,250,0.1)" }}>
                       <span className="truncate">{a.rule_name}</span>
                       <span className={`badge-${a.severity.toLowerCase()}`}>{a.severity}</span>
                     </div>
@@ -107,7 +107,7 @@ export default function Reports() {
                       <span className="truncate flex-1">{r.name}</span>
                       <div className="flex items-center gap-2">
                         <span className={`badge-${r.severity.toLowerCase()}`}>{r.severity}</span>
-                        <span className="font-bold" style={{ color: "#BF40BF" }}>{r.count}</span>
+                        <span className="font-bold" style={{ color: "#a78bfa" }}>{r.count}</span>
                       </div>
                     </div>
                   ))}
@@ -165,7 +165,7 @@ export default function Reports() {
               <h3 className="text-sm font-semibold mb-3">Аудит доступа</h3>
               <p className="text-xs text-gray-500">Попытки входа и изменения прав доступа</p>
               <div className="mt-3">
-                <div className="text-2xl font-bold" style={{ color: "#BF40BF" }}>
+                <div className="text-2xl font-bold" style={{ color: "#a78bfa" }}>
                   {stats?.by_level?.find((l) => l.key === "ERROR")?.doc_count ?? 0}
                 </div>
                 <div className="text-xs text-gray-500">Ошибки аутентификации</div>
@@ -203,7 +203,7 @@ export default function Reports() {
     .meta { font-size: 12px; color: #888; margin-bottom: 30px; }
     .card { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 6px; }
     .metric { display: inline-block; margin-right: 30px; }
-    .metric-value { font-size: 28px; font-weight: bold; color: #6A0DAD; }
+    .metric-value { font-size: 28px; font-weight: bold; color: #8b5cf6; }
     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
     th { background: #f9f9f9; font-weight: 600; }

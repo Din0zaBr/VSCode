@@ -64,9 +64,9 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
   }
 
   return (
-    <div className="overflow-auto rounded-lg" style={{ maxHeight, border: "1px solid #1a0d2e" }}>
+    <div className="overflow-auto rounded-lg" style={{ maxHeight, border: "1px solid #374151" }}>
       <table className="w-full text-sm siem-table">
-        <thead style={{ background: "#08090e" }} className="sticky top-0 z-10">
+        <thead style={{ background: "#111827" }} className="sticky top-0 z-10">
           <tr className="text-left">
             <th className="w-40">Время</th>
             <th className="w-20">Уровень</th>
@@ -88,7 +88,7 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                   key={key}
                   onClick={() => setExpanded(isExpanded ? null : key)}
                   className="transition-colors cursor-pointer"
-                  style={isExpanded ? { background: "rgba(106,13,173,0.08)" } : undefined}
+                  style={isExpanded ? { background: "rgba(167,139,250,0.08)" } : undefined}
                 >
                   <td className="px-3 py-1.5 text-gray-400 font-mono text-xs whitespace-nowrap">
                     {formatTime(log.timestamp)}
@@ -109,7 +109,7 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                 </tr>
                 {isExpanded && (
                   <tr key={`${key}-detail`}>
-                    <td colSpan={6} className="px-4 py-3" style={{ background: "#0a0b12" }}>
+                    <td colSpan={6} className="px-4 py-3" style={{ background: "#111827" }}>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-xs mb-2">
                         <DetailField label="ID события" value={log.event_id} />
                         <DetailField label="Время" value={log.timestamp} />
@@ -120,16 +120,16 @@ export default function LogTable({ logs, highlight, maxHeight = "70vh" }: Props)
                         <DetailField label="Уровень" value={log.level} />
                       </div>
                       {hasMeta && (
-                        <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1a0d2e" }}>
-                          <span className="text-[10px] uppercase tracking-wider" style={{ color: "#3d4557" }}>Метаданные</span>
-                          <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-60 overflow-auto" style={{ background: "#07080e" }}>
+                        <div className="mt-2 pt-2" style={{ borderTop: "1px solid #374151" }}>
+                          <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>Метаданные</span>
+                          <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-60 overflow-auto" style={{ background: "#111827" }}>
                             {JSON.stringify(log.meta, null, 2)}
                           </pre>
                         </div>
                       )}
-                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid #1a0d2e" }}>
-                        <span className="text-[10px] uppercase tracking-wider" style={{ color: "#3d4557" }}>Полное сообщение</span>
-                        <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-40 overflow-auto" style={{ background: "#07080e" }}>
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid #374151" }}>
+                        <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>Полное сообщение</span>
+                        <pre className="mt-1 text-xs text-gray-300 whitespace-pre-wrap font-mono rounded p-2 max-h-40 overflow-auto" style={{ background: "#111827" }}>
                           {log.message}
                         </pre>
                       </div>

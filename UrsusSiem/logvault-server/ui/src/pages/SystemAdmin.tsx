@@ -91,7 +91,7 @@ function AccessTab() {
                 <td>
                   <select
                     className="text-xs rounded px-1.5 py-0.5 border"
-                    style={{ background: "#111520", borderColor: "#2d1860", color: "#BF40BF" }}
+                    style={{ background: "#1f2937", borderColor: "#4b5563", color: "#a78bfa" }}
                     value={u.role}
                     onChange={(e) => rolesMutation.mutate({ id: u.id, role: e.target.value })}
                   >
@@ -281,7 +281,7 @@ function ManagementTab() {
               <div className="text-sm font-medium text-gray-200">{c.label}</div>
               {c.info && <div className="text-[10px] text-gray-600">{c.info}</div>}
             </div>
-            <span className={`ml-auto text-xs ${c.ok === null ? "text-gray-600" : c.ok ? "text-green-400" : "text-red-400"}`}>
+            <span className={`ml-auto text-xs ${c.ok === null ? "text-gray-600" : c.ok ? "text-purple-300" : "text-red-400"}`}>
               {c.ok === null ? "Проверка..." : c.ok ? "OK" : "ОШИБКА"}
             </span>
           </div>
@@ -292,7 +292,7 @@ function ManagementTab() {
         <div className="siem-card p-4">
           <div className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">Детали системы</div>
           <pre className="text-[11px] font-mono text-gray-400 whitespace-pre-wrap overflow-auto max-h-64"
-            style={{ background: "#08090e", borderRadius: "6px", padding: "10px", border: "1px solid #1a0d2e" }}>
+            style={{ background: "#111827", borderRadius: "6px", padding: "10px", border: "1px solid #374151" }}>
             {JSON.stringify(metrics, null, 2)}
           </pre>
         </div>
@@ -332,7 +332,7 @@ function PoliciesTab() {
               <div className="text-[10px] text-gray-600 mt-0.5">{p.type}</div>
             </div>
             <span className={p.enabled ? "badge-resolved" : "badge-fp"}>{p.enabled ? "Активна" : "Отключена"}</span>
-            <button className="text-xs px-2 py-1 rounded text-gray-500 hover:text-gray-300" style={{ border: "1px solid #1a0d2e" }}>✎</button>
+            <button className="text-xs px-2 py-1 rounded text-gray-500 hover:text-gray-300" style={{ border: "1px solid #374151" }}>✎</button>
           </div>
         ))}
       </div>
@@ -382,19 +382,19 @@ function ApiKeysTab() {
         <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 w-20">Сервер:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #2d1860" }}>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563" }}>
             {serverBase}
           </code>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 w-20">API:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#8b20d1", border: "1px solid #2d1860" }}>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#8b20d1", border: "1px solid #4b5563" }}>
             {serverBase}/api
           </code>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500 w-20">Ingest:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#08090e", color: "#3d6565", border: "1px solid #2d1860" }}>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#3d6565", border: "1px solid #4b5563" }}>
             POST {serverBase}/api/ingest   (X-Api-Key: &lt;ключ&gt;)
           </code>
         </div>
@@ -430,7 +430,7 @@ function ApiKeysTab() {
             <span className="text-xs font-semibold" style={{ color: "#00c853" }}>Новый ключ создан — скопируйте сейчас, он больше не будет показан!</span>
             <button onClick={() => setFreshKey(null)} className="text-gray-500 hover:text-gray-200 text-sm">✕</button>
           </div>
-          <code className="block text-xs font-mono px-3 py-2 rounded select-all" style={{ background: "#08090e", color: "#00c853", border: "1px solid #00c853", wordBreak: "break-all" }}>
+          <code className="block text-xs font-mono px-3 py-2 rounded select-all" style={{ background: "#111827", color: "#00c853", border: "1px solid #00c853", wordBreak: "break-all" }}>
             {freshKey.key_value}
           </code>
           <div className="text-xs text-gray-600">
@@ -499,13 +499,13 @@ export default function SystemAdmin() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
-      <div className="flex border-b flex-shrink-0" style={{ borderColor: "#1a0d2e", background: "#0d0f18" }}>
+      <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-colors"
             style={{
-              color: activeTab === t.id ? "#BF40BF" : "#64748b",
-              borderBottom: activeTab === t.id ? "2px solid #BF40BF" : "2px solid transparent",
+              color: activeTab === t.id ? "#a78bfa" : "#64748b",
+              borderBottom: activeTab === t.id ? "2px solid #a78bfa" : "2px solid transparent",
             }}>
             {t.label}
           </button>
