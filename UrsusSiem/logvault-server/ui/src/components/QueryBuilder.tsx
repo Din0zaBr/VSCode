@@ -2,20 +2,72 @@ import { useState } from "react";
 import QueryConditionRow from "./QueryConditionRow";
 import type { QueryCondition } from "./QueryConditionRow";
 
+// Field type metadata for proper PDQL generation
+const FIELD_TYPES: Record<string, "string" | "number" | "ip" | "date" | "enum"> = {
+  // Numeric fields
+  "src.port": "number",
+  "dst.port": "number",
+  "duration": "number",
+  "count": "number",
+  "count.bytes": "number",
+  // IP fields
+  "src.ip": "ip",
+  "dst.ip": "ip",
+  "event_src.ip": "ip",
+  // Date fields
+  "time": "date",
+  // Enum fields
+  "level": "enum",
+  "protocol": "enum",
+  "action": "enum",
+  "status": "enum",
+};
+
+function pdqlStringLiteral(value: string): string {
+  // Escape quotes and wrap in double quotes
+  return `"${value.replace(/"/g, '\\"')}"`;
+}
+
+function isIPAddress(value: string): boolean {
+  // Simple IP address pattern check
+  return /^\d+\.\d+\.\d+\.\d+$/.test(value);
+}
+
 function conditionToPDQL(c: QueryCondition): string {
   const { field, operator, value } = c;
   if (!value.trim()) return "";
+
+  const fieldType = FIELD_TYPES[field] || "string";
+
   if (operator === "in") {
-    const vals = value.split(",").map((v) => `"${v.trim()}"`).join(", ");
+    const vals = value.split(",").map((v) => pdqlStringLiteral(v.trim())).join(", ");
     return `${field} in [${vals}]`;
   }
+
   if (["contains", "startswith", "endswith", "match"].includes(operator)) {
-    return `${field} ${operator} "${value}"`;
+    return `${field} ${operator} ${pdqlStringLiteral(value)}`;
   }
-  if (!isNaN(Number(value))) {
+
+  if (fieldType === "number") {
+    // For numeric fields, don't quote
     return `${field} ${operator} ${value}`;
   }
-  return `${field} ${operator} "${value}"`;
+
+  if (fieldType === "ip" || isIPAddress(value)) {
+    // For IP addresses, always quote
+    return `${field} ${operator} ${pdqlStringLiteral(value)}`;
+  }
+
+  if (fieldType === "enum" || fieldType === "date") {
+    // For enums and dates, always quote
+    return `${field} ${operator} ${pdqlStringLiteral(value)}`;
+  }
+
+  // For strings and unknown types, quote unless it's a number-like value
+  if (!isNaN(Number(value)) && value !== "") {
+    return `${field} ${operator} ${value}`;
+  }
+  return `${field} ${operator} ${pdqlStringLiteral(value)}`;
 }
 
 function buildPDQL(conditions: QueryCondition[]): string {
@@ -66,9 +118,9 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
   };
 
   const inputStyle = {
-    background: "#0d1117",
-    border: "1px solid #1a0d2e",
-    color: "#e2e8f0",
+    background: "var(--surface-2)",
+    border: "1px solid var(--border)",
+    color: "var(--text)",
     borderRadius: "6px",
     padding: "4px 8px",
     fontSize: "12px",
@@ -84,7 +136,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
         className="siem-card w-full max-w-2xl max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
           <h3 className="text-sm font-semibold text-gray-200">Визуальный конструктор запросов</h3>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-400 text-sm">✕</button>
         </div>
@@ -122,7 +174,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
           </div>
 
           {/* Sort + limit */}
-          <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: "#1a0d2e" }}>
+          <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
             <span className="text-xs text-gray-500 flex-shrink-0">Сортировка:</span>
             <input
               value={sortField}
@@ -150,18 +202,18 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
           </div>
 
           {/* Preview */}
-          <div className="pt-2 border-t" style={{ borderColor: "#1a0d2e" }}>
+          <div className="pt-2 border-t" style={{ borderColor: "var(--border)" }}>
             <div className="text-xs text-gray-500 uppercase mb-1">Предпросмотр PDQL:</div>
             <div
               className="font-mono text-[11px] px-3 py-2 rounded break-all"
-              style={{ background: "#08090e", color: "#BF40BF", border: "1px solid #1a0d2e" }}
+              style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px solid var(--border)" }}
             >
               {preview || "sort(time desc) | limit(100)"}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t" style={{ borderColor: "#1a0d2e" }}>
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t" style={{ borderColor: "var(--border)" }}>
           <button onClick={onClose} className="siem-btn-ghost text-xs px-4 py-2">Отмена</button>
           <button
             onClick={() => { onApply(preview || "sort(time desc) | limit(100)"); onClose(); }}
