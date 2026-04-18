@@ -138,7 +138,7 @@ export default function SigmaRulesAdmin() {
       <div className="p-6 h-full flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin mb-3">⏳</div>
-          <p className="text-gray-500">Загрузка SIGMA правил...</p>
+          <p className="siem-fg-soft">Загрузка SIGMA правил...</p>
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ export default function SigmaRulesAdmin() {
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100 mb-1">SIGMA Правила</h2>
-        <p className="text-sm text-gray-500">Управление {rules.length} правилами корреляции для обнаружения угроз</p>
+        <h2 className="siem-page-title mb-1">SIGMA Правила</h2>
+        <p className="text-sm siem-fg-soft">Управление {rules.length} правилами корреляции для обнаружения угроз</p>
       </div>
 
       {error && (
@@ -198,9 +198,9 @@ export default function SigmaRulesAdmin() {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-300">
+          <span className="text-sm font-semibold siem-fg-muted">
             Правила ({rules.length})
-            <span className="text-xs text-gray-600 ml-2">
+            <span className="text-xs siem-fg-soft ml-2">
               ({rules.filter((r) => r.enabled).length} активно)
             </span>
           </span>
@@ -214,8 +214,8 @@ export default function SigmaRulesAdmin() {
                 key={r.id}
                 className="siem-card p-3 cursor-pointer transition-all hover:scale-[1.02]"
                 style={{
-                  background: selectedId === r.id ? "rgba(167,139,250,0.15)" : undefined,
-                  borderColor: selectedId === r.id ? "#a78bfa" : undefined,
+                  background: selectedId === r.id ? "color-mix(in srgb, var(--accent) 16%, transparent)" : undefined,
+                  borderColor: selectedId === r.id ? "var(--accent)" : undefined,
                 }}
                 onClick={() => setSelectedId(r.id)}
               >
@@ -230,8 +230,8 @@ export default function SigmaRulesAdmin() {
                     className="w-4 h-4 mt-0.5"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-gray-200 truncate">{r.title}</div>
-                    <div className="text-[10px] text-gray-600 truncate mt-0.5">{r.category}</div>
+                    <div className="text-xs font-semibold siem-fg truncate">{r.title}</div>
+                    <div className="text-[10px] siem-fg-soft truncate mt-0.5">{r.category}</div>
                     <div className="flex items-center gap-1 mt-1">
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded"
@@ -252,8 +252,8 @@ export default function SigmaRulesAdmin() {
               <div className="siem-card p-4 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-200">{selected.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{selected.description}</p>
+                    <h3 className="text-lg font-semibold siem-fg">{selected.title}</h3>
+                    <p className="text-xs siem-fg-soft mt-1">{selected.description}</p>
                   </div>
                   <span
                     className="text-xs px-2 py-1 rounded"
@@ -265,21 +265,18 @@ export default function SigmaRulesAdmin() {
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-gray-600">Категория:</span>
-                    <span className="text-gray-300 ml-1">{selected.category}</span>
+                    <span className="siem-fg-soft">Категория:</span>
+                    <span className="siem-fg-muted ml-1">{selected.category}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Статус:</span>
-                    <span className="text-gray-300 ml-1">{selected.enabled ? "🟢 Включено" : "🔴 Отключено"}</span>
+                    <span className="siem-fg-soft">Статус:</span>
+                    <span className="siem-fg-muted ml-1">{selected.enabled ? "🟢 Включено" : "🔴 Отключено"}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-600 uppercase block mb-2">YAML</label>
-                  <div
-                    className="bg-gray-900 border rounded p-3 font-mono text-[11px] overflow-x-auto max-h-48 overflow-y-auto"
-                    style={{ borderColor: "var(--border)", color: "#c9d1d9" }}
-                  >
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">YAML</label>
+                  <div className="siem-code-block border rounded p-3 overflow-x-auto max-h-48 overflow-y-auto siem-fg">
                     {selected.yaml.split("\n").map((line, i) => (
                       <div key={i}>{line}</div>
                     ))}
@@ -309,7 +306,7 @@ export default function SigmaRulesAdmin() {
               <div className="siem-card p-12 flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="text-4xl mb-2">📋</div>
-                  <div className="text-gray-500 text-sm">Выберите правило</div>
+                  <div className="siem-fg-soft text-sm">Выберите правило</div>
                 </div>
               </div>
             )}
@@ -322,10 +319,10 @@ export default function SigmaRulesAdmin() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="siem-card w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
-              <h3 className="text-lg font-semibold text-gray-200">
+              <h3 className="text-lg font-semibold siem-fg">
                 {selectedId ? "Редактировать правило" : "Новое правило"}
               </h3>
-              <button onClick={() => setShowForm(false)} className="text-gray-600 hover:text-gray-400">
+              <button type="button" onClick={() => setShowForm(false)} className="siem-fg-soft hover:text-[color:var(--text)] text-xl leading-none px-1">
                 ✕
               </button>
             </div>
@@ -333,7 +330,7 @@ export default function SigmaRulesAdmin() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Название</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Название</label>
                   <input
                     className="siem-input w-full text-sm"
                     value={form.title}
@@ -341,7 +338,7 @@ export default function SigmaRulesAdmin() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Категория</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Категория</label>
                   <input
                     className="siem-input w-full text-sm"
                     value={form.category}
@@ -351,7 +348,7 @@ export default function SigmaRulesAdmin() {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">Описание</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">Описание</label>
                 <textarea
                   className="siem-input w-full text-sm resize-none"
                   rows={2}
@@ -362,7 +359,7 @@ export default function SigmaRulesAdmin() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Критичность</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Критичность</label>
                   <select
                     className="siem-input w-full text-sm"
                     value={form.severity}
@@ -382,13 +379,13 @@ export default function SigmaRulesAdmin() {
                       onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
                       className="w-4 h-4"
                     />
-                    <span className="text-xs text-gray-400">Включено</span>
+                    <span className="text-xs siem-fg-muted">Включено</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">YAML</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">YAML</label>
                 <textarea
                   className="siem-input w-full text-sm font-mono resize-none"
                   rows={8}

@@ -72,9 +72,9 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
     <div
       className="flex flex-col rounded-xl border overflow-hidden"
       style={{
-        background: "#1f2937",
-        borderColor: "#4b5563",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)",
+        background: "var(--surface-panel)",
+        borderColor: "var(--border-strong)",
+        boxShadow: "var(--shadow-md)",
         minWidth: "360px",
       }}
     >
@@ -82,24 +82,28 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
       <div
         className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b"
         style={{
-          background: "linear-gradient(90deg, #1f2937 0%, #12101e 100%)",
+          background: "linear-gradient(90deg, var(--surface-panel) 0%, var(--surface-inset) 100%)",
           borderColor: "var(--border)",
         }}
       >
         <div className="flex items-center gap-2">
           {/* Grid icon */}
           <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-            <rect x="0.5" y="0.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
-            <rect x="7.5" y="0.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
-            <rect x="0.5" y="7.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
-            <rect x="7.5" y="7.5" width="4" height="4" rx="0.5" stroke="#8b20d1" strokeWidth="1.2" />
+            <rect x="0.5" y="0.5" width="4" height="4" rx="0.5" stroke="var(--code-accent-2)" strokeWidth="1.2" />
+            <rect x="7.5" y="0.5" width="4" height="4" rx="0.5" stroke="var(--code-accent-2)" strokeWidth="1.2" />
+            <rect x="0.5" y="7.5" width="4" height="4" rx="0.5" stroke="var(--code-accent-2)" strokeWidth="1.2" />
+            <rect x="7.5" y="7.5" width="4" height="4" rx="0.5" stroke="var(--code-accent-2)" strokeWidth="1.2" />
           </svg>
-          <span className="text-xs font-medium" style={{ color: "#a78bfa" }}>
+          <span className="text-xs font-medium" style={{ color: "var(--accent)" }}>
             Результаты группировки
           </span>
           <span
             className="text-[10px] px-1.5 py-0.5 rounded"
-            style={{ background: "rgba(167,139,250,0.2)", color: "#8b20d1", border: "1px solid #4b5563" }}
+            style={{
+              background: "color-mix(in srgb, var(--accent) 22%, transparent)",
+              color: "var(--code-accent-2)",
+              border: "1px solid var(--border-strong)",
+            }}
           >
             {rows.length}
           </span>
@@ -115,7 +119,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
             e.currentTarget.style.background = "rgba(239,68,68,0.08)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#64748b";
+            e.currentTarget.style.color = "var(--text-soft)";
             e.currentTarget.style.borderColor = "transparent";
             e.currentTarget.style.background = "transparent";
           }}
@@ -129,14 +133,14 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
 
       {/* Table area */}
       {rows.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center py-12 text-sm" style={{ color: "#4a3670" }}>
+        <div className="flex-1 flex items-center justify-center py-12 text-sm" style={{ color: "var(--text-soft)" }}>
           Нет данных для отображения
         </div>
       ) : (
         <div className="overflow-auto flex-1">
           <table className="w-full text-xs border-collapse">
             <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
-              <tr style={{ background: "#111827", borderBottom: "1px solid #374151" }}>
+              <tr style={{ background: "var(--surface-inset)", borderBottom: "1px solid var(--border)" }}>
                 {columns.map((col) => (
                   <th
                     key={col}
@@ -144,11 +148,11 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                     className="px-3 py-2 text-left font-medium uppercase tracking-wider
                                cursor-pointer select-none transition-colors whitespace-nowrap"
                     style={{
-                      color: sortCol === col ? "#a78bfa" : "#64748b",
-                      borderRight: "1px solid rgba(26,13,46,0.5)",
+                      color: sortCol === col ? "var(--accent)" : "var(--text-soft)",
+                      borderRight: "1px solid var(--border)",
                     }}
-                    onMouseEnter={(e) => { if (sortCol !== col) (e.currentTarget as HTMLElement).style.color = "#94a3b8"; }}
-                    onMouseLeave={(e) => { if (sortCol !== col) (e.currentTarget as HTMLElement).style.color = "#64748b"; }}
+                    onMouseEnter={(e) => { if (sortCol !== col) (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+                    onMouseLeave={(e) => { if (sortCol !== col) (e.currentTarget as HTMLElement).style.color = "var(--text-soft)"; }}
                   >
                     {col}
                     <SortIcon col={col} />
@@ -157,7 +161,7 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                 {/* Drill-down spacer */}
                 <th
                   className="px-2 py-2"
-                  style={{ color: "#4a3670", borderRight: "none", width: "28px" }}
+                  style={{ color: "var(--text-soft)", borderRight: "none", width: "28px" }}
                 />
               </tr>
             </thead>
@@ -167,8 +171,8 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                   key={i}
                   onClick={() => onDrillDown(row)}
                   className="cursor-pointer transition-colors"
-                  style={{ borderBottom: "1px solid rgba(26,13,46,0.4)" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.08)"; }}
+                  style={{ borderBottom: "1px solid color-mix(in srgb, var(--border) 70%, transparent)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "color-mix(in srgb, var(--accent) 10%, transparent)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
                   {columns.map((col) => {
@@ -181,22 +185,22 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
                         title={text}
                         className="px-3 py-1.5 font-mono whitespace-nowrap"
                         style={{
-                          color: isAgg ? "#60a5fa" : "#cbd5e1",
-                          borderRight: "1px solid rgba(26,13,46,0.3)",
+                          color: isAgg ? "#60a5fa" : "var(--text-muted)",
+                          borderRight: "1px solid color-mix(in srgb, var(--border) 55%, transparent)",
                           maxWidth: "180px",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                         }}
                       >
                         {isAgg && col.startsWith("count")
-                          ? <span className="font-semibold" style={{ color: "#a78bfa" }}>{text}</span>
+                          ? <span className="font-semibold" style={{ color: "var(--accent)" }}>{text}</span>
                           : truncate(text)
                         }
                       </td>
                     );
                   })}
                   {/* Drill-down arrow */}
-                  <td className="px-2 py-1.5 text-center" style={{ color: "#4a3670" }}>
+                  <td className="px-2 py-1.5 text-center" style={{ color: "var(--text-soft)" }}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                       <path d="M3.5 2L7 5l-3.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -211,13 +215,13 @@ export default function GroupingPanel({ columns, rows, onDrillDown, onClose }: G
       {/* Footer hint */}
       <div
         className="px-4 py-1.5 flex-shrink-0 border-t flex items-center gap-1.5"
-        style={{ borderColor: "var(--border)", background: "#111827" }}
+        style={{ borderColor: "var(--border)", background: "var(--surface-inset)" }}
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <circle cx="5" cy="5" r="4" stroke="#4a3670" strokeWidth="1.2" />
-          <path d="M5 4.5v3M5 3v.5" stroke="#4a3670" strokeWidth="1.2" strokeLinecap="round" />
+          <circle cx="5" cy="5" r="4" stroke="var(--text-soft)" strokeWidth="1.2" />
+          <path d="M5 4.5v3M5 3v.5" stroke="var(--text-soft)" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
-        <span className="text-[10px]" style={{ color: "#4a3670" }}>
+        <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>
           Кликните по строке для детального просмотра
         </span>
       </div>

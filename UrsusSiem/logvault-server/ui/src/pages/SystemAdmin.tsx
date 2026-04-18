@@ -49,21 +49,21 @@ function AccessTab() {
     <div className="p-6 space-y-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-200">Управление пользователями</h3>
-          <p className="text-xs text-gray-600 mt-0.5">Создание, изменение и удаление учётных записей SIEM</p>
+          <h3 className="text-base font-semibold siem-fg">Управление пользователями</h3>
+          <p className="text-xs siem-fg-soft mt-0.5">Создание, изменение и удаление учётных записей SIEM</p>
         </div>
         <button onClick={() => setShowForm((s) => !s)} className="siem-btn text-xs py-1.5 px-4">+ Создать</button>
       </div>
 
       {showForm && (
         <div className="siem-card p-4 space-y-3">
-          <div className="text-sm font-semibold text-gray-200 mb-1">Новый пользователь</div>
+          <div className="text-sm font-semibold siem-fg mb-1">Новый пользователь</div>
           <div className="grid grid-cols-3 gap-3">
-            <div><label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Логин</label>
+            <div><label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Логин</label>
               <input className="siem-input w-full text-sm" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} /></div>
-            <div><label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Пароль</label>
+            <div><label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Пароль</label>
               <input type="password" className="siem-input w-full text-sm" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} /></div>
-            <div><label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Роль</label>
+            <div><label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Роль</label>
               <select className="siem-input w-full text-sm" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
                 <option value="operator">Оператор</option>
                 <option value="viewer">Наблюдатель</option>
@@ -80,18 +80,18 @@ function AccessTab() {
         </div>
       )}
 
-      {isLoading ? <div className="text-center text-gray-600 py-8">Загрузка...</div> : (
+      {isLoading ? <div className="text-center siem-fg-soft py-8">Загрузка...</div> : (
         <table className="w-full siem-table">
           <thead><tr><th>ID</th><th>Логин</th><th>Роль</th><th>Зарегистрирован</th><th>Агенты</th><th></th></tr></thead>
           <tbody>
             {(users ?? []).map((u) => (
               <tr key={u.id}>
-                <td className="font-mono text-gray-600 text-xs">#{u.id}</td>
-                <td className="font-medium text-gray-200">{u.username}</td>
+                <td className="font-mono siem-fg-soft text-xs">#{u.id}</td>
+                <td className="font-medium siem-fg">{u.username}</td>
                 <td>
                   <select
                     className="text-xs rounded px-1.5 py-0.5 border"
-                    style={{ background: "#1f2937", borderColor: "#4b5563", color: "#a78bfa" }}
+                    style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)", color: "var(--accent)" }}
                     value={u.role}
                     onChange={(e) => rolesMutation.mutate({ id: u.id, role: e.target.value })}
                   >
@@ -100,14 +100,14 @@ function AccessTab() {
                     <option value="admin">Администратор</option>
                   </select>
                 </td>
-                <td className="text-gray-600 text-xs">{new Date(u.created_at).toLocaleString("ru-RU")}</td>
-                <td className="text-gray-500 text-xs">{u.agents?.length > 0 ? u.agents.join(", ") : "Все"}</td>
+                <td className="siem-fg-soft text-xs">{new Date(u.created_at).toLocaleString("ru-RU")}</td>
+                <td className="siem-fg-soft text-xs">{u.agents?.length > 0 ? u.agents.join(", ") : "Все"}</td>
                 <td>
                   <button onClick={() => delMutation.mutate(u.id)} className="text-xs text-red-500/40 hover:text-red-400 px-2 py-1">Удалить</button>
                 </td>
               </tr>
             ))}
-            {!users?.length && <tr><td colSpan={6} className="text-center text-gray-600 py-8">Нет пользователей</td></tr>}
+            {!users?.length && <tr><td colSpan={6} className="text-center siem-fg-soft py-8">Нет пользователей</td></tr>}
           </tbody>
         </table>
       )}
@@ -149,34 +149,34 @@ function NotificationsTab() {
     <div className="p-6 space-y-5 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-200">Уведомления</h3>
-          <p className="text-xs text-gray-600 mt-0.5">Webhook и Telegram каналы для алертов</p>
+          <h3 className="text-base font-semibold siem-fg">Уведомления</h3>
+          <p className="text-xs siem-fg-soft mt-0.5">Webhook и Telegram каналы для алертов</p>
         </div>
         <button onClick={() => setShowForm((s) => !s)} className="siem-btn text-xs py-1.5 px-4">+ Добавить</button>
       </div>
 
       {showForm && (
         <div className="siem-card p-4 space-y-3">
-          <div className="text-sm font-semibold text-gray-200">Новый канал уведомлений</div>
+          <div className="text-sm font-semibold siem-fg">Новый канал уведомлений</div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-[10px] text-gray-600 mb-1 block">Название</label><input className="siem-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></div>
-            <div><label className="text-[10px] text-gray-600 mb-1 block">Уровень</label>
+            <div><label className="text-[10px] siem-fg-soft mb-1 block">Название</label><input className="siem-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></div>
+            <div><label className="text-[10px] siem-fg-soft mb-1 block">Уровень</label>
               <select className="siem-input w-full text-sm" value={form.level} onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}>
                 {["DEBUG","INFO","WARNING","ERROR","CRITICAL"].map((l) => <option key={l}>{l}</option>)}
               </select>
             </div>
-            <div><label className="text-[10px] text-gray-600 mb-1 block">Канал</label>
+            <div><label className="text-[10px] siem-fg-soft mb-1 block">Канал</label>
               <select className="siem-input w-full text-sm" value={form.channel_type} onChange={(e) => setForm((f) => ({ ...f, channel_type: e.target.value as any }))}>
                 <option value="webhook">Webhook</option>
                 <option value="telegram">Telegram</option>
               </select>
             </div>
             {form.channel_type === "webhook" ? (
-              <div><label className="text-[10px] text-gray-600 mb-1 block">Webhook URL</label><input className="siem-input w-full text-sm" value={form.webhook_url} onChange={(e) => setForm((f) => ({ ...f, webhook_url: e.target.value }))} /></div>
+              <div><label className="text-[10px] siem-fg-soft mb-1 block">Webhook URL</label><input className="siem-input w-full text-sm" value={form.webhook_url} onChange={(e) => setForm((f) => ({ ...f, webhook_url: e.target.value }))} /></div>
             ) : (
               <>
-                <div><label className="text-[10px] text-gray-600 mb-1 block">Token</label><input className="siem-input w-full text-sm" value={form.telegram_token} onChange={(e) => setForm((f) => ({ ...f, telegram_token: e.target.value }))} /></div>
-                <div><label className="text-[10px] text-gray-600 mb-1 block">Chat ID</label><input className="siem-input w-full text-sm" value={form.telegram_chat_id} onChange={(e) => setForm((f) => ({ ...f, telegram_chat_id: e.target.value }))} /></div>
+                <div><label className="text-[10px] siem-fg-soft mb-1 block">Token</label><input className="siem-input w-full text-sm" value={form.telegram_token} onChange={(e) => setForm((f) => ({ ...f, telegram_token: e.target.value }))} /></div>
+                <div><label className="text-[10px] siem-fg-soft mb-1 block">Chat ID</label><input className="siem-input w-full text-sm" value={form.telegram_chat_id} onChange={(e) => setForm((f) => ({ ...f, telegram_chat_id: e.target.value }))} /></div>
               </>
             )}
           </div>
@@ -187,14 +187,14 @@ function NotificationsTab() {
         </div>
       )}
 
-      {isLoading ? <div className="text-center text-gray-600 py-8">Загрузка...</div> : (
+      {isLoading ? <div className="text-center siem-fg-soft py-8">Загрузка...</div> : (
         <div className="space-y-2">
           {(rules ?? []).map((r) => (
             <div key={r.id} className="siem-card px-4 py-3 flex items-center gap-4">
               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${r.enabled ? "bg-green-500" : "bg-gray-600"}`} />
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-200">{r.name}</div>
-                <div className="text-[10px] text-gray-600">
+                <div className="text-sm font-medium siem-fg">{r.name}</div>
+                <div className="text-[10px] siem-fg-soft">
                   {r.condition_type === "threshold" ? `Порог: ${r.threshold} за ${r.window_minutes} мин` : `Regex: ${r.regex_pattern}`}
                   {" · "}Уровень: {r.level}
                 </div>
@@ -207,7 +207,7 @@ function NotificationsTab() {
               <button onClick={() => delMutation.mutate(r.id)} className="text-xs text-red-500/40 hover:text-red-400 px-2">✕</button>
             </div>
           ))}
-          {!rules?.length && <div className="text-center text-gray-600 py-8">Нет каналов уведомлений</div>}
+          {!rules?.length && <div className="text-center siem-fg-soft py-8">Нет каналов уведомлений</div>}
         </div>
       )}
     </div>
@@ -244,14 +244,14 @@ function ManagementTab() {
   return (
     <div className="p-6 space-y-5 overflow-y-auto h-full">
       <div>
-        <h3 className="text-base font-semibold text-gray-200">Управление системой</h3>
-        <p className="text-xs text-gray-600 mt-0.5">Состояние компонентов URSUS Insight</p>
+        <h3 className="text-base font-semibold siem-fg">Управление системой</h3>
+        <p className="text-xs siem-fg-soft mt-0.5">Состояние компонентов URSUS Insight</p>
       </div>
 
       {isAdmin() && (
         <div className="siem-card p-4 space-y-2">
-          <div className="text-sm font-medium text-gray-200">Обогащение событий в БД</div>
-          <p className="text-[11px] text-gray-500 leading-relaxed">
+          <div className="text-sm font-medium siem-fg">Обогащение событий в БД</div>
+          <p className="text-[11px] siem-fg-soft leading-relaxed">
             Повторно применяет парсер к уже сохранённым сообщениям: категории (category.*), тип события (event_type), IP, уровень и др.
             Обрабатывает по 5000 строк за вызов; при большой базе нажимайте кнопку несколько раз.
           </p>
@@ -263,7 +263,7 @@ function ManagementTab() {
           >
             {reparseMutation.isPending ? "Обработка…" : "Заполнить поля для накопленных событий"}
           </button>
-          {reparseMsg && <div className="text-[11px] text-gray-400 font-mono">{reparseMsg}</div>}
+          {reparseMsg && <div className="text-[11px] siem-fg-muted font-mono">{reparseMsg}</div>}
         </div>
       )}
 
@@ -278,10 +278,10 @@ function ManagementTab() {
             <div className={`w-3 h-3 rounded-full flex-shrink-0 ${c.ok === null ? "bg-gray-600 animate-pulse" : c.ok ? "bg-green-500" : "bg-red-500"}`}
               style={{ boxShadow: c.ok ? "0 0 8px rgba(74,222,128,0.6)" : c.ok === false ? "0 0 8px rgba(239,68,68,0.6)" : undefined }} />
             <div>
-              <div className="text-sm font-medium text-gray-200">{c.label}</div>
-              {c.info && <div className="text-[10px] text-gray-600">{c.info}</div>}
+              <div className="text-sm font-medium siem-fg">{c.label}</div>
+              {c.info && <div className="text-[10px] siem-fg-soft">{c.info}</div>}
             </div>
-            <span className={`ml-auto text-xs ${c.ok === null ? "text-gray-600" : c.ok ? "text-purple-300" : "text-red-400"}`}>
+            <span className={`ml-auto text-xs ${c.ok === null ? "siem-fg-soft" : c.ok ? "text-emerald-700 dark:text-purple-300" : "text-red-500 dark:text-red-400"}`}>
               {c.ok === null ? "Проверка..." : c.ok ? "OK" : "ОШИБКА"}
             </span>
           </div>
@@ -290,9 +290,9 @@ function ManagementTab() {
 
       {metrics && (
         <div className="siem-card p-4">
-          <div className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">Детали системы</div>
-          <pre className="text-[11px] font-mono text-gray-400 whitespace-pre-wrap overflow-auto max-h-64"
-            style={{ background: "#111827", borderRadius: "6px", padding: "10px", border: "1px solid #374151" }}>
+          <div className="text-xs font-semibold siem-fg-muted mb-3 uppercase tracking-wider">Детали системы</div>
+          <pre className="text-[11px] font-mono siem-fg-muted whitespace-pre-wrap overflow-auto max-h-64"
+            style={{ background: "var(--surface-inset)", borderRadius: "6px", padding: "10px", border: "1px solid var(--border-strong)" }}>
             {JSON.stringify(metrics, null, 2)}
           </pre>
         </div>
@@ -320,19 +320,19 @@ function PoliciesTab() {
   return (
     <div className="p-6 space-y-5 overflow-y-auto h-full">
       <div>
-        <h3 className="text-base font-semibold text-gray-200">Политики безопасности</h3>
-        <p className="text-xs text-gray-600 mt-0.5">Автоматические действия и правила реагирования</p>
+        <h3 className="text-base font-semibold siem-fg">Политики безопасности</h3>
+        <p className="text-xs siem-fg-soft mt-0.5">Автоматические действия и правила реагирования</p>
       </div>
       <div className="space-y-2">
         {POLICIES.map((p, i) => (
           <div key={i} className="siem-card p-4 flex items-center gap-4">
             <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.enabled ? "bg-green-500" : "bg-gray-600"}`} />
             <div className="flex-1">
-              <div className="text-sm text-gray-200">{p.name}</div>
-              <div className="text-[10px] text-gray-600 mt-0.5">{p.type}</div>
+              <div className="text-sm siem-fg">{p.name}</div>
+              <div className="text-[10px] siem-fg-soft mt-0.5">{p.type}</div>
             </div>
             <span className={p.enabled ? "badge-resolved" : "badge-fp"}>{p.enabled ? "Активна" : "Отключена"}</span>
-            <button className="text-xs px-2 py-1 rounded text-gray-500 hover:text-gray-300" style={{ border: "1px solid #374151" }}>✎</button>
+            <button type="button" className="text-xs px-2 py-1 rounded siem-fg-soft hover:text-[color:var(--text)]" style={{ border: "1px solid var(--border-strong)" }}>✎</button>
           </div>
         ))}
       </div>
@@ -373,28 +373,28 @@ function ApiKeysTab() {
   return (
     <div className="p-6 space-y-6 overflow-y-auto h-full">
       <div>
-        <h3 className="text-base font-semibold text-gray-200">Управление API-ключами агентов</h3>
-        <p className="text-xs text-gray-600 mt-0.5">Ключи используются агентами для отправки событий в SIEM</p>
+        <h3 className="text-base font-semibold siem-fg">Управление API-ключами агентов</h3>
+        <p className="text-xs siem-fg-soft mt-0.5">Ключи используются агентами для отправки событий в SIEM</p>
       </div>
 
       {/* Server connection info */}
       <div className="siem-card p-4 space-y-2">
-        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
+        <div className="text-xs font-semibold siem-fg-muted uppercase tracking-wider mb-2">Адрес для подключения агентов</div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-20">Сервер:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563" }}>
+          <span className="text-xs siem-fg-soft w-20">Сервер:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "var(--surface-inset)", color: "var(--accent)", border: "1px solid var(--border-strong)" }}>
             {serverBase}
           </code>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-20">API:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#8b20d1", border: "1px solid #4b5563" }}>
+          <span className="text-xs siem-fg-soft w-20">API:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "var(--surface-inset)", color: "var(--code-accent-2)", border: "1px solid var(--border-strong)" }}>
             {serverBase}/api
           </code>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-20">Ingest:</span>
-          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "#111827", color: "#3d6565", border: "1px solid #4b5563" }}>
+          <span className="text-xs siem-fg-soft w-20">Ingest:</span>
+          <code className="text-xs font-mono px-2 py-1 rounded" style={{ background: "var(--surface-inset)", color: "#3d6565", border: "1px solid var(--border-strong)" }}>
             POST {serverBase}/api/ingest   (X-Api-Key: &lt;ключ&gt;)
           </code>
         </div>
@@ -403,7 +403,7 @@ function ApiKeysTab() {
       {/* Create new key */}
       {isAdmin() && (
         <div className="siem-card p-4 space-y-3">
-          <div className="text-sm font-semibold text-gray-200">Создать новый ключ</div>
+          <div className="text-sm font-semibold siem-fg">Создать новый ключ</div>
           <div className="flex gap-2">
             <input
               className="siem-input flex-1 text-sm"
@@ -428,20 +428,20 @@ function ApiKeysTab() {
         <div className="siem-card p-4 space-y-2" style={{ borderColor: "#00c853" }}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold" style={{ color: "#00c853" }}>Новый ключ создан — скопируйте сейчас, он больше не будет показан!</span>
-            <button onClick={() => setFreshKey(null)} className="text-gray-500 hover:text-gray-200 text-sm">✕</button>
+            <button onClick={() => setFreshKey(null)} className="siem-fg-soft hover:text-[color:var(--text)] text-sm">✕</button>
           </div>
-          <code className="block text-xs font-mono px-3 py-2 rounded select-all" style={{ background: "#111827", color: "#00c853", border: "1px solid #00c853", wordBreak: "break-all" }}>
+          <code className="block text-xs font-mono px-3 py-2 rounded select-all" style={{ background: "var(--surface-inset)", color: "#00c853", border: "1px solid #00c853", wordBreak: "break-all" }}>
             {freshKey.key_value}
           </code>
-          <div className="text-xs text-gray-600">
-            Команда установки агента: <code className="text-gray-400">curl -fsSL {serverBase}/api/agent/install | sudo bash -s -- --key {freshKey.key_value}</code>
+          <div className="text-xs siem-fg-soft">
+            Команда установки агента: <code className="siem-fg-muted">curl -fsSL {serverBase}/api/agent/install | sudo bash -s -- --key {freshKey.key_value}</code>
           </div>
         </div>
       )}
 
       {/* Keys list */}
       {isLoading ? (
-        <div className="text-center text-gray-600 py-8">Загрузка...</div>
+        <div className="text-center siem-fg-soft py-8">Загрузка...</div>
       ) : (
         <table className="w-full siem-table text-xs">
           <thead>
@@ -457,10 +457,10 @@ function ApiKeysTab() {
           <tbody>
             {(keys ?? []).map((k: ApiKey) => (
               <tr key={k.id}>
-                <td className="font-medium text-gray-200">{k.name}</td>
-                <td><code className="font-mono text-gray-400">{k.key_preview}</code></td>
-                <td className="text-gray-500">{k.created_by} · {new Date(k.created_at).toLocaleDateString("ru-RU")}</td>
-                <td className="text-gray-500">{k.last_used ? new Date(k.last_used).toLocaleString("ru-RU") : "—"}</td>
+                <td className="font-medium siem-fg">{k.name}</td>
+                <td><code className="font-mono siem-fg-muted">{k.key_preview}</code></td>
+                <td className="siem-fg-soft">{k.created_by} · {new Date(k.created_at).toLocaleDateString("ru-RU")}</td>
+                <td className="siem-fg-soft">{k.last_used ? new Date(k.last_used).toLocaleString("ru-RU") : "—"}</td>
                 <td>
                   <button
                     onClick={() => toggleMutation.mutate({ id: k.id, enabled: !k.enabled })}
@@ -483,7 +483,7 @@ function ApiKeysTab() {
               </tr>
             ))}
             {(keys ?? []).length === 0 && (
-              <tr><td colSpan={6} className="text-center text-gray-600 py-6">Нет ключей. Создайте первый выше.</td></tr>
+              <tr><td colSpan={6} className="text-center siem-fg-soft py-6">Нет ключей. Создайте первый выше.</td></tr>
             )}
           </tbody>
         </table>
@@ -499,13 +499,13 @@ export default function SystemAdmin() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
-      <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
+      <div className="flex border-b flex-shrink-0" style={{ borderColor: "var(--border)", background: "var(--surface-panel)" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-5 py-2.5 text-xs font-medium whitespace-nowrap transition-colors"
             style={{
-              color: activeTab === t.id ? "#a78bfa" : "#64748b",
-              borderBottom: activeTab === t.id ? "2px solid #a78bfa" : "2px solid transparent",
+              color: activeTab === t.id ? "var(--accent)" : "var(--text-soft)",
+              borderBottom: activeTab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
             }}>
             {t.label}
           </button>

@@ -53,28 +53,28 @@ export default function Reports() {
             <div className="space-y-6">
               <div className="grid grid-cols-4 gap-4">
                 <div className="siem-card p-4">
-                  <div className="text-2xl font-bold" style={{ color: "#a78bfa" }}>{alertCount}</div>
-                  <div className="text-xs text-gray-500 mt-1">Всего алертов</div>
+                  <div className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{alertCount}</div>
+                  <div className="text-xs siem-fg-soft mt-1">Всего алертов</div>
                 </div>
                 <div className="siem-card p-4">
                   <div className="text-2xl font-bold text-red-400">{critical}</div>
-                  <div className="text-xs text-gray-500 mt-1">Критических</div>
+                  <div className="text-xs siem-fg-soft mt-1">Критических</div>
                 </div>
                 <div className="siem-card p-4">
                   <div className="text-2xl font-bold text-orange-400">{high}</div>
-                  <div className="text-xs text-gray-500 mt-1">Высоких</div>
+                  <div className="text-xs siem-fg-soft mt-1">Высоких</div>
                 </div>
                 <div className="siem-card p-4">
-                  <div className="text-2xl font-bold text-purple-300">0</div>
-                  <div className="text-xs text-gray-500 mt-1">Разрешено</div>
+                  <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">0</div>
+                  <div className="text-xs siem-fg-soft mt-1">Разрешено</div>
                 </div>
               </div>
               <div className="siem-card p-4">
-                <h3 className="text-sm font-semibold mb-3">Алерты по правилам</h3>
+                <h3 className="text-sm font-semibold siem-fg mb-3">Алерты по правилам</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {(alerts?.alerts ?? []).slice(0, 20).map((a) => (
-                    <div key={a.id} className="flex items-center justify-between text-xs p-2 rounded" style={{ background: "rgba(167,139,250,0.1)" }}>
-                      <span className="truncate">{a.rule_name}</span>
+                    <div key={a.id} className="flex items-center justify-between text-xs p-2 rounded" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
+                      <span className="truncate siem-fg">{a.rule_name}</span>
                       <span className={`badge-${a.severity.toLowerCase()}`}>{a.severity}</span>
                     </div>
                   ))}
@@ -107,7 +107,7 @@ export default function Reports() {
                       <span className="truncate flex-1">{r.name}</span>
                       <div className="flex items-center gap-2">
                         <span className={`badge-${r.severity.toLowerCase()}`}>{r.severity}</span>
-                        <span className="font-bold" style={{ color: "#a78bfa" }}>{r.count}</span>
+                        <span className="font-bold" style={{ color: "var(--accent)" }}>{r.count}</span>
                       </div>
                     </div>
                   ))}
@@ -163,12 +163,12 @@ export default function Reports() {
           content = (
             <div className="siem-card p-4">
               <h3 className="text-sm font-semibold mb-3">Аудит доступа</h3>
-              <p className="text-xs text-gray-500">Попытки входа и изменения прав доступа</p>
+              <p className="text-xs siem-fg-soft">Попытки входа и изменения прав доступа</p>
               <div className="mt-3">
-                <div className="text-2xl font-bold" style={{ color: "#a78bfa" }}>
+                <div className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
                   {stats?.by_level?.find((l) => l.key === "ERROR")?.doc_count ?? 0}
                 </div>
-                <div className="text-xs text-gray-500">Ошибки аутентификации</div>
+                <div className="text-xs siem-fg-soft">Ошибки аутентификации</div>
               </div>
             </div>
           );
@@ -230,15 +230,15 @@ export default function Reports() {
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100 mb-1">Отчёты</h2>
-        <p className="text-sm text-gray-500">Аналитика и статистика SIEM</p>
+        <h2 className="siem-page-title mb-1">Отчёты</h2>
+        <p className="text-sm siem-fg-soft">Аналитика и статистика SIEM</p>
       </div>
 
       {/* Controls */}
       <div className="siem-card p-4 space-y-4">
         <div className="grid grid-cols-4 gap-4">
           <div>
-            <label className="text-xs text-gray-500 uppercase block mb-2">Тип отчёта</label>
+            <label className="text-xs siem-fg-soft uppercase block mb-2">Тип отчёта</label>
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value as ReportType)}
@@ -251,7 +251,7 @@ export default function Reports() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-500 uppercase block mb-2">С даты</label>
+            <label className="text-xs siem-fg-soft uppercase block mb-2">С даты</label>
             <input
               type="date"
               value={fromDate}
@@ -260,7 +260,7 @@ export default function Reports() {
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 uppercase block mb-2">По дату</label>
+            <label className="text-xs siem-fg-soft uppercase block mb-2">По дату</label>
             <input
               type="date"
               value={toDate}
@@ -283,10 +283,10 @@ export default function Reports() {
       {/* Report */}
       {report && (
         <div className="siem-card p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-purple-900/50 pb-4">
+          <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: "var(--border)" }}>
             <div>
-              <h3 className="text-lg font-semibold text-gray-100">{report.title}</h3>
-              <div className="text-xs text-gray-500 mt-1">
+              <h3 className="text-lg font-semibold siem-fg">{report.title}</h3>
+              <div className="text-xs siem-fg-soft mt-1">
                 Период: {report.dateRange} | Создан: {report.generatedAt}
               </div>
             </div>

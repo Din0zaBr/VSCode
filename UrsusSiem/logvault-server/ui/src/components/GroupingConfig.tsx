@@ -1,16 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 
-const AVAILABLE_FIELDS = [
-  "host", "level", "service", "src_ip", "dst_ip",
-  "user", "action", "status", "protocol", "category",
-];
-
 interface GroupingConfigProps {
   fields: string[];
   onChange: (fields: string[]) => void;
+  availableFields: string[];
 }
 
-export default function GroupingConfig({ fields, onChange }: GroupingConfigProps) {
+export default function GroupingConfig({ fields, onChange, availableFields }: GroupingConfigProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<string[]>(fields);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -51,8 +47,9 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
   };
 
   const handleAdd = () => {
-    const unused = AVAILABLE_FIELDS.find((f) => !draft.includes(f));
-    setDraft([...draft, unused ?? AVAILABLE_FIELDS[0]]);
+    const unused = availableFields.find((f) => !draft.includes(f));
+    if (!unused && !availableFields.length) return;
+    setDraft([...draft, unused ?? availableFields[0]]);
   };
 
   const handleApply = () => {
@@ -79,9 +76,11 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
         onClick={handleToggle}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border"
         style={{
-          background: isActive ? "rgba(167,139,250,0.18)" : "rgba(45,24,96,0.18)",
-          borderColor: isActive ? "#8b5cf6" : "#4b5563",
-          color: isActive ? "#a78bfa" : "#94a3b8",
+          background: isActive
+            ? "color-mix(in srgb, var(--accent) 18%, transparent)"
+            : "color-mix(in srgb, var(--accent-secondary) 12%, var(--surface-inset))",
+          borderColor: isActive ? "var(--accent-secondary)" : "var(--border-strong)",
+          color: isActive ? "var(--accent)" : "var(--text-soft)",
         }}
         title="Настройка группировки"
       >
@@ -95,7 +94,7 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
         {isActive && (
           <span
             className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
-            style={{ background: "#8b5cf6", color: "#fff" }}
+            style={{ background: "var(--accent-secondary)", color: "#fff" }}
           >
             {fields.length}
           </span>
@@ -113,45 +112,45 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
           ref={panelRef}
           className="absolute left-0 top-full mt-1.5 z-50 rounded-xl border shadow-2xl"
           style={{
-            background: "#1f2937",
-            borderColor: "#4b5563",
+            background: "var(--surface-panel)",
+            borderColor: "var(--border-strong)",
             minWidth: "260px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(45,24,96,0.4)",
+            boxShadow: "var(--shadow-md)",
           }}
         >
           <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: "var(--border)" }}>
-            <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "#8b20d1" }}>
+            <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "var(--code-accent-2)" }}>
               Поля группировки
             </span>
-            <span className="text-[10px]" style={{ color: "#4a3670" }}>
-              {draft.length} / {AVAILABLE_FIELDS.length}
+            <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>
+              {draft.length} / {availableFields.length}
             </span>
           </div>
 
           <div className="p-2 space-y-1.5">
             {draft.length === 0 && (
-              <div className="text-center py-3 text-xs" style={{ color: "#4a3670" }}>
+              <div className="text-center py-3 text-xs" style={{ color: "var(--text-soft)" }}>
                 Нет полей — нажмите +
               </div>
             )}
             {draft.map((field, idx) => {
               const taken = new Set(draft.filter((_, i) => i !== idx));
-              const options = AVAILABLE_FIELDS.filter((f) => !taken.has(f));
+              const options = availableFields.filter((f) => !taken.has(f));
               return (
                 <div key={idx} className="flex items-center gap-1.5">
-                  <span className="text-[10px] w-4 text-right flex-shrink-0 select-none" style={{ color: "#4a3670" }}>
+                  <span className="text-[10px] w-4 text-right flex-shrink-0 select-none" style={{ color: "var(--text-soft)" }}>
                     {idx + 1}
                   </span>
                   <select
                     value={field}
                     onChange={(e) => handleFieldChange(idx, e.target.value)}
                     className="flex-1 rounded-md px-2 py-1 text-xs font-mono appearance-none focus:outline-none transition-colors cursor-pointer"
-                    style={{ background: "#161622", border: "1px solid #4b5563", color: "#a78bfa" }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#8b5cf6"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "#4b5563"; }}
+                    style={{ background: "var(--surface-inset)", border: "1px solid var(--border-strong)", color: "var(--accent)" }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-secondary)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)"; }}
                   >
                     {options.map((opt) => (
-                      <option key={opt} value={opt} style={{ background: "#1f2937", color: "#a78bfa" }}>
+                      <option key={opt} value={opt} style={{ background: "var(--surface-panel)", color: "var(--accent)" }}>
                         {opt}
                       </option>
                     ))}
@@ -162,7 +161,7 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded transition-colors text-xs"
                     style={{ color: "var(--text-soft)", background: "transparent" }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-soft)"; e.currentTarget.style.background = "transparent"; }}
                   >
                     ×
                   </button>
@@ -171,14 +170,14 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
             })}
           </div>
 
-          {draft.length < AVAILABLE_FIELDS.length && (
+          {draft.length < availableFields.length && (
             <div className="px-2 pb-2">
               <button
                 onClick={handleAdd}
                 className="w-full flex items-center justify-center gap-1.5 py-1 rounded-md text-xs transition-colors border border-dashed"
-                style={{ borderColor: "#4b5563", color: "var(--text-soft)", background: "transparent" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#8b5cf6"; e.currentTarget.style.color = "#a78bfa"; e.currentTarget.style.background = "rgba(167,139,250,0.08)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#4b5563"; e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
+                style={{ borderColor: "var(--border-strong)", color: "var(--text-soft)", background: "transparent" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-secondary)"; e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 10%, transparent)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)"; e.currentTarget.style.color = "var(--text-soft)"; e.currentTarget.style.background = "transparent"; }}
               >
                 <span className="text-base leading-none mb-px">+</span>
                 Добавить поле
@@ -190,18 +189,18 @@ export default function GroupingConfig({ fields, onChange }: GroupingConfigProps
             <button
               onClick={handleReset}
               className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
-              style={{ background: "rgba(45,24,96,0.2)", border: "1px solid #4b5563", color: "var(--text-muted)" }}
+              style={{ background: "rgba(45,24,96,0.2)", border: "1px solid var(--border-strong)", color: "var(--text-muted)" }}
               onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "#7f1d1d"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.borderColor = "#4b5563"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-soft)"; e.currentTarget.style.borderColor = "var(--border-strong)"; }}
             >
               Сбросить
             </button>
             <button
               onClick={handleApply}
               className="px-3 py-1 rounded-md text-xs font-medium transition-all"
-              style={{ background: "linear-gradient(135deg, #8b5cf6, #8b20d1)", color: "#fff" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #8b20d1, #a78bfa)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #8b5cf6, #8b20d1)"; }}
+              style={{ background: "linear-gradient(135deg, var(--accent-secondary), var(--code-accent-2))", color: "#fff" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, var(--code-accent-2), var(--accent))"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, var(--accent-secondary), var(--code-accent-2))"; }}
             >
               Применить
             </button>

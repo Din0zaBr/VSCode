@@ -95,25 +95,25 @@ function CorrelationRulesTab() {
       {/* List */}
       <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "var(--border)" }}>
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-          <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>Правила ({rules?.length ?? 0})</span>
+          <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>Правила ({rules?.length ?? 0})</span>
           {isAdmin() && <button onClick={openCreate} className="siem-btn text-xs py-1 px-3">+ Новое</button>}
         </div>
         <div className="flex-1 overflow-y-auto">
-          {isLoading && <div className="text-center text-gray-600 py-8 text-sm">Загрузка...</div>}
+          {isLoading && <div className="text-center siem-fg-soft py-8 text-sm">Загрузка...</div>}
           {(rules ?? []).map((r) => (
             <div
               key={r.id}
               className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
-              style={{ borderColor: "var(--border)", background: editRule?.id === r.id ? "rgba(167,139,250,0.12)" : "transparent" }}
+              style={{ borderColor: "var(--border)", background: editRule?.id === r.id ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "transparent" }}
               onClick={() => openEdit(r)}
             >
               <div className="flex items-center gap-2 mb-0.5">
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${r.enabled ? "bg-green-500" : "bg-gray-600"}`} />
-                <span className="text-xs font-medium text-gray-200 truncate">{r.name}</span>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${r.enabled ? "bg-green-500" : "bg-neutral-400 dark:bg-neutral-600"}`} />
+                <span className="text-xs font-medium siem-fg truncate">{r.name}</span>
               </div>
               <div className="flex items-center gap-2 ml-3.5">
                 <span className={SEV_COLORS[r.severity] ?? "badge-info"}>{r.severity}</span>
-                <span className="text-[10px] text-gray-600">срабат.: {r.hit_count ?? 0}</span>
+                <span className="text-[10px] siem-fg-soft">срабат.: {r.hit_count ?? 0}</span>
               </div>
             </div>
           ))}
@@ -125,7 +125,7 @@ function CorrelationRulesTab() {
         {showForm ? (
           <>
             <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
-              <span className="text-sm font-semibold text-gray-200">{editRule ? "Редактировать правило" : "Новое правило Sigma"}</span>
+              <span className="text-sm font-semibold siem-fg">{editRule ? "Редактировать правило" : "Новое правило Sigma"}</span>
               <div className="flex gap-2">
                 <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-3 py-1.5">Отмена</button>
                 {editRule && isAdmin() && (
@@ -142,11 +142,11 @@ function CorrelationRulesTab() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Название</label>
+                  <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Название</label>
                   <input className="siem-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Критичность</label>
+                  <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Критичность</label>
                   <select className="siem-input w-full text-sm" value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value }))}>
                     {["CRITICAL","HIGH","MEDIUM","LOW"].map((s) => <option key={s}>{s}</option>)}
                   </select>
@@ -154,22 +154,22 @@ function CorrelationRulesTab() {
                 <div className="flex items-end gap-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={form.enabled} onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))} className="w-4 h-4 accent-violet-500" />
-                    <span className="text-sm text-gray-300">Включено</span>
+                    <span className="text-sm siem-fg-muted">Включено</span>
                   </label>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">Описание</label>
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">Описание</label>
                 <input className="siem-input w-full text-sm" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Описание правила" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] text-gray-600 uppercase tracking-wider">Sigma Rule (YAML)</label>
+                  <label className="text-[10px] siem-fg-soft uppercase tracking-wider">Sigma Rule (YAML)</label>
                   <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(47,79,79,0.3)", color: "#3d6565", border: "1px solid #2F4F4F" }}>Sigma v2</span>
                 </div>
                 <textarea
                   className="w-full p-3 rounded-xl text-xs font-mono resize-none focus:outline-none"
-                  style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563", minHeight: "380px", lineHeight: "1.6" }}
+                  style={{ background: "var(--surface-inset)", color: "var(--accent)", border: "1px solid var(--border-strong)", minHeight: "380px", lineHeight: "1.6" }}
                   value={form.sigma_rule}
                   onChange={(e) => setForm((f) => ({ ...f, sigma_rule: e.target.value }))}
                   spellCheck={false}
@@ -179,8 +179,8 @@ function CorrelationRulesTab() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center flex-col gap-3">
-            <div className="text-5xl" style={{ color: "#374151" }}>⚡</div>
-            <div className="text-gray-600 text-sm">Выберите правило или создайте новое</div>
+            <div className="text-5xl" style={{ color: "var(--border-strong)" }}>⚡</div>
+            <div className="siem-fg-soft text-sm">Выберите правило или создайте новое</div>
           </div>
         )}
       </div>
@@ -223,54 +223,54 @@ function ExclusionsTab() {
   return (
     <div className="p-4 space-y-4 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Всего: {data?.total ?? 0}</span>
+        <span className="text-xs siem-fg-soft">Всего: {data?.total ?? 0}</span>
         <button onClick={openCreate} className="siem-btn text-xs py-1.5 px-4">+ Создать</button>
       </div>
 
       {showForm && (
         <div className="siem-card p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-200">{editEx ? "Редактировать" : "Новое исключение"}</span>
+            <span className="text-sm font-semibold siem-fg">{editEx ? "Редактировать" : "Новое исключение"}</span>
             <div className="flex gap-2">
               <button onClick={() => setShowForm(false)} className="siem-btn-ghost text-xs px-3 py-1">Отмена</button>
               <button onClick={handleSave} className="siem-btn text-xs px-3 py-1">Сохранить</button>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-[10px] text-gray-600 mb-1 block">Название</label><input className="siem-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></div>
-            <div><label className="text-[10px] text-gray-600 mb-1 block">Тип</label>
+            <div><label className="text-[10px] siem-fg-soft mb-1 block">Название</label><input className="siem-input w-full text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></div>
+            <div><label className="text-[10px] siem-fg-soft mb-1 block">Тип</label>
               <select className="siem-input w-full text-sm" value={form.exclusion_type} onChange={(e) => setForm((f) => ({ ...f, exclusion_type: e.target.value }))}>
                 {["ip","host","user","rule","field"].map((t) => <option key={t}>{t}</option>)}
               </select>
             </div>
           </div>
-          <div><label className="text-[10px] text-gray-600 mb-1 block">Описание</label><input className="siem-input w-full text-sm" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} /></div>
-          <div><label className="text-[10px] text-gray-600 mb-1 block">Условия (JSON)</label>
-            <textarea className="siem-input w-full font-mono text-xs min-h-[80px] resize-none" value={form.condRaw} onChange={(e) => setForm((f) => ({ ...f, condRaw: e.target.value }))} style={{ color: "#a78bfa" }} />
+          <div><label className="text-[10px] siem-fg-soft mb-1 block">Описание</label><input className="siem-input w-full text-sm" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} /></div>
+          <div><label className="text-[10px] siem-fg-soft mb-1 block">Условия (JSON)</label>
+            <textarea className="siem-input w-full font-mono text-xs min-h-[80px] resize-none" value={form.condRaw} onChange={(e) => setForm((f) => ({ ...f, condRaw: e.target.value }))} style={{ color: "var(--accent)" }} />
           </div>
-          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.enabled} onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))} className="w-4 h-4 accent-violet-500" /><span className="text-sm text-gray-300">Включено</span></label>
+          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.enabled} onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))} className="w-4 h-4 accent-violet-500" /><span className="text-sm siem-fg-muted">Включено</span></label>
         </div>
       )}
 
-      {isLoading ? <div className="text-center text-gray-600 py-8">Загрузка...</div> : (
+      {isLoading ? <div className="text-center siem-fg-soft py-8">Загрузка...</div> : (
         <table className="w-full siem-table">
           <thead><tr><th>Название</th><th>Тип</th><th>Статус</th><th>Описание</th><th></th></tr></thead>
           <tbody>
             {excl.map((ex) => (
               <tr key={ex.id}>
-                <td className="font-medium text-gray-200">{ex.name}</td>
+                <td className="font-medium siem-fg">{ex.name}</td>
                 <td><span className="badge-info">{ex.exclusion_type}</span></td>
                 <td><span className={ex.enabled ? "badge-resolved" : "badge-fp"}>{ex.enabled ? "Активно" : "Отключено"}</span></td>
-                <td className="text-gray-500">{ex.description || "—"}</td>
+                <td className="siem-fg-soft">{ex.description || "—"}</td>
                 <td>
                   <div className="flex gap-1">
-                    <button onClick={() => openEdit(ex)} className="text-xs px-2 py-1 rounded hover:bg-purple-900/20 text-gray-400">✎</button>
+                    <button type="button" onClick={() => openEdit(ex)} className="text-xs px-2 py-1 rounded siem-fg-soft hover:text-[color:var(--accent)] hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]">✎</button>
                     <button onClick={() => delMutation.mutate(ex.id)} className="text-xs px-2 py-1 rounded text-red-500/50 hover:text-red-400">✕</button>
                   </div>
                 </td>
               </tr>
             ))}
-            {excl.length === 0 && <tr><td colSpan={5} className="text-center text-gray-600 py-8">Нет исключений</td></tr>}
+            {excl.length === 0 && <tr><td colSpan={5} className="text-center siem-fg-soft py-8">Нет исключений</td></tr>}
           </tbody>
         </table>
       )}
@@ -311,26 +311,26 @@ function AccountsTab() {
         <button onClick={() => discoverMutation.mutate()} disabled={discoverMutation.isPending} className="siem-btn-ghost text-xs py-2 px-3 disabled:opacity-50">
           {discoverMutation.isPending ? "⟳ Сканирование..." : "⟳ Обнаружение"}
         </button>
-        <span className="text-xs text-gray-600">Всего: {data?.total ?? 0}</span>
+        <span className="text-xs siem-fg-soft">Всего: {data?.total ?? 0}</span>
       </div>
 
-      {isLoading ? <div className="text-center text-gray-600 py-8">Загрузка...</div> : (
+      {isLoading ? <div className="text-center siem-fg-soft py-8">Загрузка...</div> : (
         <table className="w-full siem-table">
           <thead><tr><th>Пользователь</th><th>Домен</th><th>Email</th><th>Риск</th><th>Привилег.</th><th>Сервисная</th><th>Последний раз</th><th></th></tr></thead>
           <tbody>
             {accounts.map((a) => (
               <tr key={a.id}>
-                <td className="font-medium text-gray-200">{a.display_name || a.username}</td>
-                <td className="text-gray-500">{a.domain || "—"}</td>
-                <td className="text-gray-500">{a.email || "—"}</td>
+                <td className="font-medium siem-fg">{a.display_name || a.username}</td>
+                <td className="siem-fg-soft">{a.domain || "—"}</td>
+                <td className="siem-fg-soft">{a.email || "—"}</td>
                 <td><span className={RISK_CLS[a.risk_level.toLowerCase()] ?? "badge-info"}>{a.risk_level}</span></td>
                 <td><span className={a.is_privileged ? "badge-critical" : "badge-fp"}>{a.is_privileged ? "Да" : "Нет"}</span></td>
                 <td><span className={a.is_service_account ? "badge-medium" : "badge-fp"}>{a.is_service_account ? "Да" : "Нет"}</span></td>
-                <td className="text-gray-600 text-xs">{a.last_seen ? new Date(a.last_seen).toLocaleString("ru-RU") : "—"}</td>
+                <td className="siem-fg-soft text-xs">{a.last_seen ? new Date(a.last_seen).toLocaleString("ru-RU") : "—"}</td>
                 <td><button onClick={() => delMutation.mutate(a.id)} className="text-xs text-red-500/50 hover:text-red-400 px-1">✕</button></td>
               </tr>
             ))}
-            {accounts.length === 0 && <tr><td colSpan={8} className="text-center text-gray-600 py-8">Нет учётных записей</td></tr>}
+            {accounts.length === 0 && <tr><td colSpan={8} className="text-center siem-fg-soft py-8">Нет учётных записей</td></tr>}
           </tbody>
         </table>
       )}
@@ -344,7 +344,7 @@ function ProgressBar({ value, color = "#58a6ff" }: { value: number; color?: stri
   const clamped = Math.min(100, Math.max(0, value));
   const barColor = clamped >= 90 ? "#f85149" : clamped >= 70 ? "#e3b341" : color;
   return (
-    <div className="relative w-full rounded-full overflow-hidden" style={{ height: 6, background: "#21262d" }}>
+    <div className="relative w-full rounded-full overflow-hidden" style={{ height: 6, background: "var(--border)" }}>
       <div
         style={{ width: `${clamped}%`, background: barColor, height: "100%", borderRadius: "inherit", transition: "width 0.4s ease" }}
       />
@@ -356,10 +356,10 @@ function MetricRow({ label, value, unit, percent }: { label: string; value: stri
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-gray-500">{label}</span>
-        <span className="text-[11px] font-mono" style={{ color: "#c9d1d9" }}>
-          {value}{unit ? <span className="text-gray-600 ml-0.5">{unit}</span> : null}
-          <span className="text-gray-600 ml-1.5">{percent.toFixed(1)}%</span>
+        <span className="text-[11px] siem-fg-soft">{label}</span>
+        <span className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+          {value}{unit ? <span className="siem-fg-soft ml-0.5">{unit}</span> : null}
+          <span className="siem-fg-soft ml-1.5">{percent.toFixed(1)}%</span>
         </span>
       </div>
       <ProgressBar value={percent} />
@@ -386,17 +386,17 @@ function SourceMonitoringTab() {
   const selected = agents.find((a) => a.agent_id === selectedId) ?? (agents.length > 0 ? agents[0] : null);
 
   return (
-    <div className="flex h-full overflow-hidden" style={{ background: "#1f2937" }}>
+    <div className="flex h-full overflow-hidden" style={{ background: "var(--surface-panel)" }}>
       {/* Agent list */}
       <div
         className="w-64 flex flex-col flex-shrink-0 border-r overflow-hidden"
-        style={{ borderColor: "#21262d", background: "#1f2937" }}
+        style={{ borderColor: "var(--border)", background: "var(--surface-panel)" }}
       >
         <div
           className="px-4 py-3 border-b flex items-center justify-between flex-shrink-0"
-          style={{ borderColor: "#21262d" }}
+          style={{ borderColor: "var(--border)" }}
         >
-          <span className="text-xs font-semibold" style={{ color: "#8b949e" }}>
+          <span className="text-xs font-semibold" style={{ color: "var(--text-soft)" }}>
             АГЕНТЫ ({agents.length})
           </span>
           {isLoading && (
@@ -405,7 +405,7 @@ function SourceMonitoringTab() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {agents.length === 0 && !isLoading && (
-            <div className="text-center py-10 text-xs" style={{ color: "#484f58" }}>
+            <div className="text-center py-10 text-xs" style={{ color: "var(--text-soft)" }}>
               Нет данных от агентов
             </div>
           )}
@@ -418,16 +418,16 @@ function SourceMonitoringTab() {
                 onClick={() => setSelectedId(agent.agent_id)}
                 className="w-full text-left px-4 py-3 border-b transition-colors"
                 style={{
-                  borderColor: "#21262d",
-                  background: isActive ? "#161b22" : "transparent",
+                  borderColor: "var(--border)",
+                  background: isActive ? "var(--surface-inset)" : "transparent",
                 }}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ background: online ? "#3fb950" : "#484f58", boxShadow: online ? "0 0 5px #3fb95066" : "none" }}
+                    style={{ background: online ? "#3fb950" : "var(--text-soft)", boxShadow: online ? "0 0 5px #3fb95066" : "none" }}
                   />
-                  <span className="text-xs font-medium truncate" style={{ color: "#e6edf3" }}>
+                  <span className="text-xs font-medium truncate" style={{ color: "var(--text)" }}>
                     {agent.host || agent.agent_id}
                   </span>
                 </div>
@@ -436,13 +436,13 @@ function SourceMonitoringTab() {
                     className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
                     style={{
                       background: online ? "rgba(63,185,80,0.12)" : "rgba(72,79,88,0.3)",
-                      color: online ? "#3fb950" : "#484f58",
+                      color: online ? "#3fb950" : "var(--text-soft)",
                     }}
                   >
                     {online ? "онлайн" : "офлайн"}
                   </span>
                   {agent.cpu && (
-                    <span className="text-[10px]" style={{ color: "#484f58" }}>
+                    <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>
                       CPU {(agent.cpu as { usage_percent: number }).usage_percent.toFixed(0)}%
                     </span>
                   )}
@@ -454,60 +454,60 @@ function SourceMonitoringTab() {
       </div>
 
       {/* Detail panel */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ background: "#1f2937" }}>
+      <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ background: "var(--surface-panel)" }}>
         {!selected ? (
           <div className="flex h-full items-center justify-center flex-col gap-3">
-            <div className="text-4xl" style={{ color: "#21262d" }}>📡</div>
-            <div className="text-sm" style={{ color: "#484f58" }}>Нет данных от агентов</div>
+            <div className="text-4xl" style={{ color: "var(--border)" }}>📡</div>
+            <div className="text-sm" style={{ color: "var(--text-soft)" }}>Нет данных от агентов</div>
           </div>
         ) : (
           <>
             {/* Header */}
             <div
               className="rounded-xl p-4 border flex items-start justify-between"
-              style={{ background: "#161b22", borderColor: "#21262d" }}
+              style={{ background: "var(--surface-inset)", borderColor: "var(--border)" }}
             >
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className="w-2.5 h-2.5 rounded-full"
                     style={{
-                      background: isAgentOnline(selected.timestamp) ? "#3fb950" : "#484f58",
+                      background: isAgentOnline(selected.timestamp) ? "#3fb950" : "var(--text-soft)",
                       boxShadow: isAgentOnline(selected.timestamp) ? "0 0 6px #3fb95077" : "none",
                     }}
                   />
-                  <span className="text-base font-semibold" style={{ color: "#e6edf3" }}>
+                  <span className="text-base font-semibold" style={{ color: "var(--text)" }}>
                     {selected.host || selected.agent_id}
                   </span>
                   <span
                     className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
                     style={{
                       background: isAgentOnline(selected.timestamp) ? "rgba(63,185,80,0.12)" : "rgba(72,79,88,0.25)",
-                      color: isAgentOnline(selected.timestamp) ? "#3fb950" : "#6e7681",
+                      color: isAgentOnline(selected.timestamp) ? "#3fb950" : "var(--text-muted)",
                     }}
                   >
                     {isAgentOnline(selected.timestamp) ? "онлайн" : "офлайн"}
                   </span>
                 </div>
-                <div className="text-[11px] space-y-0.5 ml-5" style={{ color: "#6e7681" }}>
-                  <div>ID: <span style={{ color: "#8b949e" }}>{selected.agent_id}</span></div>
+                <div className="text-[11px] space-y-0.5 ml-5" style={{ color: "var(--text-muted)" }}>
+                  <div>ID: <span style={{ color: "var(--text-soft)" }}>{selected.agent_id}</span></div>
                   {selected.distro && (
                     <div>
-                      ОС: <span style={{ color: "#8b949e" }}>
+                      ОС: <span style={{ color: "var(--text-soft)" }}>
                         {selected.distro.name} {selected.distro.version}
                       </span>
                     </div>
                   )}
                   {selected.uptime && (
                     <div>
-                      Uptime: <span style={{ color: "#8b949e" }}>{selected.uptime.human}</span>
+                      Uptime: <span style={{ color: "var(--text-soft)" }}>{selected.uptime.human}</span>
                     </div>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[10px] mb-0.5" style={{ color: "#484f58" }}>последнее обновление</div>
-                <div className="text-xs font-mono" style={{ color: "#6e7681" }}>
+                <div className="text-[10px] mb-0.5" style={{ color: "var(--text-soft)" }}>последнее обновление</div>
+                <div className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
                   {selected.timestamp
                     ? new Date(selected.timestamp).toLocaleString("ru-RU")
                     : "—"}
@@ -519,13 +519,13 @@ function SourceMonitoringTab() {
             {selected.cpu && (
               <div
                 className="rounded-xl p-4 border space-y-3"
-                style={{ background: "#161b22", borderColor: "#21262d" }}
+                style={{ background: "var(--surface-inset)", borderColor: "var(--border)" }}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                  <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>
                     Процессор
                   </span>
-                  <span className="text-[10px]" style={{ color: "#484f58" }}>
+                  <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>
                     {selected.cpu.cores} ядер
                   </span>
                 </div>
@@ -539,13 +539,13 @@ function SourceMonitoringTab() {
                   <div className="flex gap-6 pt-1">
                     {(["1m", "5m", "15m"] as const).map((k) => (
                       <div key={k}>
-                        <div className="text-[10px] mb-0.5" style={{ color: "#484f58" }}>{k}</div>
-                        <div className="text-xs font-mono" style={{ color: "#c9d1d9" }}>
+                        <div className="text-[10px] mb-0.5" style={{ color: "var(--text-soft)" }}>{k}</div>
+                        <div className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
                           {selected.load_average[k].toFixed(2)}
                         </div>
                       </div>
                     ))}
-                    <div className="text-[10px] self-end mb-0.5 ml-1" style={{ color: "#484f58" }}>load avg</div>
+                    <div className="text-[10px] self-end mb-0.5 ml-1" style={{ color: "var(--text-soft)" }}>load avg</div>
                   </div>
                 )}
               </div>
@@ -555,9 +555,9 @@ function SourceMonitoringTab() {
             {selected.memory && (
               <div
                 className="rounded-xl p-4 border space-y-3"
-                style={{ background: "#161b22", borderColor: "#21262d" }}
+                style={{ background: "var(--surface-inset)", borderColor: "var(--border)" }}
               >
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>
                   Память
                 </span>
                 <MetricRow
@@ -581,17 +581,17 @@ function SourceMonitoringTab() {
             {selected.disk && selected.disk.length > 0 && (
               <div
                 className="rounded-xl p-4 border space-y-4"
-                style={{ background: "#161b22", borderColor: "#21262d" }}
+                style={{ background: "var(--surface-inset)", borderColor: "var(--border)" }}
               >
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8b949e" }}>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-soft)" }}>
                   Диски
                 </span>
                 {selected.disk.map((d, i) => (
                   <div key={i} className="space-y-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-mono" style={{ color: "#58a6ff" }}>{d.mount}</span>
-                      <span className="text-[10px]" style={{ color: "#484f58" }}>{d.device}</span>
-                      <span className="text-[10px]" style={{ color: "#484f58" }}>{d.fs_type}</span>
+                      <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>{d.device}</span>
+                      <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>{d.fs_type}</span>
                     </div>
                     <MetricRow
                       label=""
@@ -708,7 +708,7 @@ function ReferencesTab() {
       {/* List */}
       <div className="w-72 flex flex-col border-r flex-shrink-0" style={{ borderColor: "var(--border)" }}>
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-          <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>
+          <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>
             Сценарии ({scenarios.length})
           </span>
           <button onClick={handleNew} className="siem-btn text-xs py-1 px-3">
@@ -717,20 +717,20 @@ function ReferencesTab() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {scenarios.length === 0 && (
-            <div className="text-center text-gray-600 py-8 text-sm">Нет сценариев</div>
+            <div className="text-center siem-fg-soft py-8 text-sm">Нет сценариев</div>
           )}
           {scenarios.map((s) => (
             <div
               key={s.id}
               className="px-4 py-3 border-b cursor-pointer hover:bg-purple-900/10 transition-colors"
-              style={{ borderColor: "var(--border)", background: selectedId === s.id ? "rgba(167,139,250,0.12)" : "transparent" }}
+              style={{ borderColor: "var(--border)", background: selectedId === s.id ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "transparent" }}
               onClick={() => setSelectedId(s.id)}
             >
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CRIT_COLORS[s.criticality] }} />
-                <span className="text-xs font-medium text-gray-200 truncate">{s.name}</span>
+                <span className="text-xs font-medium siem-fg truncate">{s.name}</span>
               </div>
-              <div className="text-[10px] text-gray-600 ml-3">{s.customer || "—"}</div>
+              <div className="text-[10px] siem-fg-soft ml-3">{s.customer || "—"}</div>
             </div>
           ))}
         </div>
@@ -741,7 +741,7 @@ function ReferencesTab() {
         {showForm ? (
           <>
             <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
-              <span className="text-sm font-semibold text-gray-200">
+              <span className="text-sm font-semibold siem-fg">
                 {selectedId ? "Редактировать сценарий" : "Новый сценарий"}
               </span>
               <div className="flex gap-2">
@@ -765,7 +765,7 @@ function ReferencesTab() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                     Название
                   </label>
                   <input
@@ -775,7 +775,7 @@ function ReferencesTab() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                  <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                     Клиент
                   </label>
                   <input
@@ -786,7 +786,7 @@ function ReferencesTab() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Критичность
                 </label>
                 <select
@@ -801,7 +801,7 @@ function ReferencesTab() {
                 </select>
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Описание
                 </label>
                 <textarea
@@ -812,7 +812,7 @@ function ReferencesTab() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Метод обнаружения
                 </label>
                 <textarea
@@ -823,7 +823,7 @@ function ReferencesTab() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Первопричина
                 </label>
                 <textarea
@@ -834,7 +834,7 @@ function ReferencesTab() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Рекомендации
                 </label>
                 <textarea
@@ -845,7 +845,7 @@ function ReferencesTab() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] siem-fg-soft uppercase tracking-wider mb-1 block">
                   Заметки
                 </label>
                 <textarea
@@ -861,8 +861,8 @@ function ReferencesTab() {
           <>
             <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">{selected.name}</h3>
-                <p className="text-xs text-gray-600 mt-0.5">{selected.customer}</p>
+                <h3 className="text-sm font-semibold siem-fg">{selected.name}</h3>
+                <p className="text-xs siem-fg-soft mt-0.5">{selected.customer}</p>
               </div>
               <div className="flex gap-2">
                 <span
@@ -879,35 +879,35 @@ function ReferencesTab() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {selected.description && (
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Описание</h4>
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.description}</p>
+                  <h4 className="text-xs font-semibold siem-fg-muted uppercase mb-1">Описание</h4>
+                  <p className="text-sm siem-fg-muted whitespace-pre-wrap">{selected.description}</p>
                 </div>
               )}
               {selected.detection_method && (
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Обнаружено</h4>
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.detection_method}</p>
+                  <h4 className="text-xs font-semibold siem-fg-muted uppercase mb-1">Обнаружено</h4>
+                  <p className="text-sm siem-fg-muted whitespace-pre-wrap">{selected.detection_method}</p>
                 </div>
               )}
               {selected.root_cause && (
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Причина</h4>
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.root_cause}</p>
+                  <h4 className="text-xs font-semibold siem-fg-muted uppercase mb-1">Причина</h4>
+                  <p className="text-sm siem-fg-muted whitespace-pre-wrap">{selected.root_cause}</p>
                 </div>
               )}
               {selected.recommendations && (
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Рекомендации</h4>
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.recommendations}</p>
+                  <h4 className="text-xs font-semibold siem-fg-muted uppercase mb-1">Рекомендации</h4>
+                  <p className="text-sm siem-fg-muted whitespace-pre-wrap">{selected.recommendations}</p>
                 </div>
               )}
               {selected.notes && (
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-300 uppercase mb-1">Заметки</h4>
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap">{selected.notes}</p>
+                  <h4 className="text-xs font-semibold siem-fg-muted uppercase mb-1">Заметки</h4>
+                  <p className="text-sm siem-fg-muted whitespace-pre-wrap">{selected.notes}</p>
                 </div>
               )}
-              <div className="text-xs text-gray-600 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+              <div className="text-xs siem-fg-soft pt-4 border-t" style={{ borderColor: "var(--border)" }}>
                 Создан: {new Date(selected.created_at).toLocaleString("ru-RU")}
               </div>
             </div>
@@ -915,7 +915,7 @@ function ReferencesTab() {
         ) : (
           <div className="flex-1 flex items-center justify-center flex-col gap-3">
             <div className="text-5xl">📚</div>
-            <div className="text-gray-500 text-sm font-medium">Выберите или создайте сценарий</div>
+            <div className="siem-fg-soft text-sm font-medium">Выберите или создайте сценарий</div>
           </div>
         )}
       </div>
@@ -929,8 +929,8 @@ function StubTab({ label, icon = "📋" }: { label: string; icon?: string }) {
   return (
     <div className="flex-1 flex items-center justify-center flex-col gap-3 h-full">
       <div className="text-5xl">{icon}</div>
-      <div className="text-gray-500 text-sm font-medium">{label}</div>
-      <div className="text-gray-700 text-xs">Раздел в разработке</div>
+      <div className="siem-fg-soft text-sm font-medium">{label}</div>
+      <div className="siem-fg-muted text-xs">Раздел в разработке</div>
     </div>
   );
 }
@@ -943,13 +943,13 @@ export default function DataStorage() {
   return (
     <div className="flex flex-col h-[calc(100vh-52px)]">
       {/* Sub-nav */}
-      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "var(--border)", background: "#1f2937" }}>
+      <div className="flex border-b overflow-x-auto flex-shrink-0" style={{ borderColor: "var(--border)", background: "var(--surface-panel)" }}>
         {SUB_TABS.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0"
             style={{
-              color: activeTab === t.id ? "#a78bfa" : "#64748b",
-              borderBottom: activeTab === t.id ? "2px solid #a78bfa" : "2px solid transparent",
+              color: activeTab === t.id ? "var(--accent)" : "var(--text-soft)",
+              borderBottom: activeTab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
             }}>
             {t.label}
           </button>

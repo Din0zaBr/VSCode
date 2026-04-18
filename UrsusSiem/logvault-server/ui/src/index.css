@@ -3,13 +3,15 @@
 @tailwind utilities;
 
 :root {
-  /* Backgrounds */
+  /* Backgrounds — unchanged dark palette */
   --bg: #111827;
   --bg-gradient-start: #111827;
   --bg-gradient-mid: #1f2937;
   --bg-gradient-end: #111827;
   --surface: #1f2937;
   --surface-2: #374151;
+  --surface-panel: #1f2937;
+  --surface-inset: #111827;
   /* Borders */
   --border: #4b5563;
   --border-strong: #6b7280;
@@ -20,7 +22,11 @@
   /* Accent (professional purple) */
   --accent: #a78bfa;
   --accent-secondary: #8b5cf6;
-  --accent-glow: rgba(167, 139, 250, 0.1);
+  --accent-glow: rgba(167, 139, 250, 0.12);
+  --accent-chip-bg: rgba(167, 139, 250, 0.2);
+  --accent-chip-border: #4b5563;
+  --code-accent: #a78bfa;
+  --code-accent-2: #c4b5fd;
   /* Spacing scale */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -28,9 +34,9 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-glow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 1px 3px rgba(0, 0, 0, 0.1);
   /* Border radius */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -38,38 +44,102 @@
 }
 
 [data-theme="light"] {
-  --bg: #f9fafb;
-  --bg-gradient-start: #f9fafb;
-  --bg-gradient-mid: #f3f4f6;
-  --bg-gradient-end: #f9fafb;
-  --surface: #ffffff;
-  --surface-2: #f3f4f6;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
-  --text: #111827;
-  --text-soft: #6b7280;
-  --text-muted: #4b5563;
-  --accent: #8b5cf6;
-  --accent-secondary: #7c3aed;
-  --accent-glow: rgba(139, 92, 246, 0.1);
+  /* Same structure as dark: cool slate + subtle violet mid (parallel to dark purple mid) */
+  --bg: #e8ecf4;
+  --bg-gradient-start: #e4e9f2;
+  --bg-gradient-mid: #ebe7fb;
+  --bg-gradient-end: #e2e8f4;
+  --surface: #f7f8fc;
+  --surface-2: #eef1f8;
+  --surface-panel: #f0f2fa;
+  --surface-inset: #e6eaf3;
+  --border: #c8d0e0;
+  --border-strong: #a8b4cc;
+  --text: #0f172a;
+  --text-soft: #64748b;
+  --text-muted: #475569;
+  --accent: #7c3aed;
+  --accent-secondary: #6d28d9;
+  --accent-glow: rgba(124, 58, 237, 0.12);
+  --accent-chip-bg: rgba(124, 58, 237, 0.12);
+  --accent-chip-border: #c4b5fd;
+  --code-accent: #6d28d9;
+  --code-accent-2: #5b21b6;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(124, 58, 237, 0.04);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(124, 58, 237, 0.06);
+  --shadow-glow: 0 0 48px rgba(124, 58, 237, 0.07);
 }
 
 @layer base {
-  html, body, #root {
-    background-color: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Native date/time inputs and scrollbars follow the active theme */
+  html {
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
   }
 
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: var(--surface); }
-  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--accent-secondary); }
+  html,
+  body,
+  #root {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--surface-2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+  }
+}
+
+/* Theme-aware text (replaces fixed Tailwind gray-100 / gray-300) */
+@layer utilities {
+  .siem-fg {
+    color: var(--text);
+  }
+  .siem-fg-muted {
+    color: var(--text-muted);
+  }
+  .siem-fg-soft {
+    color: var(--text-soft);
+  }
+  .siem-surface-fill {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .siem-inset-fill {
+    background: var(--surface-inset);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  /* Pill / segmented control track (theme-aware) */
+  .siem-segment-track {
+    border-radius: 0.5rem;
+    padding: 0.125rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
 }
 
 @layer components {
   .app-shell {
-    background: linear-gradient(165deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 45%, var(--bg-gradient-end) 100%);
+    background: linear-gradient(
+      165deg,
+      var(--bg-gradient-start) 0%,
+      var(--bg-gradient-mid) 45%,
+      var(--bg-gradient-end) 100%
+    );
     color: var(--text);
   }
 
@@ -115,7 +185,9 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
   }
-  .siem-input::placeholder { color: var(--text-soft); }
+  .siem-input::placeholder {
+    color: var(--text-soft);
+  }
 
   /* SIEM Button primary */
   .siem-btn {
@@ -173,35 +245,96 @@
   }
 
   /* Severity badges */
-  .badge-critical { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-  .badge-high     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
-  .badge-medium   { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
-  .badge-low      { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-  .badge-info     { @apply text-xs px-2 py-0.5 rounded font-medium; background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+  .badge-critical {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .badge-high {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+  }
+  .badge-medium {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+  }
+  .badge-low {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .badge-info {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(167, 139, 250, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+  }
 
   /* Status badges */
-  .badge-open         { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-investigating{ background: rgba(234,179,8,0.12); color: #facc15; border: 1px solid rgba(234,179,8,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-resolved     { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); @apply text-xs px-2 py-0.5 rounded; }
-  .badge-fp           { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); @apply text-xs px-2 py-0.5 rounded; }
+  .badge-open {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-investigating {
+    background: rgba(234, 179, 8, 0.12);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-resolved {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-fp {
+    background: rgba(100, 116, 139, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
 
   /* Criticality dot */
-  .crit-dot { @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0; }
-  .crit-dot-critical { background: #ef4444; }
-  .crit-dot-high     { background: #f97316; }
-  .crit-dot-medium   { background: #eab308; }
-  .crit-dot-low      { background: #3b82f6; }
-  .crit-dot-info     { background: #9ca3af; }
+  .crit-dot {
+    @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0;
+  }
+  .crit-dot-critical {
+    background: #ef4444;
+  }
+  .crit-dot-high {
+    background: #f97316;
+  }
+  .crit-dot-medium {
+    background: #eab308;
+  }
+  .crit-dot-low {
+    background: #3b82f6;
+  }
+  .crit-dot-info {
+    background: #9ca3af;
+  }
 
   /* Correlation star */
-  .corr-star { color: #ef4444; font-size: 11px; line-height: 1; }
+  .corr-star {
+    color: #ef4444;
+    font-size: 11px;
+    line-height: 1;
+  }
 
   /* PDQL input area */
   .pdql-bar {
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 8px;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
     font-size: 12px;
     color: var(--text);
   }
@@ -219,8 +352,14 @@
   .field-row:hover {
     background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
-  .field-row:hover .field-add-btn { @apply visible; }
-  .field-add-btn { @apply invisible text-xs px-1 rounded flex-shrink-0; color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+  .field-row:hover .field-add-btn {
+    @apply visible;
+  }
+  .field-add-btn {
+    @apply invisible text-xs px-1 rounded flex-shrink-0;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
 
   /* Page header / section title */
   .siem-page-title {
@@ -265,12 +404,70 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
   }
+
+  /* Monospace / JSON preview */
+  .siem-code-block {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    background: var(--surface-inset);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+}
+
+/* Light theme: badge text contrast on pale backgrounds */
+[data-theme="light"] .badge-critical {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+[data-theme="light"] .badge-high {
+  color: #c2410c;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+[data-theme="light"] .badge-medium {
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(202, 138, 4, 0.4);
+}
+[data-theme="light"] .badge-low {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+[data-theme="light"] .badge-info {
+  color: var(--accent-secondary);
+  background: var(--accent-chip-bg);
+  border-color: var(--accent-chip-border);
+}
+[data-theme="light"] .badge-open {
+  color: #b91c1c;
+}
+[data-theme="light"] .badge-investigating {
+  color: #a16207;
+}
+[data-theme="light"] .badge-resolved {
+  color: #15803d;
+}
+[data-theme="light"] .badge-fp {
+  color: #475569;
 }
 
 /* Print styles for incident PDF */
 @media print {
-  body { background: white !important; color: black !important; }
-  .no-print { display: none !important; }
-  .print-only { display: block !important; }
-  .incident-print-card { page-break-inside: avoid; }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .incident-print-card {
+    page-break-inside: avoid;
+  }
 }

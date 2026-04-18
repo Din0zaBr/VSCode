@@ -26,7 +26,7 @@ interface Integration {
 const TYPE_META: Record<IntegrationType, { label: string; icon: string; color: string; description: string }> = {
   suricata:    { label: "Suricata IDS",  icon: "🛡", color: "#f87171", description: "Получение алертов от Suricata IDS" },
   kaspersky:   { label: "Kaspersky",     icon: "🔒", color: "#fb923c", description: "Данные об угрозах от Kaspersky EDR" },
-  ml_anomaly:  { label: "ML Аномалии",   icon: "🤖", color: "#a78bfa", description: "Обнаружение аномалий через ML-модель" },
+  ml_anomaly:  { label: "ML Аномалии",   icon: "🤖", color: "var(--accent)", description: "Обнаружение аномалий через ML-модель" },
   elastic:     { label: "Elasticsearch", icon: "🔍", color: "#34d399", description: "Синхронизация с Elastic/OpenSearch" },
   splunk:      { label: "Splunk",        icon: "📊", color: "#60a5fa", description: "Интеграция с Splunk SIEM" },
   webhook:     { label: "Webhook",       icon: "🔗", color: "#facc15", description: "Входящие webhook от любых сервисов" },
@@ -140,8 +140,8 @@ export default function Integrations() {
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100 mb-1">Интеграции</h2>
-        <p className="text-sm text-gray-500">Управление внешними коннекторами и источниками данных</p>
+        <h2 className="siem-page-title mb-1">Интеграции</h2>
+        <p className="text-sm siem-fg-soft">Управление внешними коннекторами и источниками данных</p>
       </div>
 
       {/* Type quick-add cards */}
@@ -158,7 +158,7 @@ export default function Integrations() {
               title={meta.description}
             >
               <div className="text-xl mb-1">{meta.icon}</div>
-              <div className="text-[10px] font-semibold text-gray-300 leading-tight">{meta.label}</div>
+              <div className="text-[10px] font-semibold siem-fg-muted leading-tight">{meta.label}</div>
               {count > 0 && (
                 <div className="text-[9px] mt-1" style={{ color: meta.color }}>{count} шт.</div>
               )}
@@ -172,16 +172,16 @@ export default function Integrations() {
         {/* List */}
         <div className="lg:col-span-1 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-semibold siem-fg-muted">
               Коннекторы ({integrations.length})
-              <span className="text-xs text-gray-600 ml-2">
+              <span className="text-xs siem-fg-soft ml-2">
                 ({integrations.filter((i) => i.status === "enabled").length} активно)
               </span>
             </span>
             <button onClick={() => handleNew()} className="siem-btn text-xs px-3 py-1.5">+ Добавить</button>
           </div>
           {integrations.length === 0 ? (
-            <div className="siem-card p-8 text-center text-gray-600 text-sm">
+            <div className="siem-card p-8 text-center siem-fg-soft text-sm">
               Нет интеграций.<br />Выберите тип выше или нажмите "+ Добавить"
             </div>
           ) : (
@@ -193,16 +193,16 @@ export default function Integrations() {
                   key={item.id}
                   className="siem-card p-3 cursor-pointer transition-all hover:scale-[1.01]"
                   style={{
-                    background: selectedId === item.id ? "rgba(167,139,250,0.15)" : undefined,
-                    borderColor: selectedId === item.id ? "#a78bfa" : undefined,
+                    background: selectedId === item.id ? "color-mix(in srgb, var(--accent) 16%, transparent)" : undefined,
+                    borderColor: selectedId === item.id ? "var(--accent)" : undefined,
                   }}
                   onClick={() => setSelectedId(item.id)}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{meta.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-gray-200 truncate">{item.name}</div>
-                      <div className="text-[10px] text-gray-600 truncate">{meta.label}</div>
+                      <div className="text-xs font-semibold siem-fg truncate">{item.name}</div>
+                      <div className="text-[10px] siem-fg-soft truncate">{meta.label}</div>
                     </div>
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: st.color }} />
                   </div>
@@ -220,8 +220,8 @@ export default function Integrations() {
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{TYPE_META[selected.type].icon}</span>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-200">{selected.name}</h3>
-                    <p className="text-xs text-gray-500">{TYPE_META[selected.type].label}</p>
+                    <h3 className="text-lg font-semibold siem-fg">{selected.name}</h3>
+                    <p className="text-xs siem-fg-soft">{TYPE_META[selected.type].label}</p>
                   </div>
                 </div>
                 <span
@@ -237,18 +237,18 @@ export default function Integrations() {
               </div>
 
               {selected.description && (
-                <p className="text-xs text-gray-500">{selected.description}</p>
+                <p className="text-xs siem-fg-soft">{selected.description}</p>
               )}
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div><span className="text-gray-600">URL: </span><span className="text-gray-300 font-mono break-all">{selected.url}</span></div>
-                <div><span className="text-gray-600">Авторизация: </span><span className="text-gray-300">{selected.auth_method}</span></div>
-                <div><span className="text-gray-600">Интервал: </span><span className="text-gray-300">{selected.sync_interval}с</span></div>
+                <div><span className="siem-fg-soft">URL: </span><span className="siem-fg-muted font-mono break-all">{selected.url}</span></div>
+                <div><span className="siem-fg-soft">Авторизация: </span><span className="siem-fg-muted">{selected.auth_method}</span></div>
+                <div><span className="siem-fg-soft">Интервал: </span><span className="siem-fg-muted">{selected.sync_interval}с</span></div>
                 <div>
-                  <span className="text-gray-600">Последняя синхр.: </span>
-                  <span className="text-gray-300">{selected.last_sync ? new Date(selected.last_sync).toLocaleString("ru-RU") : "—"}</span>
+                  <span className="siem-fg-soft">Последняя синхр.: </span>
+                  <span className="siem-fg-muted">{selected.last_sync ? new Date(selected.last_sync).toLocaleString("ru-RU") : "—"}</span>
                 </div>
-                <div><span className="text-gray-600">Создан: </span><span className="text-gray-300">{new Date(selected.created_at).toLocaleString("ru-RU")}</span></div>
+                <div><span className="siem-fg-soft">Создан: </span><span className="siem-fg-muted">{new Date(selected.created_at).toLocaleString("ru-RU")}</span></div>
               </div>
 
               <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
@@ -269,7 +269,7 @@ export default function Integrations() {
             <div className="siem-card p-12 flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="text-4xl mb-2">🔗</div>
-                <div className="text-gray-500 text-sm">Выберите коннектор или создайте новый</div>
+                <div className="siem-fg-soft text-sm">Выберите коннектор или создайте новый</div>
               </div>
             </div>
           )}
@@ -281,14 +281,14 @@ export default function Integrations() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="siem-card w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
-              <h3 className="text-lg font-semibold text-gray-200">{editId ? "Редактировать интеграцию" : "Новая интеграция"}</h3>
-              <button onClick={() => setShowForm(false)} className="text-gray-600 hover:text-gray-400">✕</button>
+              <h3 className="text-lg font-semibold siem-fg">{editId ? "Редактировать интеграцию" : "Новая интеграция"}</h3>
+              <button type="button" onClick={() => setShowForm(false)} className="siem-fg-soft hover:text-[color:var(--text)] text-xl leading-none px-1">✕</button>
             </div>
 
             <div className="p-6 space-y-4">
               {/* Type grid */}
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">Тип коннектора</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">Тип коннектора</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(Object.entries(TYPE_META) as [IntegrationType, typeof TYPE_META[IntegrationType]][]).map(([type, meta]) => (
                     <button
@@ -298,7 +298,7 @@ export default function Integrations() {
                       className="p-2 rounded-lg text-center text-[11px] transition-all"
                       style={{
                         background: form.type === type ? `${meta.color}22` : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${form.type === type ? meta.color : "#374151"}`,
+                        border: `1px solid ${form.type === type ? meta.color : "var(--border-strong)"}`,
                         color: form.type === type ? meta.color : "#6b7280",
                       }}
                     >
@@ -307,12 +307,12 @@ export default function Integrations() {
                     </button>
                   ))}
                 </div>
-                <p className="text-[10px] text-gray-600 mt-1">{TYPE_META[form.type].description}</p>
+                <p className="text-[10px] siem-fg-soft mt-1">{TYPE_META[form.type].description}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Название</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Название</label>
                   <input
                     className="siem-input w-full text-sm"
                     value={form.name}
@@ -321,7 +321,7 @@ export default function Integrations() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Интервал синхр. (сек)</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Интервал синхр. (сек)</label>
                   <input
                     type="number"
                     className="siem-input w-full text-sm"
@@ -333,7 +333,7 @@ export default function Integrations() {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">URL / Endpoint</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">URL / Endpoint</label>
                 <input
                   className="siem-input w-full text-sm font-mono"
                   value={form.url}
@@ -343,7 +343,7 @@ export default function Integrations() {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">Описание</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">Описание</label>
                 <textarea
                   className="siem-input w-full text-sm resize-none"
                   rows={2}
@@ -353,7 +353,7 @@ export default function Integrations() {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">Аутентификация</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">Аутентификация</label>
                 <select
                   className="siem-input w-full text-sm mb-3"
                   value={form.auth_method}

@@ -6,25 +6,7 @@ interface QueryCondition {
   logic: "AND" | "OR";
 }
 
-const FIELDS: { value: string; label: string; type: "string" | "number" | "enum" }[] = [
-  { value: "level",           label: "level",           type: "enum" },
-  { value: "host",            label: "host",            type: "string" },
-  { value: "agent_id",        label: "agent_id",        type: "string" },
-  { value: "source",          label: "source",          type: "string" },
-  { value: "service",         label: "service",         type: "string" },
-  { value: "src.ip",          label: "src.ip",          type: "string" },
-  { value: "dst.ip",          label: "dst.ip",          type: "string" },
-  { value: "src.port",        label: "src.port",        type: "number" },
-  { value: "dst.port",        label: "dst.port",        type: "number" },
-  { value: "protocol",        label: "protocol",        type: "string" },
-  { value: "action",          label: "action",          type: "string" },
-  { value: "status",          label: "status",          type: "string" },
-  { value: "category.generic",label: "category.generic",type: "string" },
-  { value: "category.high",   label: "category.high",   type: "string" },
-  { value: "message",         label: "message",         type: "string" },
-  { value: "subject.name",    label: "subject.name",    type: "string" },
-  { value: "object.name",     label: "object.name",     type: "string" },
-];
+type FieldType = "string" | "number" | "enum";
 
 const LEVEL_OPTIONS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"];
 
@@ -38,6 +20,7 @@ interface QueryConditionRowProps {
   condition: QueryCondition;
   index: number;
   isFirst: boolean;
+  availableFields: string[];
   onChange: (updated: QueryCondition) => void;
   onRemove: () => void;
 }
@@ -45,10 +28,16 @@ interface QueryConditionRowProps {
 export type { QueryCondition };
 
 export default function QueryConditionRow({
-  condition, index, isFirst, onChange, onRemove,
+  condition, index, isFirst, availableFields, onChange, onRemove,
 }: QueryConditionRowProps) {
-  const fieldMeta = FIELDS.find((f) => f.value === condition.field) ?? FIELDS[0];
-  const operators = OPERATORS_FOR[fieldMeta.type] ?? OPERATORS_FOR.string;
+  const fieldOptions = availableFields.length ? availableFields : [condition.field || "level"];
+  const inferType = (field: string): FieldType => {
+    if (field === "level") return "enum";
+    if (/(\.port$|^count$|^count\.|^duration$|^id$|event_id_raw|record_number)/.test(field)) return "number";
+    return "string";
+  };
+  const fieldType = inferType(condition.field);
+  const operators = OPERATORS_FOR[fieldType] ?? OPERATORS_FOR.string;
 
   const inputStyle = {
     background: "#1f2937",
@@ -82,8 +71,8 @@ export default function QueryConditionRow({
         onChange={(e) => onChange({ ...condition, field: e.target.value, operator: "=", value: "" })}
         style={{ ...inputStyle, width: "160px", flexShrink: 0 }}
       >
-        {FIELDS.map((f) => (
-          <option key={f.value} value={f.value}>{f.label}</option>
+        {fieldOptions.map((f) => (
+          <option key={f} value={f}>{f}</option>
         ))}
       </select>
 
@@ -97,7 +86,7 @@ export default function QueryConditionRow({
       </select>
 
       {/* Value */}
-      {fieldMeta.type === "enum" && condition.operator !== "in" ? (
+      {fieldType === "enum" && condition.operator !== "in" ? (
         <select
           value={condition.value}
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
@@ -118,7 +107,7 @@ export default function QueryConditionRow({
       <button
         type="button"
         onClick={onRemove}
-        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded text-gray-600 hover:text-red-400 transition-colors"
+        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded siem-fg-soft hover:text-red-400 transition-colors"
         style={{ background: "rgba(239,68,68,0.08)" }}
         title="Удалить условие"
       >

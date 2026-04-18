@@ -13,7 +13,7 @@ function gaugeColor(pct: number): string {
 function gaugeTextColor(pct: number): string {
   if (pct >= 85) return "text-red-400";
   if (pct >= 60) return "text-yellow-400";
-  return "text-purple-300";
+  return "text-violet-700 dark:text-purple-300";
 }
 
 function GaugeBar({ label, percent, detail }: { label: string; percent: number; detail: string }) {
@@ -21,13 +21,13 @@ function GaugeBar({ label, percent, detail }: { label: string; percent: number; 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-[11px]">
-        <span className="text-gray-400">{label}</span>
+        <span className="siem-fg-muted">{label}</span>
         <span className={gaugeTextColor(clamped)}>
           {clamped.toFixed(1)}%
-          <span className="text-gray-600 ml-1">({detail})</span>
+          <span className="siem-fg-soft ml-1">({detail})</span>
         </span>
       </div>
-      <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-2)" }}>
         <div
           className={`h-full rounded-full transition-all duration-500 ${gaugeColor(clamped)}`}
           style={{ width: `${clamped}%` }}
@@ -61,26 +61,26 @@ function AgentCard({ m }: { m: AgentMetrics }) {
 
   return (
     <div
-      className="border border-gray-800 rounded-lg p-3 hover:border-gray-700 transition-colors"
+      className="siem-card rounded-lg p-3 transition-colors hover:border-[var(--accent)]"
       title={loadTitle}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="min-w-0">
-          <div className="text-xs font-mono text-vault-300 truncate" title={m.agent_id}>
+          <div className="text-xs font-mono text-violet-700 dark:text-vault-300 truncate" title={m.agent_id}>
             {m.agent_id}
           </div>
-          <div className="text-[10px] text-gray-600 truncate">
+          <div className="text-[10px] siem-fg-soft truncate">
             {m.host}
-            {distroLabel && <span className="ml-1.5 text-gray-700">{distroLabel}</span>}
+            {distroLabel && <span className="ml-1.5 siem-fg-muted">{distroLabel}</span>}
           </div>
         </div>
         <div className="shrink-0 ml-2 text-right">
           {m.uptime?.human && (
-            <div className="text-[10px] text-gray-600" title="Uptime">
+            <div className="text-[10px] siem-fg-soft" title="Uptime">
               {m.uptime.human}
             </div>
           )}
-          <div className="text-[10px] text-gray-700">{ago}</div>
+          <div className="text-[10px] siem-fg-muted">{ago}</div>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ function timeSince(iso: string): string {
 export default function AgentMetricsPanel({ data }: Props) {
   if (!data.length) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center siem-fg-soft py-8">
         Нет данных о метриках
       </div>
     );

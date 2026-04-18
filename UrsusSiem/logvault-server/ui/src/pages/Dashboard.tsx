@@ -38,7 +38,7 @@ const LEVEL_COLORS: Record<string, string> = {
   ERROR:    "#f97316",
   WARNING:  "#eab308",
   WARN:     "#facc15",
-  INFO:     "#a78bfa",
+  INFO:     "var(--accent)",
   DEBUG:    "#6b7280",
 };
 
@@ -224,15 +224,15 @@ export default function Dashboard() {
                 <AreaChart data={timelineData} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#a78bfa" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="var(--accent)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="label" tick={{ fill: "var(--text-soft)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                   <YAxis tick={{ fill: "var(--text-soft)", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<SiemTooltip />} />
-                  <Area type="monotone" dataKey="total" name="Всего событий" stroke="#a78bfa" strokeWidth={2} fill="url(#gTotal)" dot={false} />
+                  <Area type="monotone" dataKey="total" name="Всего событий" stroke="var(--accent)" strokeWidth={2} fill="url(#gTotal)" dot={false} />
                 </AreaChart>
               ) : chartView === "severity" ? (
                 <AreaChart data={timelineData} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
@@ -258,8 +258,8 @@ export default function Dashboard() {
                 <AreaChart data={timelineData} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gTotal2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#a78bfa" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="var(--accent)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="gError2" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.3} />
@@ -274,7 +274,7 @@ export default function Dashboard() {
                   <XAxis dataKey="label" tick={{ fill: "var(--text-soft)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                   <YAxis tick={{ fill: "var(--text-soft)", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<SiemTooltip />} />
-                  <Area type="monotone" dataKey="total"   name="Всего"       stroke="#a78bfa" strokeWidth={2} fill="url(#gTotal2)" dot={false} />
+                  <Area type="monotone" dataKey="total"   name="Всего"       stroke="var(--accent)" strokeWidth={2} fill="url(#gTotal2)" dot={false} />
                   <Area type="monotone" dataKey="ERROR"   name="Ошибки"      stroke="#ef4444" strokeWidth={1.5} fill="url(#gError2)" dot={false} />
                   <Area type="monotone" dataKey="WARNING" name="Предупр."    stroke="#eab308" strokeWidth={1} fill="url(#gWarn2)" dot={false} />
                   <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: "var(--text-soft)", fontSize: 10 }}>{v}</span>} />
@@ -289,9 +289,9 @@ export default function Dashboard() {
           {[
             { label: "Открытых инцидентов",  val: openInc,            color: "#ef4444", to: "/incidents" },
             { label: "Критичных инцидентов", val: criticalInc,         color: "#f97316", to: "/incidents" },
-            { label: "Активов",              val: totalAssets,         color: "#a78bfa", to: "/assets" },
+            { label: "Активов",              val: totalAssets,         color: "var(--accent)", to: "/assets" },
             { label: "Активных агентов",     val: activeAgents.length, color: "#4ade80", sub: `из ${agents?.length ?? 0}` },
-            { label: "Поток событий",        val: avgFlow,             color: "#a78bfa", sub: "событий/мин", ld: isLoading },
+            { label: "Поток событий",        val: avgFlow,             color: "var(--accent)", sub: "событий/мин", ld: isLoading },
             { label: "Открытых задач",       val: totalTasks,          color: "#eab308", to: "/incidents" },
           ].map((k) => (
             <div key={k.label} className="siem-card p-4 transition-colors hover:border-siem-purple cursor-pointer"
@@ -332,7 +332,7 @@ export default function Dashboard() {
                   <Tooltip content={<SiemTooltip />} />
                   <Bar dataKey="count" name="Событий" radius={[0, 4, 4, 0]}>
                     {hostBar.map((_, i) => (
-                      <Cell key={i} fill="#a78bfa" opacity={0.9 - i * 0.08} />
+                      <Cell key={i} fill="var(--accent)" opacity={0.9 - i * 0.08} />
                     ))}
                   </Bar>
                 </BarChart>

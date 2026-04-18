@@ -83,10 +83,16 @@ class Token:
 
 def _tokenize(text: str) -> list[Token]:
     tokens: list[Token] = []
+    pos = 0
     for m in _TOKEN_RE.finditer(text):
+        if m.start() != pos:
+            skipped = text[pos:m.start()]
+            if skipped.strip():
+                raise PDQLParseError(f"Unexpected token: {skipped.strip()}")
         kind = m.lastgroup
         val = m.group()
         if kind == "WS":
+            pos = m.end()
             continue
         if kind == "STRING":
             val = val[1:-1]
@@ -104,6 +110,11 @@ def _tokenize(text: str) -> list[Token]:
             else:
                 kind = "FIELD"
         tokens.append(Token(type=kind, value=val))
+        pos = m.end()
+    if pos != len(text):
+        skipped = text[pos:]
+        if skipped.strip():
+            raise PDQLParseError(f"Unexpected token: {skipped.strip()}")
     return tokens
 
 
@@ -158,14 +169,20 @@ class PDQLParser:
         return result
 
     def _split_pipes(self, query: str) -> list[str]:
-        """Split by | respecting parentheses depth."""
+        """Split by | respecting parentheses, lists and quoted strings."""
         parts: list[str] = []
         depth = 0
+        quote: str | None = None
         current: list[str] = []
         for ch in query:
-            if ch == "(":
+            if quote:
+                if ch == quote:
+                    quote = None
+            elif ch in ("'", '"'):
+                quote = ch
+            elif ch in ("(", "["):
                 depth += 1
-            elif ch == ")":
+            elif ch in (")", "]"):
                 depth -= 1
             elif ch == "|" and depth == 0:
                 parts.append("".join(current))
@@ -186,7 +203,9 @@ class PDQLParser:
 
     def _parse_filter(self, body: str) -> FilterNode:
         tokens = _tokenize(body)
-        node, _ = self._parse_or(tokens, 0)
+        node, pos = self._parse_or(tokens, 0)
+        if pos != len(tokens):
+            raise PDQLParseError(f"Unexpected token: {tokens[pos].value}")
         return node
 
     def _parse_or(self, tokens: list[Token], pos: int) -> tuple[FilterNode, int]:
@@ -262,17 +281,18 @@ class PDQLParser:
             else:
                 raise PDQLParseError(f"Expected operator, got '{op_token.value}'")
 
-            # IN [val1, val2, ...]
-            if op == "IN" and pos < len(tokens) and tokens[pos].type == "LBRACKET":
+            # IN [val1, val2, ...] and IN (val1, val2, ...)
+            if op == "IN" and pos < len(tokens) and tokens[pos].type in ("LBRACKET", "LPAREN"):
+                close_type = "RBRACKET" if tokens[pos].type == "LBRACKET" else "RPAREN"
                 pos += 1
                 values: list[str] = []
-                while pos < len(tokens) and tokens[pos].type != "RBRACKET":
+                while pos < len(tokens) and tokens[pos].type != close_type:
                     if tokens[pos].type == "COMMA":
                         pos += 1
                         continue
                     values.append(tokens[pos].value)
                     pos += 1
-                if pos < len(tokens) and tokens[pos].type == "RBRACKET":
+                if pos < len(tokens) and tokens[pos].type == close_type:
                     pos += 1
                 return FilterNode(type="predicate", predicate=Predicate(field=fld, operator="IN", value=values)), pos
 
@@ -326,7 +346,18 @@ class PDQLParser:
 class PDQLToSQL:
     """Translates PDQLQuery into PostgreSQL SQL."""
 
+    @staticmethod
+    def _coalesce_text(*exprs: str) -> str:
+        """SQL: COALESCE(NULLIF(e1,''), NULLIF(e2,''), ...)."""
+        cleaned = [f"NULLIF({e}, '')" for e in exprs if e]
+        if not cleaned:
+            return "''"
+        if len(cleaned) == 1:
+            return cleaned[0]
+        return f"COALESCE({', '.join(cleaned)})"
+
     DIRECT_FIELDS: dict[str, str] = {
+        "id": "l.id",
         "time": "l.timestamp",
         "event_id": "l.event_id",
         "text": "l.message",
@@ -341,7 +372,115 @@ class PDQLToSQL:
         "event_type": "l.meta->>'event_type'",
     }
 
+    # Explicit field aliases with fallbacks (flat key, nested JSON, legacy underscore keys).
+    # This keeps PDQL stable even if meta schema varies between sources.
+    ALIAS_FIELDS: dict[str, str] = {
+        # ── event_src.* ──────────────────────────────────────────────────
+        "event_src.vendor": _coalesce_text.__func__(
+            "l.meta->>'event_src.vendor'",
+            "l.meta->'event_src'->>'vendor'",
+            "l.meta->>'event_src_vendor'",
+        ),
+        "event_src.title": _coalesce_text.__func__(
+            "l.meta->>'event_src.title'",
+            "l.meta->'event_src'->>'title'",
+            "l.meta->>'event_src_title'",
+        ),
+        "event_src.subsys": _coalesce_text.__func__(
+            "l.meta->>'event_src.subsys'",
+            "l.meta->'event_src'->>'subsys'",
+            "l.meta->>'event_src_subsys'",
+        ),
+        "event_src.category": _coalesce_text.__func__(
+            "l.meta->>'event_src.category'",
+            "l.meta->'event_src'->>'category'",
+            "l.meta->>'event_src_category'",
+        ),
+        # host is stored in column, but some sources also put it in meta
+        "event_src.host": _coalesce_text.__func__(
+            "l.host",
+            "l.meta->>'event_src.host'",
+            "l.meta->'event_src'->>'host'",
+        ),
+        "event_src.ip": _coalesce_text.__func__(
+            "l.meta->>'event_src.ip'",
+            "l.meta->'event_src'->>'ip'",
+            "l.meta->>'event_src_ip'",
+        ),
+
+        # ── src.* / dst.* (often flat keys) ─────────────────────────────
+        "src.ip": _coalesce_text.__func__(
+            "l.meta->>'src.ip'",
+            "l.meta->'src'->>'ip'",
+            "l.meta->>'src_ip'",
+        ),
+        "dst.ip": _coalesce_text.__func__(
+            "l.meta->>'dst.ip'",
+            "l.meta->'dst'->>'ip'",
+            "l.meta->>'dst_ip'",
+        ),
+        "src.host": _coalesce_text.__func__(
+            "l.meta->>'src.host'",
+            "l.meta->'src'->>'host'",
+            "l.meta->>'src_host'",
+        ),
+        "dst.host": _coalesce_text.__func__(
+            "l.meta->>'dst.host'",
+            "l.meta->'dst'->>'host'",
+            "l.meta->>'dst_host'",
+        ),
+        "src.port": _coalesce_text.__func__(
+            "l.meta->>'src.port'",
+            "l.meta->'src'->>'port'",
+            "l.meta->>'src_port'",
+        ),
+        "dst.port": _coalesce_text.__func__(
+            "l.meta->>'dst.port'",
+            "l.meta->'dst'->>'port'",
+            "l.meta->>'dst_port'",
+        ),
+
+        # ── category.* (parser stores meta.category.{generic,high,low}) ──
+        "category.generic": _coalesce_text.__func__(
+            "l.meta->>'category.generic'",
+            "l.meta->'category'->>'generic'",
+        ),
+        "category.high": _coalesce_text.__func__(
+            "l.meta->>'category.high'",
+            "l.meta->'category'->>'high'",
+        ),
+        "category.low": _coalesce_text.__func__(
+            "l.meta->>'category.low'",
+            "l.meta->'category'->>'low'",
+        ),
+
+        # ── subject.* / object.* (flat keys in enrichment) ──────────────
+        "subject.process.id": _coalesce_text.__func__(
+            "l.meta->>'subject.process.id'",
+            "l.meta->'subject'->'process'->>'id'",
+        ),
+        "subject.process.parent.id": _coalesce_text.__func__(
+            "l.meta->>'subject.process.parent.id'",
+            "l.meta->'subject'->'process'->'parent'->>'id'",
+        ),
+        "subject.account.id": _coalesce_text.__func__(
+            "l.meta->>'subject.account.id'",
+            "l.meta->'subject'->'account'->>'id'",
+        ),
+        "object.path": _coalesce_text.__func__(
+            "l.meta->>'object.path'",
+            "l.meta->'object'->>'path'",
+        ),
+        "object.process.id": _coalesce_text.__func__(
+            "l.meta->>'object.process.id'",
+            "l.meta->'object'->'process'->>'id'",
+        ),
+    }
+
     NUMERIC_FIELDS: dict[str, str] = {
+        "id": "bigint",
+        "event_id_raw": "bigint",
+        "record_number": "bigint",
         "src.port": "int",
         "dst.port": "int",
         "count": "int",
@@ -354,16 +493,20 @@ class PDQLToSQL:
     def field_to_sql(self, fld: str) -> str:
         if fld in self.DIRECT_FIELDS:
             return self.DIRECT_FIELDS[fld]
+        if fld in self.ALIAS_FIELDS:
+            return self.ALIAS_FIELDS[fld]
         parts = fld.split(".")
         if len(parts) == 1:
             return f"l.meta->>'{parts[0]}'"
+        flat_key = f"l.meta->>'{fld}'"
+        underscore_key = f"l.meta->>'{fld.replace('.', '_')}'"
         path = "l.meta"
         for p in parts[:-1]:
             path += f"->'{p}'"
         path += f"->>'{parts[-1]}'"
         if fld in self.NUMERIC_FIELDS:
-            return f"({path})::{self.NUMERIC_FIELDS[fld]}"
-        return path
+            return f"(COALESCE(NULLIF({flat_key}, ''), NULLIF({underscore_key}, ''), {path}))::{self.NUMERIC_FIELDS[fld]}"
+        return f"COALESCE(NULLIF({flat_key}, ''), NULLIF({underscore_key}, ''), {path})"
 
     def translate(
         self,

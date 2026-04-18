@@ -85,15 +85,15 @@ export default function CustomFieldsAdmin() {
   return (
     <div className="p-6 space-y-6 h-full overflow-y-auto">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100 mb-1">Пользовательские поля</h2>
-        <p className="text-sm text-gray-500">Управление дополнительными полями для инцидентов и сценариев</p>
+        <h2 className="siem-page-title mb-1">Пользовательские поля</h2>
+        <p className="text-sm siem-fg-soft">Управление дополнительными полями для инцидентов и сценариев</p>
       </div>
 
       {/* Fields list */}
       <div className="space-y-3">
         {fields.length === 0 ? (
           <div className="siem-card p-6 text-center">
-            <div className="text-gray-600 text-sm mb-4">Нет пользовательских полей</div>
+            <div className="siem-fg-soft text-sm mb-4">Нет пользовательских полей</div>
             <button onClick={handleNew} className="siem-btn text-xs px-4 py-2">
               + Создать поле
             </button>
@@ -101,7 +101,7 @@ export default function CustomFieldsAdmin() {
         ) : (
           <>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-300">Поля ({fields.length})</span>
+              <span className="text-sm font-semibold siem-fg-muted">Поля ({fields.length})</span>
               <button onClick={handleNew} className="siem-btn text-xs px-4 py-2">
                 + Новое поле
               </button>
@@ -111,7 +111,7 @@ export default function CustomFieldsAdmin() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-semibold text-gray-200">{f.label}</h3>
+                      <h3 className="text-sm font-semibold siem-fg">{f.label}</h3>
                       {f.required && (
                         <span
                           className="text-[10px] px-1.5 py-0.5 rounded"
@@ -121,9 +121,9 @@ export default function CustomFieldsAdmin() {
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-gray-600 space-y-0.5">
+                    <div className="text-[11px] siem-fg-soft space-y-0.5">
                       <div>
-                        Ключ: <span style={{ color: "#a78bfa", fontFamily: "monospace" }}>{f.name}</span>
+                        Ключ: <span style={{ color: "var(--accent)", fontFamily: "monospace" }}>{f.name}</span>
                       </div>
                       <div>Тип: {TYPE_LABELS[f.type]}</div>
                       {f.description && <div>{f.description}</div>}
@@ -165,10 +165,10 @@ export default function CustomFieldsAdmin() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--border)" }}>
-              <h3 className="text-lg font-semibold text-gray-200">
+              <h3 className="text-lg font-semibold siem-fg">
                 {editId ? "Редактировать поле" : "Новое поле"}
               </h3>
-              <button onClick={() => setShowForm(false)} className="text-gray-600 hover:text-gray-400">
+              <button type="button" onClick={() => setShowForm(false)} className="siem-fg-soft hover:text-[color:var(--text)] text-xl leading-none px-1">
                 ✕
               </button>
             </div>
@@ -176,19 +176,19 @@ export default function CustomFieldsAdmin() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Название поля (ключ)</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Название поля (ключ)</label>
                   <input
                     className="siem-input w-full text-sm font-mono"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value.replace(/\s+/g, "_").toLowerCase() })}
                     placeholder="field_name"
                   />
-                  <div className="text-[10px] text-gray-600 mt-1">
+                  <div className="text-[10px] siem-fg-soft mt-1">
                     Использование: custom_field[{form.name}]
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Название для отображения</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Название для отображения</label>
                   <input
                     className="siem-input w-full text-sm"
                     value={form.label}
@@ -200,7 +200,7 @@ export default function CustomFieldsAdmin() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Тип данных</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Тип данных</label>
                   <select
                     className="siem-input w-full text-sm"
                     value={form.type}
@@ -225,13 +225,13 @@ export default function CustomFieldsAdmin() {
                       onChange={(e) => setForm({ ...form, required: e.target.checked })}
                       className="w-4 h-4"
                     />
-                    <span className="text-xs text-gray-400">Обязательное поле</span>
+                    <span className="text-xs siem-fg-muted">Обязательное поле</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 uppercase block mb-2">Описание</label>
+                <label className="text-xs siem-fg-soft uppercase block mb-2">Описание</label>
                 <textarea
                   className="siem-input w-full text-sm resize-none"
                   rows={2}
@@ -243,7 +243,7 @@ export default function CustomFieldsAdmin() {
 
               {form.type === "dropdown" && (
                 <div>
-                  <label className="text-xs text-gray-500 uppercase block mb-2">Варианты (по одному на строку)</label>
+                  <label className="text-xs siem-fg-soft uppercase block mb-2">Варианты (по одному на строку)</label>
                   <textarea
                     className="siem-input w-full text-sm resize-none font-mono"
                     rows={3}
@@ -264,10 +264,10 @@ export default function CustomFieldsAdmin() {
 
               {form.type === "dropdown" && form.options && form.options.length > 0 && (
                 <div className="bg-purple-900/20 p-3 rounded">
-                  <div className="text-xs font-semibold text-gray-300 mb-2">Предпросмотр:</div>
+                  <div className="text-xs font-semibold siem-fg-muted mb-2">Предпросмотр:</div>
                   <div className="space-y-1">
                     {form.options.map((opt, i) => (
-                      <div key={i} className="text-sm text-gray-400">
+                      <div key={i} className="text-sm siem-fg-muted">
                         • {opt}
                       </div>
                     ))}

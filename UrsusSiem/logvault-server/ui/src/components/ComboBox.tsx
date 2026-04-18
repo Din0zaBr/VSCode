@@ -52,7 +52,7 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
         <button
           type="button"
           onClick={() => { onChange(""); inputRef.current?.focus(); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs leading-none"
+          className="absolute right-2 top-1/2 -translate-y-1/2 siem-fg-soft hover:text-[color:var(--text-muted)] text-xs leading-none"
           tabIndex={-1}
           aria-label="Clear"
         >
@@ -64,7 +64,7 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
           id={listId}
           role="listbox"
           className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-auto rounded-lg shadow-xl"
-          style={{ background: "#1f2937", border: "1px solid #374151" }}
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}
         >
           {filtered.map((opt) => (
             <li
@@ -76,9 +76,9 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
                 onChange(opt);
                 setOpen(false);
               }}
-              className="px-3 py-1.5 text-sm cursor-pointer transition-colors text-gray-300"
-              style={opt === value ? { background: "rgba(167,139,250,0.2)", color: "#a78bfa" } : undefined}
-              onMouseEnter={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = "rgba(255,255,255,0.04)"; }}
+              className="px-3 py-1.5 text-sm cursor-pointer transition-colors siem-fg"
+              style={opt === value ? { background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-secondary)" } : undefined}
+              onMouseEnter={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = "color-mix(in srgb, var(--accent) 8%, var(--surface-2))"; }}
               onMouseLeave={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = ""; }}
             >
               {opt}

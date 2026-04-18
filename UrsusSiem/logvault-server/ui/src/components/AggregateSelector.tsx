@@ -58,8 +58,8 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
     <div
       className="rounded-xl border"
       style={{
-        background: "#1f2937",
-        borderColor: "#4b5563",
+        background: "var(--surface-panel)",
+        borderColor: "var(--border-strong)",
       }}
     >
       {/* Header */}
@@ -67,15 +67,15 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
         className="flex items-center justify-between px-3 py-2 border-b"
         style={{ borderColor: "var(--border)" }}
       >
-        <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "#8b20d1" }}>
+        <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "var(--code-accent-2)" }}>
           Агрегаты
         </span>
         <button
           onClick={handleToggleAll}
           className="text-[10px] transition-colors"
-          style={{ color: noneChecked ? "#8b5cf6" : "#64748b" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#a78bfa"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = noneChecked ? "#8b5cf6" : "#64748b"; }}
+          style={{ color: noneChecked ? "var(--accent-secondary)" : "var(--text-soft)" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = noneChecked ? "var(--accent-secondary)" : "var(--text-soft)"; }}
         >
           {allChecked ? "Снять все" : "Выбрать все"}
         </button>
@@ -91,15 +91,15 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
               className="flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer
                          select-none transition-colors"
               style={{ userSelect: "none" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.08)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "color-mix(in srgb, var(--accent) 10%, transparent)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
               {/* Custom checkbox */}
               <span
                 className="flex-shrink-0 flex items-center justify-center w-4 h-4 rounded transition-all"
                 style={{
-                  background: checked ? "rgba(167,139,250,0.25)" : "transparent",
-                  border: checked ? "1.5px solid #a78bfa" : "1.5px solid #4b5563",
+                  background: checked ? "color-mix(in srgb, var(--accent) 28%, transparent)" : "transparent",
+                  border: checked ? "1.5px solid var(--accent)" : "1.5px solid var(--border-strong)",
                 }}
                 onClick={() => toggle(opt.id)}
               >
@@ -107,7 +107,7 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
                   <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
                     <path
                       d="M1 3.5L3.5 6L8 1"
-                      stroke="#a78bfa"
+                      stroke="var(--accent)"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -129,13 +129,13 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
               <div className="flex-1 min-w-0">
                 <span
                   className="font-mono text-xs font-medium"
-                  style={{ color: checked ? "#a78bfa" : "#94a3b8" }}
+                  style={{ color: checked ? "var(--accent)" : "var(--text-soft)" }}
                 >
                   {opt.label}
                 </span>
                 <span
                   className="block text-[10px] leading-tight mt-0.5"
-                  style={{ color: "#4a3670" }}
+                  style={{ color: "var(--text-soft)" }}
                 >
                   {opt.description}
                 </span>
@@ -145,7 +145,7 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
               {checked && (
                 <span
                   className="flex-shrink-0 w-1.5 h-1.5 rounded-full"
-                  style={{ background: "#8b20d1" }}
+                  style={{ background: "var(--code-accent-2)" }}
                 />
               )}
             </label>
@@ -159,7 +159,7 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
           className="px-3 py-2 border-t flex items-center gap-1.5 flex-wrap"
           style={{ borderColor: "var(--border)" }}
         >
-          <span className="text-[10px]" style={{ color: "#4a3670" }}>
+          <span className="text-[10px]" style={{ color: "var(--text-soft)" }}>
             Выбрано:
           </span>
           {selected.map((id) => (
@@ -167,9 +167,9 @@ export default function AggregateSelector({ selected, onChange }: AggregateSelec
               key={id}
               className="text-[10px] font-mono px-1.5 py-0.5 rounded"
               style={{
-                background: "rgba(167,139,250,0.15)",
-                color: "#b266ff",
-                border: "1px solid rgba(167,139,250,0.3)",
+                background: "color-mix(in srgb, var(--accent) 16%, transparent)",
+                color: "var(--accent)",
+                border: "1px solid color-mix(in srgb, var(--accent) 35%, var(--border))",
               }}
             >
               {id}

@@ -86,17 +86,19 @@ function buildPDQL(conditions: QueryCondition[]): string {
 }
 
 let nextId = 1;
-function newCondition(): QueryCondition {
-  return { id: `c${nextId++}`, field: "level", operator: "=", value: "ERROR", logic: "AND" };
+function newCondition(defaultField: string): QueryCondition {
+  return { id: `c${nextId++}`, field: defaultField, operator: "=", value: "ERROR", logic: "AND" };
 }
 
 interface QueryBuilderProps {
   onApply: (pdql: string) => void;
   onClose: () => void;
+  availableFields: string[];
 }
 
-export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
-  const [conditions, setConditions] = useState<QueryCondition[]>([newCondition()]);
+export default function QueryBuilder({ onApply, onClose, availableFields }: QueryBuilderProps) {
+  const defaultField = availableFields[0] || "level";
+  const [conditions, setConditions] = useState<QueryCondition[]>([newCondition(defaultField)]);
   const [sortField, setSortField] = useState("time");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [limitVal, setLimitVal] = useState("100");
@@ -107,7 +109,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
     return parts.join(" | ");
   })();
 
-  const handleAdd = () => setConditions((c) => [...c, newCondition()]);
+  const handleAdd = () => setConditions((c) => [...c, newCondition(defaultField)]);
 
   const handleChange = (id: string, updated: QueryCondition) => {
     setConditions((c) => c.map((x) => (x.id === id ? updated : x)));
@@ -137,15 +139,15 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-          <h3 className="text-sm font-semibold text-gray-200">Визуальный конструктор запросов</h3>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-400 text-sm">✕</button>
+          <h3 className="text-sm font-semibold siem-fg">Визуальный конструктор запросов</h3>
+          <button type="button" onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text)] text-sm">✕</button>
         </div>
 
         <div className="p-5 space-y-4">
           {/* Conditions */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500 uppercase">Условия фильтра</span>
+              <span className="text-xs siem-fg-soft uppercase">Условия фильтра</span>
               <button
                 type="button"
                 onClick={handleAdd}
@@ -161,12 +163,13 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
                   condition={c}
                   index={i}
                   isFirst={i === 0}
+                  availableFields={availableFields}
                   onChange={(updated) => handleChange(c.id, updated)}
                   onRemove={() => handleRemove(c.id)}
                 />
               ))}
               {conditions.length === 0 && (
-                <div className="text-xs text-gray-600 text-center py-4">
+                <div className="text-xs siem-fg-soft text-center py-4">
                   Нет условий — будут возвращены все события
                 </div>
               )}
@@ -175,7 +178,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
 
           {/* Sort + limit */}
           <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-            <span className="text-xs text-gray-500 flex-shrink-0">Сортировка:</span>
+            <span className="text-xs siem-fg-soft flex-shrink-0">Сортировка:</span>
             <input
               value={sortField}
               onChange={(e) => setSortField(e.target.value)}
@@ -190,7 +193,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
               <option value="desc">desc</option>
               <option value="asc">asc</option>
             </select>
-            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">Лимит:</span>
+            <span className="text-xs siem-fg-soft flex-shrink-0 ml-2">Лимит:</span>
             <input
               type="number"
               value={limitVal}
@@ -203,12 +206,12 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
 
           {/* Preview */}
           <div className="pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-            <div className="text-xs text-gray-500 uppercase mb-1">Предпросмотр PDQL:</div>
+            <div className="text-xs siem-fg-soft uppercase mb-1">Предпросмотр PDQL:</div>
             <div
               className="font-mono text-[11px] px-3 py-2 rounded break-all"
               style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px solid var(--border)" }}
             >
-              {preview || "sort(time desc) | limit(100)"}
+              {preview || "filter() | sort(time desc)"}
             </div>
           </div>
         </div>
@@ -216,7 +219,7 @@ export default function QueryBuilder({ onApply, onClose }: QueryBuilderProps) {
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t" style={{ borderColor: "var(--border)" }}>
           <button onClick={onClose} className="siem-btn-ghost text-xs px-4 py-2">Отмена</button>
           <button
-            onClick={() => { onApply(preview || "sort(time desc) | limit(100)"); onClose(); }}
+            onClick={() => { onApply(preview || "filter() | sort(time desc)"); onClose(); }}
             className="siem-btn text-xs px-4 py-2"
           >
             Применить

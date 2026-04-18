@@ -53,7 +53,7 @@ const OPERATORS_BY_TYPE: Record<string, string[]> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  string: "#60a5fa", number: "#34d399", ip: "#a78bfa",
+  string: "#60a5fa", number: "#34d399", ip: "var(--accent)",
   enum: "#facc15", date: "#fb923c",
 };
 
@@ -281,7 +281,7 @@ export default function PDQLInput({ value, onChange, onSubmit }: PDQLInputProps)
                           <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}>fn</span>
                         )}
                         {s.hint && (
-                          <span className="text-[9px] text-gray-600 truncate max-w-[120px] flex-shrink-0">{s.hint}</span>
+                          <span className="text-[9px] siem-fg-soft truncate max-w-[120px] flex-shrink-0">{s.hint}</span>
                         )}
                       </button>
                     );

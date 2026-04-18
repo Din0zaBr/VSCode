@@ -73,7 +73,7 @@ export default function Alerts() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-100">Правила алертов</h2>
+        <h2 className="siem-page-title">Правила алертов</h2>
         {isAdmin() && (
           <button
             onClick={() => {
@@ -88,15 +88,15 @@ export default function Alerts() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-300">Создание правила алерта</h3>
+        <form onSubmit={handleCreate} className="siem-card rounded-xl p-5 space-y-4">
+          <h3 className="text-sm font-semibold siem-fg">Создание правила алерта</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Имя">
               <input
                 value={form.name ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="input-field"
+                className="siem-input w-full text-sm"
                 placeholder="Например, высокая скорость ошибок"
               />
             </Field>
@@ -104,7 +104,7 @@ export default function Alerts() {
               <select
                 value={form.level}
                 onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))}
-                className="input-field"
+                className="siem-input w-full text-sm"
               >
                 {["ERROR", "CRITICAL", "WARN", "INFO", "DEBUG"].map((l) => (
                   <option key={l} value={l}>{l}</option>
@@ -118,7 +118,7 @@ export default function Alerts() {
               <select
                 value={form.condition_type}
                 onChange={(e) => setForm((f) => ({ ...f, condition_type: e.target.value as "threshold" | "regex" }))}
-                className="input-field"
+                className="siem-input w-full text-sm"
               >
                 <option value="threshold">Пороговое значение</option>
                 <option value="regex">Регулярное выражение</option>
@@ -132,7 +132,7 @@ export default function Alerts() {
                     min={1}
                     value={form.threshold}
                     onChange={(e) => setForm((f) => ({ ...f, threshold: +e.target.value }))}
-                    className="input-field"
+                    className="siem-input w-full text-sm"
                   />
                 </Field>
                 <Field label="Временной интервал (минуты)">
@@ -141,7 +141,7 @@ export default function Alerts() {
                     min={1}
                     value={form.window_minutes}
                     onChange={(e) => setForm((f) => ({ ...f, window_minutes: +e.target.value }))}
-                    className="input-field"
+                    className="siem-input w-full text-sm"
                   />
                 </Field>
               </>
@@ -150,7 +150,7 @@ export default function Alerts() {
                 <input
                   value={form.regex_pattern ?? ""}
                   onChange={(e) => setForm((f) => ({ ...f, regex_pattern: e.target.value }))}
-                  className="input-field"
+                  className="siem-input w-full text-sm"
                   placeholder="Например, OutOfMemory|Segfault|OutOfMemoryError"
                 />
               </Field>
@@ -159,24 +159,24 @@ export default function Alerts() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">Каналы для уведомлений</span>
-              <button type="button" onClick={addChannel} className="text-xs text-vault-400 hover:text-vault-300">
+              <span className="text-sm siem-fg-soft">Каналы для уведомлений</span>
+              <button type="button" onClick={addChannel} className="text-xs text-vault-600 hover:text-vault-500 dark:text-vault-400 dark:hover:text-vault-300">
                 + Добавить канал для уведомлений
               </button>
             </div>
             {(form.channels ?? []).map((ch, idx) => (
-              <div key={idx} className="bg-gray-800/50 rounded-lg p-3 space-y-2">
+              <div key={idx} className="rounded-lg border p-3 space-y-2 siem-inset-fill">
                 <div className="flex items-center justify-between">
                   <select
                     value={ch.type}
                     onChange={(e) => updateChannel(idx, { type: e.target.value as "webhook" | "telegram" })}
-                    className="input-field w-40"
+                    className="siem-input w-40 text-sm"
                   >
                     <option value="webhook">Вебхук</option>
                     <option value="telegram">Телеграм</option>
                   </select>
                   {(form.channels ?? []).length > 1 && (
-                    <button type="button" onClick={() => removeChannel(idx)} className="text-xs text-red-400 hover:text-red-300">
+                    <button type="button" onClick={() => removeChannel(idx)} className="text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300">
                       Удалить канал для уведомлений
                     </button>
                   )}
@@ -186,7 +186,7 @@ export default function Alerts() {
                     placeholder="https://hooks.example.com/..."
                     value={ch.webhook_url ?? ""}
                     onChange={(e) => updateChannel(idx, { webhook_url: e.target.value })}
-                    className="input-field w-full"
+                    className="siem-input w-full text-sm"
                   />
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -194,13 +194,13 @@ export default function Alerts() {
                       placeholder="Bot Token"
                       value={ch.telegram_token ?? ""}
                       onChange={(e) => updateChannel(idx, { telegram_token: e.target.value })}
-                      className="input-field"
+                      className="siem-input w-full text-sm"
                     />
                     <input
                       placeholder="Chat ID"
                       value={ch.telegram_chat_id ?? ""}
                       onChange={(e) => updateChannel(idx, { telegram_chat_id: e.target.value })}
-                      className="input-field"
+                      className="siem-input w-full text-sm"
                     />
                   </div>
                 )}
@@ -209,12 +209,13 @@ export default function Alerts() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm siem-fg-muted cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.enabled}
                 onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
-                className="rounded bg-gray-800 border-gray-600 text-vault-500 focus:ring-vault-500"
+                className="h-4 w-4 rounded border cursor-pointer"
+                style={{ borderColor: "var(--border)", accentColor: "var(--accent-secondary)" }}
               />
               Включено
             </label>
@@ -231,9 +232,9 @@ export default function Alerts() {
       )}
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-12">Загрузка правил...</div>
+        <div className="text-center siem-fg-soft py-12">Загрузка правил...</div>
       ) : rules.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
+        <div className="text-center siem-fg-soft py-12">
           Нет настроенных правил алертов. Создайте одно, чтобы начать.
         </div>
       ) : (
@@ -241,17 +242,17 @@ export default function Alerts() {
           {rules.map((rule: AlertRule) => (
             <div
               key={rule.id}
-              className="bg-gray-900 rounded-xl border border-gray-800 p-4 flex items-center justify-between"
+              className="siem-card rounded-xl p-4 flex items-center justify-between"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${rule.enabled ? "bg-green-400" : "bg-gray-600"}`} />
-                  <span className="text-sm font-medium text-gray-200">{rule.name || rule.id}</span>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+                  <span className={`w-2 h-2 rounded-full ${rule.enabled ? "bg-green-400" : "bg-gray-500"}`} />
+                  <span className="text-sm font-medium siem-fg">{rule.name || rule.id}</span>
+                  <span className="text-xs siem-fg-soft px-2 py-0.5 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
                     {rule.condition_type}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs siem-fg-soft">
                   {rule.condition_type === "threshold"
                     ? `${rule.level} > ${rule.threshold} in ${rule.window_minutes}min`
                     : `Regex: ${rule.regex_pattern}`}
@@ -263,7 +264,7 @@ export default function Alerts() {
                 <button
                   onClick={() => deleteMut.mutate(rule.id)}
                   disabled={deleteMut.isPending}
-                  className="text-sm text-red-400 hover:text-red-300 transition-colors px-3 py-1"
+                  className="text-sm text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 transition-colors px-3 py-1"
                 >
                   Удалить
                 </button>
@@ -272,26 +273,6 @@ export default function Alerts() {
           ))}
         </div>
       )}
-
-      <style>{`
-        .input-field {
-          background: #111827;
-          border: 1px solid #374151;
-          border-radius: 0.5rem;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: #e5e7eb;
-          outline: none;
-          width: 100%;
-          transition: border-color 0.15s;
-        }
-        .input-field:focus {
-          border-color: #4c6ef5;
-        }
-        .input-field::placeholder {
-          color: #6b7280;
-        }
-      `}</style>
     </div>
   );
 }
@@ -303,7 +284,7 @@ function Field({ label, children, className = "" }: {
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-xs text-gray-400 mb-1 block">{label}</span>
+      <span className="text-xs siem-fg-soft mb-1 block">{label}</span>
       {children}
     </label>
   );

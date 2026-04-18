@@ -24,20 +24,7 @@ const QUICK_RANGES = [
   { label: "7 д",   value: "7d",  ms: 7 * 24 * 60 * 60_000 },
 ];
 
-/** Поля для PDQL group() в канале событий (несколько через Ctrl+клик). */
-const GROUP_BY_FIELDS: { value: string; label: string }[] = [
-  { value: "level", label: "level" },
-  { value: "host", label: "host" },
-  { value: "agent_id", label: "agent_id" },
-  { value: "source", label: "source" },
-  { value: "service", label: "service" },
-  { value: "event_src.host", label: "event_src.host" },
-  { value: "src.ip", label: "src.ip" },
-  { value: "event_type", label: "event_type" },
-  { value: "category.generic", label: "category.generic" },
-  { value: "category.high", label: "category.high" },
-  { value: "category.low", label: "category.low" },
-];
+const FULL_FIELDSET_ID = "full_fld";
 
 // All possible detail fields in display order
 const DETAIL_FIELDS: { key: string; label: string }[] = [
@@ -265,23 +252,23 @@ function PDQLModal({ value, onSave, onClose }: { value: string; onSave: (v: stri
   const [text, setText] = useState(value);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[700px] max-h-[80vh] flex flex-col rounded-2xl border" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+      <div className="w-[700px] max-h-[80vh] flex flex-col rounded-2xl border" style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)" }}>
         <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>⚡ PDQL Редактор</span>
-            <span className="text-xs text-gray-500">Полный запрос к каналу событий</span>
+            <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>⚡ PDQL Редактор</span>
+            <span className="text-xs siem-fg-soft">Полный запрос к каналу событий</span>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-200 text-lg">✕</button>
+          <button onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text)] text-lg">✕</button>
         </div>
-        <div className="px-4 py-2 text-xs text-gray-500 border-b" style={{ borderColor: "var(--border)" }}>
-          Команды через запятую или <code className="text-gray-400">|</code>:{" "}
-          <span style={{ color: "#8b20d1" }}>filter</span>/<span style={{ color: "#8b20d1" }}>where</span>(предикаты),{" "}
-          <span style={{ color: "#a78bfa" }}>select</span>(поля), <span style={{ color: "#8b5cf6" }}>sort</span>, <span style={{ color: "#3d6565" }}>limit</span>.
-          Операторы: <code className="text-gray-400">= != contains</code> и др.
+        <div className="px-4 py-2 text-xs siem-fg-soft border-b" style={{ borderColor: "var(--border)" }}>
+          Команды через запятую или <code className="siem-fg-muted">|</code>:{" "}
+          <span style={{ color: "var(--code-accent-2)" }}>filter</span>/<span style={{ color: "var(--code-accent-2)" }}>where</span>(предикаты),{" "}
+          <span style={{ color: "var(--accent)" }}>select</span>(поля), <span style={{ color: "var(--accent-secondary)" }}>sort</span>, <span style={{ color: "#3d6565" }}>limit</span>.
+          Операторы: <code className="siem-fg-muted">= != contains</code> и др.
         </div>
         <textarea
           className="flex-1 m-4 rounded-lg p-3 text-sm font-mono resize-none focus:outline-none"
-          style={{ background: "#111827", color: "#a78bfa", border: "1px solid #4b5563", minHeight: "300px" }}
+          style={{ background: "var(--surface-inset)", color: "var(--accent)", border: "1px solid var(--border-strong)", minHeight: "300px" }}
           value={text}
           onChange={(e) => setText(e.target.value)}
           spellCheck={false}
@@ -325,6 +312,7 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
 
   const save = () => {
     if (!editing) return;
+    if (editing.id === FULL_FIELDSET_ID) return;
     const updated = { ...editing, name: newName, fields: checkedFields };
     const idx = fieldsets.findIndex((f) => f.id === updated.id);
     let next: Fieldset[];
@@ -339,7 +327,7 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
   };
 
   const del = (id: string) => {
-    if (id === "default") return;
+    if (id === "default" || id === FULL_FIELDSET_ID) return;
     const next = fieldsets.filter((f) => f.id !== id);
     setFieldsets(next);
     saveFieldsets(next);
@@ -350,15 +338,25 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
+  const moveField = (idx: number, dir: -1 | 1) => {
+    setCheckedFields((prev) => {
+      const to = idx + dir;
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(idx, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[800px] max-h-[85vh] flex rounded-2xl border overflow-hidden" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+      <div className="w-[800px] max-h-[85vh] flex rounded-2xl border overflow-hidden" style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)" }}>
         {/* Left: fieldset list */}
         <div className="w-56 border-r flex flex-col" style={{ borderColor: "var(--border)" }}>
           <div className="flex items-center justify-between px-3 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-            <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>Филдсеты</span>
-            <button onClick={startCreate} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>+ Новый</button>
+            <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>Филдсеты</span>
+            <button onClick={startCreate} className="text-xs px-2 py-1 rounded" style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)", color: "var(--accent)" }}>+ Новый</button>
           </div>
           <div className="flex-1 overflow-y-auto">
             {fieldsets.map((fs) => (
@@ -367,15 +365,17 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
                 className="flex items-center justify-between px-3 py-2 cursor-pointer border-b"
                 style={{
                   borderColor: "var(--border)",
-                  background: fs.id === currentFieldsetId ? "rgba(167,139,250,0.15)" : "transparent",
+                  background: fs.id === currentFieldsetId ? "color-mix(in srgb, var(--accent) 16%, transparent)" : "transparent",
                 }}
               >
-                <button onClick={() => onSelect(fs)} className="flex-1 text-left text-xs truncate" style={{ color: fs.id === currentFieldsetId ? "#a78bfa" : "#94a3b8" }}>
+                <button onClick={() => onSelect(fs)} className="flex-1 text-left text-xs truncate" style={{ color: fs.id === currentFieldsetId ? "var(--accent)" : "var(--text-soft)" }}>
                   {fs.name}
                 </button>
                 <div className="flex gap-1">
-                  <button onClick={() => startEdit(fs)} className="text-[10px] text-gray-500 hover:text-gray-200 px-1">✎</button>
-                  {!fs.isDefault && <button onClick={() => del(fs.id)} className="text-[10px] text-red-500/60 hover:text-red-400 px-1">✕</button>}
+                  {fs.id !== FULL_FIELDSET_ID && (
+                    <button onClick={() => startEdit(fs)} className="text-[10px] siem-fg-soft hover:text-[color:var(--text)] px-1">✎</button>
+                  )}
+                  {!fs.isDefault && fs.id !== FULL_FIELDSET_ID && <button onClick={() => del(fs.id)} className="text-[10px] text-red-500/60 hover:text-red-400 px-1">✕</button>}
                 </div>
               </div>
             ))}
@@ -390,14 +390,14 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
           {editing ? (
             <>
               <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-                <span className="text-xs text-gray-400">Название:</span>
+                <span className="text-xs siem-fg-muted">Название:</span>
                 <input
                   className="siem-input text-xs py-1 flex-1"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                 />
               </div>
-              <div className="text-xs text-gray-500 px-4 pt-2">Выберите отображаемые поля:</div>
+              <div className="text-xs siem-fg-soft px-4 pt-2">Выберите отображаемые поля:</div>
               <div className="flex-1 overflow-y-auto px-4 py-2 grid grid-cols-3 gap-1 content-start">
                 {uniqueFields.map((key) => (
                   <label key={key} className="flex items-center gap-1.5 cursor-pointer py-0.5">
@@ -407,9 +407,22 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
                       onChange={() => toggleField(key)}
                       className="accent-violet-500 w-3 h-3"
                     />
-                    <span className="text-[11px] font-mono truncate" style={{ color: checkedFields.includes(key) ? "#a78bfa" : "#64748b" }}>{key}</span>
+                    <span className="text-[11px] font-mono truncate" style={{ color: checkedFields.includes(key) ? "var(--accent)" : "var(--text-soft)" }}>{key}</span>
                   </label>
                 ))}
+              </div>
+              <div className="px-4 pb-2">
+                <div className="text-xs siem-fg-soft mb-1">Порядок отображения (в таблице):</div>
+                <div className="max-h-36 overflow-y-auto rounded border p-1" style={{ borderColor: "var(--border)" }}>
+                  {checkedFields.map((key, idx) => (
+                    <div key={key} className="flex items-center gap-2 px-1 py-0.5">
+                      <span className="text-[10px] w-5 siem-fg-soft">{idx + 1}</span>
+                      <span className="text-[11px] font-mono flex-1 truncate" style={{ color: "var(--accent)" }}>{key}</span>
+                      <button type="button" onClick={() => moveField(idx, -1)} className="text-[10px] px-1 rounded siem-btn-ghost">↑</button>
+                      <button type="button" onClick={() => moveField(idx, 1)} className="text-[10px] px-1 rounded siem-btn-ghost">↓</button>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="flex justify-end gap-2 px-4 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
                 <button onClick={() => setEditing(null)} className="siem-btn-ghost text-xs px-3 py-1.5">Отмена</button>
@@ -417,7 +430,7 @@ function FieldsetManagerModal({ onClose, onSelect, currentFieldsetId }: {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-600 text-sm">
+            <div className="flex-1 flex items-center justify-center siem-fg-soft text-sm">
               Выберите филдсет для редактирования
             </div>
           )}
@@ -436,16 +449,16 @@ function QueryHistoryModal({ onClose, onRestore }: {
   const [history, setHistory] = useState<QueryHistoryItem[]>(getQueryHistory());
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-end bg-black/40">
-      <div className="w-[420px] h-full flex flex-col border-l" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+      <div className="w-[420px] h-full flex flex-col border-l" style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)" }}>
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-          <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>История запросов</span>
+          <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>История запросов</span>
           <div className="flex gap-2">
-            <button onClick={() => { clearQueryHistory(); setHistory([]); }} className="text-xs text-gray-500 hover:text-red-400">Очистить</button>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
+            <button onClick={() => { clearQueryHistory(); setHistory([]); }} className="text-xs siem-fg-soft hover:text-red-400">Очистить</button>
+            <button onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text)]">✕</button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {history.length === 0 && <div className="text-center text-gray-600 py-12 text-sm">История пуста</div>}
+          {history.length === 0 && <div className="text-center siem-fg-soft py-12 text-sm">История пуста</div>}
           {history.map((item) => (
             <div
               key={item.id}
@@ -453,10 +466,10 @@ function QueryHistoryModal({ onClose, onRestore }: {
               style={{ borderColor: "var(--border)" }}
               onClick={() => { onRestore(item); onClose(); }}
             >
-              <div className="text-[11px] text-gray-500 mb-1">{fmtTime(item.timestamp)}</div>
-              <div className="text-xs font-mono truncate" style={{ color: "#a78bfa" }}>{item.pdql}</div>
-              {item.label && <div className="text-[11px] text-gray-400 mt-0.5">{item.label}</div>}
-              <div className="text-[10px] text-gray-600 mt-0.5">
+              <div className="text-[11px] siem-fg-soft mb-1">{fmtTime(item.timestamp)}</div>
+              <div className="text-xs font-mono truncate" style={{ color: "var(--accent)" }}>{item.pdql}</div>
+              {item.label && <div className="text-[11px] siem-fg-muted mt-0.5">{item.label}</div>}
+              <div className="text-[10px] siem-fg-soft mt-0.5">
                 {item.timeRange.type === "relative" ? `Последние: ${item.timeRange.relative}` : `${item.timeRange.from} → ${item.timeRange.to}`}
               </div>
             </div>
@@ -479,7 +492,7 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
   const crit = deriveCriticality(event);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden border-r" style={{ borderColor: "var(--border)", background: "#1f2937", width: "360px", flexShrink: 0 }}>
+    <div className="flex flex-col h-full overflow-hidden border-r" style={{ borderColor: "var(--border)", background: "var(--surface-panel)", width: "360px", flexShrink: 0 }}>
       {/* Header */}
       <div className="flex items-start justify-between px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
         <div className="flex-1 pr-2">
@@ -490,12 +503,12 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
               {event.level || "—"}
             </span>
           </div>
-          <div className="text-xs font-medium leading-snug" style={{ color: "#e2e8f0" }}>
+          <div className="text-xs font-medium leading-snug" style={{ color: "var(--text-muted)" }}>
             {event.message || "(нет сообщения)"}
           </div>
           <div className="text-[10px] mt-1" style={{ color: "var(--text-soft)" }}>{fmtTime(event.timestamp)}</div>
         </div>
-        <button onClick={onClose} className="text-gray-600 hover:text-gray-300 text-sm flex-shrink-0 mt-0.5">✕</button>
+        <button onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text-muted)] text-sm flex-shrink-0 mt-0.5">✕</button>
       </div>
 
       {/* Scrollable fields */}
@@ -527,13 +540,13 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
           <button
             onClick={() => setShowRaw((s) => !s)}
             className="text-[11px] flex items-center gap-1 mb-1"
-            style={{ color: "#8b5cf6" }}
+            style={{ color: "var(--accent-secondary)" }}
           >
             <span>{showRaw ? "▾" : "▸"}</span> Исходное событие (raw)
           </button>
           {showRaw && (
             <pre className="text-[10px] font-mono p-2 rounded leading-relaxed overflow-auto max-h-64"
-              style={{ background: "#111827", color: "var(--text-muted)", border: "1px solid #374151" }}>
+              style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--border-strong)" }}>
               {JSON.stringify({ ...event }, null, 2)}
             </pre>
           )}
@@ -545,7 +558,7 @@ function EventDetailPanel({ event, onClose, onAddFilter, onLinkIncident }: {
         <button
           onClick={() => onLinkIncident(event)}
           className="flex-1 text-xs py-1.5 rounded-lg transition-colors"
-          style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
+          style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)", color: "var(--accent)", border: "1px solid var(--border-strong)" }}
         >
           + В инцидент
         </button>
@@ -560,8 +573,8 @@ function FieldRow({ fieldKey, label, value, onAddFilter }: {
 }) {
   return (
     <div className="field-row group" onClick={() => onAddFilter(fieldKey, value)}>
-      <span className="text-[10px] font-mono w-32 flex-shrink-0 truncate" style={{ color: "#8b5cf6" }} title={label}>{label}</span>
-      <span className="text-[11px] flex-1 break-all leading-tight" style={{ color: "#cbd5e1" }}>{value}</span>
+      <span className="text-[10px] font-mono w-32 flex-shrink-0 truncate" style={{ color: "var(--accent-secondary)" }} title={label}>{label}</span>
+      <span className="text-[11px] flex-1 break-all leading-tight" style={{ color: "var(--text-muted)" }}>{value}</span>
       <span className="field-add-btn">+ фильтр</span>
     </div>
   );
@@ -580,13 +593,13 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[480px] rounded-2xl border" style={{ background: "#1f2937", borderColor: "#4b5563" }}>
+      <div className="w-[480px] rounded-2xl border" style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)" }}>
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-          <span className="text-sm font-bold" style={{ color: "#a78bfa" }}>Привязка к инциденту</span>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-200">✕</button>
+          <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>Привязка к инциденту</span>
+          <button onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text)]">✕</button>
         </div>
         <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-          <div className="text-xs text-gray-500 mb-2">Событие: <span className="text-gray-300">{event.message}</span></div>
+          <div className="text-xs siem-fg-soft mb-2">Событие: <span className="siem-fg-muted">{event.message}</span></div>
           {(data?.alerts ?? []).map((a) => (
             <div
               key={a.id}
@@ -594,12 +607,12 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
               style={{ borderColor: "var(--border)" }}
             >
               <div>
-                <div className="text-xs font-medium text-gray-200">#{a.id} — {a.rule_name}</div>
-                <div className="text-[10px] text-gray-500">{a.severity} · {a.status}</div>
+                <div className="text-xs font-medium siem-fg">#{a.id} — {a.rule_name}</div>
+                <div className="text-[10px] siem-fg-soft">{a.severity} · {a.status}</div>
               </div>
               <button
                 className="text-xs px-2 py-1 rounded"
-                style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}
+                style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)", color: "var(--accent)" }}
                 onClick={() => { navigate(`/incidents?id=${a.id}`); onClose(); }}
               >
                 Привязать
@@ -608,7 +621,7 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
           ))}
         </div>
         <div className="px-4 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-          <div className="text-xs text-gray-400 mb-2">Или создать новый инцидент:</div>
+          <div className="text-xs siem-fg-muted mb-2">Или создать новый инцидент:</div>
           <div className="flex gap-2">
             <input
               className="siem-input flex-1 text-xs"
@@ -628,14 +641,19 @@ function LinkIncidentModal({ event, onClose }: { event: LogEvent; onClose: () =>
 
 // ── Main Events Page ─────────────────────────────────────────────────────────
 
-/** Split on commas or pipes only at nesting depth 0 (respecting parentheses). */
+/** Split on commas or pipes only at nesting depth 0, respecting quotes and lists. */
 function splitTopLevelDelim(input: string, sep: "," | "|"): string[] {
   const parts: string[] = [];
   let depth = 0;
   let cur = "";
+  let quote: '"' | "'" | null = null;
   for (const ch of input) {
-    if (ch === "(") depth++;
-    else if (ch === ")") depth--;
+    if (quote) {
+      if (ch === quote) quote = null;
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === "(" || ch === "[") depth++;
+    else if (ch === ")" || ch === "]") depth--;
     else if (ch === sep && depth === 0) {
       parts.push(cur.trim());
       cur = "";
@@ -655,10 +673,16 @@ function normalizeWhereToFilter(chunk: string): string {
   return chunk.trim().replace(/^where\s*\(/i, "filter(");
 }
 
+function normalizeFieldForPdql(field: string): string {
+  if (field === "text") return "message";
+  if (field === "criticality") return "level";
+  return field;
+}
+
 /** Ensure select() lists include event_id so rows are addressable in the channel UI. */
 function ensureEventIdInSelect(pipeline: string): string {
-  return pipeline
-    .split("|")
+  const segments = pipeline.length ? splitTopLevelDelim(pipeline, "|") : [];
+  return segments
     .map((seg) => {
       const s = seg.trim();
       if (!/^select\s*\(/i.test(s)) return s;
@@ -702,8 +726,10 @@ function buildPipelinePdql(raw: string): string {
     .map((s) => normalizeWhereToFilter(s))
     .map((s) => s.trim())
     .filter(Boolean)
+    .filter((s) => !/^filter\s*\(\s*\)\s*$/i.test(s))
     .map((s) => (isPdqlCommand(s) ? s : `filter(${s})`));
 
+  if (!normalized.length) return "sort(time desc)";
   return ensureEventIdInSelect(normalized.join(" | "));
 }
 
@@ -721,7 +747,7 @@ function pdqlStringLiteral(value: string): string {
 function buildFilterToken(fieldKey: string, value: string): string {
   const f = pdqlFieldNameForUiKey(fieldKey);
   const raw = value.replace(/\r?\n/g, " ").trim();
-  if (f === "event_id" && /^\d+$/.test(raw)) {
+  if (["id", "event_id_raw", "record_number"].includes(f) && /^\d+$/.test(raw)) {
     return `${f} = ${raw}`;
   }
   return `${f} = ${pdqlStringLiteral(raw)}`;
@@ -770,8 +796,8 @@ export default function Events() {
   const [toDt, setToDt]               = useState("");
   const [useCustom, setUseCustom]     = useState(false);
 
-  // PDQL (channel bar — commas or | between commands; where() = filter())
-  const [pdqlFilter, setPdqlFilter]   = useState("sort(time desc)");
+  // PDQL canonical style: filter(...) | sort(...)
+  const [pdqlFilter, setPdqlFilter]   = useState("filter() | sort(time desc)");
   const [groupByFields, setGroupByFields] = useState<string[]>([]);
   const [aggFuncs, setAggFuncs] = useState<string[]>(["count()"]);
   const [showPdqlModal, setShowPdqlModal] = useState(false);
@@ -780,7 +806,7 @@ export default function Events() {
 
   // Fieldsets
   const [fieldsets, setFieldsets]     = useState<Fieldset[]>(getFieldsets());
-  const [currentFsId, setCurrentFsId] = useState("default");
+  const [currentFsId, setCurrentFsId] = useState(FULL_FIELDSET_ID);
   const [showFsManager, setShowFsManager] = useState(false);
 
   const PAGE_SIZE = 100;
@@ -807,7 +833,7 @@ export default function Events() {
   const [sortDir,   setSortDir]   = useState<"asc" | "desc">("desc");
 
   // Hide columns that have no data in the current result set (without modifying fieldset)
-  const [hideEmpty, setHideEmpty] = useState(false);
+  const [hideEmpty, setHideEmpty] = useState(true);
 
   // True while new page events are buffering (1 s min display to avoid jank)
   const [appendPending, setAppendPending] = useState(false);
@@ -817,7 +843,7 @@ export default function Events() {
     const rangeMs = QUICK_RANGES.find((r) => r.value === "1h")?.ms ?? 3600_000;
     return {
       pdql: "sort(time desc)",
-      rawFilter: "sort(time desc)",
+      rawFilter: "filter() | sort(time desc)",
       from: nowMinus(rangeMs),
       to: new Date().toISOString(),
       size: PAGE_SIZE,
@@ -825,6 +851,26 @@ export default function Events() {
   });
 
   const currentFieldset = fieldsets.find((f) => f.id === currentFsId) ?? fieldsets[0];
+
+  useEffect(() => {
+    const allFieldKeys = ["criticality", "time", "event_src.host", "text", ...DETAIL_FIELDS.map((f) => f.key)];
+    const fullFields = [...new Set(allFieldKeys)];
+    const fullFieldset: Fieldset = { id: FULL_FIELDSET_ID, name: "FULL_FLD", fields: fullFields, isDefault: true };
+    const existing = getFieldsets();
+    const withoutFull = existing.filter((f) => f.id !== FULL_FIELDSET_ID);
+    const next = [fullFieldset, ...withoutFull];
+    saveFieldsets(next);
+    setFieldsets(next);
+    setCurrentFsId(FULL_FIELDSET_ID);
+    setHideEmpty(true);
+  }, []);
+  const pdqlAvailableFields = useMemo(() => {
+    const normalized = new Set<string>(["event_id", "id", "event_id_raw", "record_number", "time", "message"]);
+    for (const fs of fieldsets) {
+      for (const f of fs.fields) normalized.add(normalizeFieldForPdql(f));
+    }
+    return Array.from(normalized).filter(Boolean);
+  }, [fieldsets]);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
     queryKey: ["events-channel", appliedChannel, internalPage],
@@ -923,6 +969,8 @@ export default function Events() {
     const q = searchParams.get("q");
     if (q) {
       setPdqlFilter(q);
+      setCurrentFsId(FULL_FIELDSET_ID);
+      setHideEmpty(true);
       const pdql = buildChannelPdql(q, []);
       setAppliedChannel({ pdql, rawFilter: q, from: nowMinus(86_400_000), to: new Date().toISOString(), size: PAGE_SIZE });
     }
@@ -951,12 +999,8 @@ export default function Events() {
       setPdqlFilter(merged);
       return;
     }
-    const hasSelect = pdqlFilter.match(/select\s*\(/i);
-    if (hasSelect) {
-      setPdqlFilter(`${pdqlFilter.trimEnd()}, where(${token})`);
-    } else {
-      setPdqlFilter(`select(time), where(${token}), sort(time desc)`);
-    }
+    const base = buildPipelinePdql(pdqlFilter);
+    setPdqlFilter(`filter(${token}) | ${base}`);
   };
 
   const handleRestoreHistory = (item: QueryHistoryItem) => {
@@ -1038,7 +1082,7 @@ export default function Events() {
 
           {/* Row 1: Time + Quick ranges */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-500 flex-shrink-0">Период:</span>
+            <span className="text-xs siem-fg-soft flex-shrink-0">Период:</span>
             <div className="flex gap-0.5 bg-siem-surface2 rounded-lg p-0.5 border" style={{ borderColor: "var(--border)" }}>
               {QUICK_RANGES.map((r) => (
                 <button
@@ -1046,8 +1090,8 @@ export default function Events() {
                   onClick={() => { setQuickRange(r.value); setUseCustom(false); }}
                   className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
                   style={{
-                    background: !useCustom && quickRange === r.value ? "#8b5cf6" : "transparent",
-                    color: !useCustom && quickRange === r.value ? "#fff" : "#64748b",
+                    background: !useCustom && quickRange === r.value ? "var(--accent-secondary)" : "transparent",
+                    color: !useCustom && quickRange === r.value ? "#fff" : "var(--text-soft)",
                   }}
                 >
                   {r.label}
@@ -1057,8 +1101,8 @@ export default function Events() {
                 onClick={() => setUseCustom(true)}
                 className="px-2.5 py-1 rounded text-xs font-medium transition-colors"
                 style={{
-                  background: useCustom ? "#8b5cf6" : "transparent",
-                  color: useCustom ? "#fff" : "#64748b",
+                  background: useCustom ? "var(--accent-secondary)" : "transparent",
+                  color: useCustom ? "#fff" : "var(--text-soft)",
                 }}
               >
                 Свой
@@ -1068,7 +1112,7 @@ export default function Events() {
             {useCustom && (
               <>
                 <input type="datetime-local" className="siem-input text-xs py-1" value={fromDt} onChange={(e) => setFromDt(e.target.value)} />
-                <span className="text-gray-600 text-xs">→</span>
+                <span className="siem-fg-soft text-xs">→</span>
                 <input type="datetime-local" className="siem-input text-xs py-1" value={toDt} onChange={(e) => setToDt(e.target.value)} />
               </>
             )}
@@ -1102,7 +1146,7 @@ export default function Events() {
             <button
               onClick={() => setShowHistory(true)}
               className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
-              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
+              style={{ background: "color-mix(in srgb, var(--accent-secondary) 26%, var(--surface-inset))", color: "var(--code-accent-2)", border: "1px solid var(--border-strong)" }}
               title="История запросов"
             >
               ↺ История
@@ -1111,7 +1155,7 @@ export default function Events() {
             <button
               onClick={() => setShowSavedQueries(true)}
               className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
-              style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
+              style={{ background: "color-mix(in srgb, var(--accent-secondary) 26%, var(--surface-inset))", color: "var(--code-accent-2)", border: "1px solid var(--border-strong)" }}
               title="Сохранённые запросы и шаблоны"
             >
               ☆ Запросы
@@ -1120,15 +1164,15 @@ export default function Events() {
 
           {/* Group by */}
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-gray-500 flex-shrink-0">Группировка:</span>
-            <GroupingConfig fields={groupByFields} onChange={setGroupByFields} />
+            <span className="text-xs siem-fg-soft flex-shrink-0">Группировка:</span>
+            <GroupingConfig fields={groupByFields} onChange={setGroupByFields} availableFields={pdqlAvailableFields} />
             {groupByFields.length > 0 && (
               <AggregateSelector selected={aggFuncs} onChange={setAggFuncs} />
             )}
             {groupByFields.length > 0 && (
               <button
                 type="button"
-                className="text-[10px] text-gray-500 hover:text-gray-300 underline"
+                className="text-[10px] siem-fg-soft hover:text-[color:var(--text-muted)] underline"
                 onClick={() => { setGroupByFields([]); setAggFuncs(["count()"]); }}
               >
                 сбросить
@@ -1142,7 +1186,7 @@ export default function Events() {
             <button
               onClick={() => setShowPdqlModal(true)}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
-              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
+              style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)", color: "var(--accent)", border: "1px solid var(--border-strong)" }}
               title="Открыть полный PDQL редактор"
             >
               ⚡
@@ -1152,7 +1196,7 @@ export default function Events() {
             <button
               onClick={() => setShowQueryBuilder(true)}
               className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm"
-              style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid #4b5563" }}
+              style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)", color: "var(--accent)", border: "1px solid var(--border-strong)" }}
               title="Визуальный конструктор запросов"
             >
               🔧
@@ -1164,7 +1208,7 @@ export default function Events() {
               value={pdqlFilter}
               onChange={(e) => setPdqlFilter(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleApply()}
-              placeholder='filter(level != "INFO") | select(time, text) или sort(time desc)'
+              placeholder='filter(level != "INFO") | sort(time desc) | limit(100)'
               spellCheck={false}
             />
 
@@ -1183,7 +1227,7 @@ export default function Events() {
               <button
                 onClick={() => setShowFsManager(true)}
                 className="text-xs px-2 py-1.5 rounded-lg"
-                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
+                style={{ background: "color-mix(in srgb, var(--accent-secondary) 26%, var(--surface-inset))", color: "var(--code-accent-2)", border: "1px solid var(--border-strong)" }}
                 title="Управление филдсетами"
               >
                 ⚙
@@ -1195,9 +1239,9 @@ export default function Events() {
               onClick={() => setHideEmpty((v: boolean) => !v)}
               className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 transition-colors"
               style={{
-                background: hideEmpty ? "rgba(167,139,250,0.2)" : "rgba(45,24,96,0.3)",
-                color: hideEmpty ? "#a78bfa" : "#8b20d1",
-                border: hideEmpty ? "1px solid #a78bfa" : "1px solid #4b5563",
+                background: hideEmpty ? "color-mix(in srgb, var(--accent) 22%, transparent)" : "color-mix(in srgb, var(--accent-secondary) 26%, var(--surface-inset))",
+                color: hideEmpty ? "var(--accent)" : "var(--code-accent-2)",
+                border: hideEmpty ? "1px solid var(--accent)" : "1px solid var(--border-strong)",
               }}
               title={hideEmpty ? "Показать все столбцы" : "Скрыть пустые столбцы"}
             >
@@ -1209,14 +1253,14 @@ export default function Events() {
               <button
                 onClick={() => setShowExport((s) => !s)}
                 className="text-xs px-3 py-1.5 rounded-lg"
-                style={{ background: "rgba(45,24,96,0.3)", color: "#8b20d1", border: "1px solid #4b5563" }}
+                style={{ background: "color-mix(in srgb, var(--accent-secondary) 26%, var(--surface-inset))", color: "var(--code-accent-2)", border: "1px solid var(--border-strong)" }}
               >
                 ↓ Экспорт
               </button>
               {showExport && (
                 <div
                   className="absolute right-0 top-8 z-30 rounded-xl border py-1 shadow-xl"
-                  style={{ background: "#1f2937", borderColor: "#4b5563", minWidth: "120px" }}
+                  style={{ background: "var(--surface-panel)", borderColor: "var(--border-strong)", minWidth: "120px" }}
                 >
                   {[
                     { label: "CSV", fn: handleExportCSV },
@@ -1227,7 +1271,7 @@ export default function Events() {
                       key={label}
                       onClick={() => { fn(); setShowExport(false); }}
                       className="w-full text-left px-4 py-1.5 text-xs hover:bg-purple-900/20 transition-colors"
-                      style={{ color: "#a78bfa" }}
+                      style={{ color: "var(--accent)" }}
                     >
                       {label}
                     </button>
@@ -1255,13 +1299,13 @@ export default function Events() {
               </div>
             </div>
           ) : isLoading && loadedCount === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-600">Загрузка событий...</div>
+            <div className="flex items-center justify-center h-full siem-fg-soft">Загрузка событий...</div>
           ) : (isGrouped ? allGroupedRows.length === 0 : sortedEvents.length === 0) && !isFetching ? (
-            <div className="flex items-center justify-center h-full text-gray-600">
+            <div className="flex items-center justify-center h-full siem-fg-soft">
               <div className="text-center">
-                <div className="text-4xl mb-2" style={{ color: "#4b5563" }}>◎</div>
+                <div className="text-4xl mb-2" style={{ color: "var(--border-strong)" }}>◎</div>
                 <div>{isGrouped ? "Нет групп по текущему фильтру" : "Нет событий за выбранный период"}</div>
-                <div className="text-xs text-gray-700 mt-1">Измените фильтр или временной диапазон</div>
+                <div className="text-xs siem-fg-muted mt-1">Измените фильтр или временной диапазон</div>
               </div>
             </div>
           ) : isGrouped ? (
@@ -1269,7 +1313,7 @@ export default function Events() {
               {/* Grouped aggregation table */}
               <div className="overflow-auto" style={{ flex: drillDownRow ? "0 0 40%" : "1 1 0" }}>
                 <table className="w-full siem-table text-xs">
-                  <thead className="sticky top-0" style={{ background: "#1f2937" }}>
+                  <thead className="sticky top-0" style={{ background: "var(--surface-panel)" }}>
                     <tr>
                       {groupedCols.map((col) => (
                         <th key={col} className="text-left font-mono">{col}</th>
@@ -1282,13 +1326,13 @@ export default function Events() {
                         key={i}
                         className="cursor-pointer"
                         style={{
-                          background: drillDownRow === row ? "rgba(167,139,250,0.18)" : undefined,
-                          borderLeft: drillDownRow === row ? "2px solid #8b5cf6" : "2px solid transparent",
+                          background: drillDownRow === row ? "color-mix(in srgb, var(--accent) 18%, transparent)" : undefined,
+                          borderLeft: drillDownRow === row ? "2px solid var(--accent-secondary)" : "2px solid transparent",
                         }}
                         onClick={() => setDrillDownRow(drillDownRow === row ? null : row)}
                       >
                         {groupedCols.map((col) => (
-                          <td key={col} className="text-gray-300 font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
+                          <td key={col} className="siem-fg-muted font-mono truncate max-w-[240px]" title={String(row[col] ?? "")}>
                             {row[col] === null || row[col] === undefined ? "—" : String(row[col])}
                           </td>
                         ))}
@@ -1300,16 +1344,16 @@ export default function Events() {
 
               {/* Drill-down: event stream for the selected group row */}
               {drillDownRow && (
-                <div className="flex flex-col border-t overflow-hidden" style={{ flex: "1 1 0", borderColor: "#4b5563" }}>
+                <div className="flex flex-col border-t overflow-hidden" style={{ flex: "1 1 0", borderColor: "var(--border-strong)" }}>
                   <div
                     className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
-                    style={{ borderColor: "var(--border)", background: "#111827" }}
+                    style={{ borderColor: "var(--border)", background: "var(--surface-inset)" }}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-bold flex-shrink-0" style={{ color: "#a78bfa" }}>
+                      <span className="text-xs font-bold flex-shrink-0" style={{ color: "var(--accent)" }}>
                         ▸ События группы:
                       </span>
-                      <span className="text-xs font-mono text-gray-400 truncate">
+                      <span className="text-xs font-mono siem-fg-muted truncate">
                         {groupedCols
                           .filter((c) => c !== "count")
                           .map((f) => `${f} = "${drillDownRow[f] ?? "—"}"`)
@@ -1318,19 +1362,19 @@ export default function Events() {
                     </div>
                     <button
                       onClick={() => setDrillDownRow(null)}
-                      className="text-gray-500 hover:text-gray-200 text-sm flex-shrink-0 ml-2"
+                      className="siem-fg-soft hover:text-[color:var(--text)] text-sm flex-shrink-0 ml-2"
                     >
                       ✕
                     </button>
                   </div>
                   <div className="flex-1 overflow-auto">
                     {drillLoading ? (
-                      <div className="flex items-center justify-center h-full text-gray-600 text-sm">Загрузка событий...</div>
+                      <div className="flex items-center justify-center h-full siem-fg-soft text-sm">Загрузка событий...</div>
                     ) : drillEvents.length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-gray-600 text-sm">Нет событий для этой группы</div>
+                      <div className="flex items-center justify-center h-full siem-fg-soft text-sm">Нет событий для этой группы</div>
                     ) : (
                       <table className="w-full siem-table text-xs">
-                        <thead className="sticky top-0" style={{ background: "#111827" }}>
+                        <thead className="sticky top-0" style={{ background: "var(--surface-inset)" }}>
                           <tr>
                             {activeFields.map((f: string) => (
                               <th key={f} className="text-left select-none">
@@ -1349,8 +1393,8 @@ export default function Events() {
                                 key={event.event_id || i}
                                 className="cursor-pointer"
                                 style={{
-                                  background: isSelected ? "rgba(167,139,250,0.15)" : undefined,
-                                  borderLeft: isSelected ? "2px solid #8b5cf6" : "2px solid transparent",
+                                  background: isSelected ? "color-mix(in srgb, var(--accent) 16%, transparent)" : undefined,
+                                  borderLeft: isSelected ? "2px solid var(--accent-secondary)" : "2px solid transparent",
                                 }}
                                 onClick={() => setSelectedEvent(isSelected ? null : event)}
                               >
@@ -1362,13 +1406,13 @@ export default function Events() {
                                         {isCorr && <span className="corr-star" title="Событие корреляции">★</span>}
                                       </div>
                                     ) : f === "time" ? (
-                                      <span className="font-mono text-gray-400">{fmtTimeShort(getEventField(event, f))}</span>
+                                      <span className="font-mono siem-fg-muted">{fmtTimeShort(getEventField(event, f))}</span>
                                     ) : f === "text" ? (
-                                      <span className="text-gray-200 truncate block max-w-[500px]" title={getEventField(event, f)}>
+                                      <span className="siem-fg truncate block max-w-[500px]" title={getEventField(event, f)}>
                                         {getEventField(event, f) || "(нет сообщения)"}
                                       </span>
                                     ) : (
-                                      <span className="text-gray-400 font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
+                                      <span className="siem-fg-muted font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
                                         {getEventField(event, f) || "—"}
                                       </span>
                                     )}
@@ -1381,7 +1425,7 @@ export default function Events() {
                       </table>
                     )}
                   </div>
-                  <div className="px-3 py-1 border-t flex-shrink-0 text-xs text-gray-600" style={{ borderColor: "var(--border)" }}>
+                  <div className="px-3 py-1 border-t flex-shrink-0 text-xs siem-fg-soft" style={{ borderColor: "var(--border)" }}>
                     {drillEvents.length} событий (первые 300)
                   </div>
                 </div>
@@ -1389,7 +1433,7 @@ export default function Events() {
             </div>
           ) : (
             <table className="w-full siem-table text-xs">
-              <thead className="sticky top-0" style={{ background: "#1f2937" }}>
+              <thead className="sticky top-0" style={{ background: "var(--surface-panel)" }}>
                 <tr>
                   {activeFields.map((f: string) => (
                     <th
@@ -1400,7 +1444,7 @@ export default function Events() {
                     >
                       {f === "criticality" ? "⬤" : f === "text" ? "Сообщение" : f}
                       {sortField === f && f !== "criticality" && (
-                        <span className="ml-1" style={{ color: "#a78bfa" }}>
+                        <span className="ml-1" style={{ color: "var(--accent)" }}>
                           {sortDir === "asc" ? "↑" : "↓"}
                         </span>
                       )}
@@ -1419,8 +1463,8 @@ export default function Events() {
                       onClick={() => setSelectedEvent(isSelected ? null : event)}
                       className="cursor-pointer"
                       style={{
-                        background: isSelected ? "rgba(167,139,250,0.15)" : undefined,
-                        borderLeft: isSelected ? "2px solid #8b5cf6" : "2px solid transparent",
+                        background: isSelected ? "color-mix(in srgb, var(--accent) 16%, transparent)" : undefined,
+                        borderLeft: isSelected ? "2px solid var(--accent-secondary)" : "2px solid transparent",
                       }}
                     >
                       {activeFields.map((f: string) => (
@@ -1431,13 +1475,13 @@ export default function Events() {
                               {isCorr && <span className="corr-star" title="Событие корреляции">★</span>}
                             </div>
                           ) : f === "time" ? (
-                            <span className="font-mono text-gray-400">{fmtTimeShort(getEventField(event, f))}</span>
+                            <span className="font-mono siem-fg-muted">{fmtTimeShort(getEventField(event, f))}</span>
                           ) : f === "text" ? (
-                            <span className="text-gray-200 truncate block max-w-[500px]" title={getEventField(event, f)}>
+                            <span className="siem-fg truncate block max-w-[500px]" title={getEventField(event, f)}>
                               {getEventField(event, f) || "(нет сообщения)"}
                             </span>
                           ) : (
-                            <span className="text-gray-400 font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
+                            <span className="siem-fg-muted font-mono truncate block max-w-[200px]" title={getEventField(event, f)}>
                               {getEventField(event, f) || "—"}
                             </span>
                           )}
@@ -1455,13 +1499,13 @@ export default function Events() {
 
         {/* ── Status bar ──────────────────────────────────────────────── */}
         <div className="px-4 py-2 border-t flex-shrink-0 flex items-center gap-3" style={{ borderColor: "var(--border)" }}>
-          <span className="text-xs text-gray-600">
+          <span className="text-xs siem-fg-soft">
             {isGrouped
               ? allGroupedRows.length.toLocaleString() + " групп"
               : "Загружено " + loadedCount.toLocaleString() + " из " + total.toLocaleString() + " событий"}
           </span>
           {(isFetching || appendPending) && (
-            <span className="text-xs animate-pulse" style={{ color: "#8b20d1" }}>загрузка...</span>
+            <span className="text-xs animate-pulse" style={{ color: "var(--code-accent-2)" }}>загрузка...</span>
           )}
         </div>
       </div>
@@ -1482,6 +1526,7 @@ export default function Events() {
       )}
       {showQueryBuilder && (
         <QueryBuilder
+          availableFields={pdqlAvailableFields}
           onApply={(pdql) => {
             const rangeMs = QUICK_RANGES.find((r) => r.value === quickRange)?.ms ?? 3600_000;
             const from = useCustom ? fromDt : nowMinus(rangeMs);

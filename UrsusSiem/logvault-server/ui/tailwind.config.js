@@ -21,7 +21,8 @@ export default {
         siem: {
           bg:          "#111827",   // Lighter dark background
           surface:     "#1f2937",   // Card surface
-          surface2:    "#374151",   // Hover surface
+          /* Must track index.css :root / [data-theme="light"] — fixed hex breaks light theme */
+          surface2:    "var(--surface-2)",
           border:      "#4b5563",   // Neutral gray border
           "border-2":  "#6b7280",   // Lighter border
           purple:      "#a78bfa",   // Professional purple

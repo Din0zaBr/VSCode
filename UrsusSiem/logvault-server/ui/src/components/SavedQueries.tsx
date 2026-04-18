@@ -112,8 +112,8 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
       <div className="siem-card w-full max-w-xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--border)" }}>
-          <h3 className="text-sm font-semibold text-gray-200">Сохранённые запросы</h3>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-400">✕</button>
+          <h3 className="text-sm font-semibold siem-fg">Сохранённые запросы</h3>
+          <button type="button" onClick={onClose} className="siem-fg-soft hover:text-[color:var(--text)] text-lg leading-none px-1">✕</button>
         </div>
 
         {/* Tabs */}
@@ -124,8 +124,8 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
               onClick={() => setActiveTab(tab)}
               className="px-5 py-2 text-xs font-medium transition-colors"
               style={{
-                color: activeTab === tab ? "#a78bfa" : "#64748b",
-                borderBottom: activeTab === tab ? "2px solid #a78bfa" : "2px solid transparent",
+                color: activeTab === tab ? "var(--accent)" : "var(--text-soft)",
+                borderBottom: activeTab === tab ? "2px solid var(--accent)" : "2px solid transparent",
               }}
             >
               {tab === "presets" ? "Шаблоны" : `Мои запросы (${userQueries.length})`}
@@ -164,7 +164,7 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
                 />
                 <div
                   className="font-mono text-[10px] px-2 py-1 rounded truncate"
-                  style={{ background: "#111827", color: "#a78bfa", border: "1px solid #374151" }}
+                  style={{ background: "var(--surface-inset)", color: "var(--accent)", border: "1px solid var(--border-strong)" }}
                 >
                   {currentPdql || "— пустой запрос —"}
                 </div>
@@ -184,14 +184,14 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
         {/* List */}
         <div className="flex-1 overflow-y-auto">
           {displayList.length === 0 ? (
-            <div className="p-8 text-center text-gray-600 text-sm">
+            <div className="p-8 text-center siem-fg-soft text-sm">
               {activeTab === "saved" ? "Нет сохранённых запросов" : "Нет шаблонов"}
             </div>
           ) : (
             displayList.map((q) => (
               <div
                 key={q.id}
-                className="px-5 py-3 border-b hover:bg-white/[0.02] transition-colors"
+                className="px-5 py-3 border-b hover:bg-[color-mix(in_srgb,var(--accent)_5%,transparent)] transition-colors"
                 style={{ borderColor: "var(--border)" }}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -206,20 +206,20 @@ export default function SavedQueries({ currentPdql, onLoad, onClose }: SavedQuer
                           {q.starred ? "⭐" : "☆"}
                         </button>
                       )}
-                      <span className="text-xs font-semibold text-gray-200">{q.name}</span>
+                      <span className="text-xs font-semibold siem-fg">{q.name}</span>
                       <span
                         className="text-[9px] px-1.5 py-0.5 rounded flex-shrink-0"
-                        style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}
+                        style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent)" }}
                       >
                         {q.timeRange}
                       </span>
                     </div>
                     {q.description && (
-                      <p className="text-[10px] text-gray-600 mt-0.5">{q.description}</p>
+                      <p className="text-[10px] siem-fg-soft mt-0.5">{q.description}</p>
                     )}
                     <div
                       className="font-mono text-[10px] mt-1 truncate px-1.5 py-0.5 rounded"
-                      style={{ background: "#111827", color: "#6b7280" }}
+                      style={{ background: "var(--surface-inset)", color: "#6b7280" }}
                     >
                       {q.pdql}
                     </div>

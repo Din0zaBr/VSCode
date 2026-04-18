@@ -11,7 +11,7 @@ const LEVEL_COLORS: Record<string, string> = {
   WARN: "text-yellow-400",
   WARNING: "text-yellow-400",
   INFO: "text-blue-400",
-  DEBUG: "text-gray-500",
+  DEBUG: "siem-fg-soft",
 };
 
 export default function LiveLogs() {
@@ -68,9 +68,9 @@ export default function LiveLogs() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-100">Логи в реальном времени</h2>
+          <h2 className="siem-page-title">Логи в реальном времени</h2>
           <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
-            connected ? "bg-green-500/20 text-purple-300" : "bg-red-500/20 text-red-400"
+            connected ? "bg-green-500/15 text-green-800 dark:text-green-300" : "bg-red-500/15 text-red-700 dark:text-red-400"
           }`}>
             <span className={`w-2 h-2 rounded-full ${connected ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
             {connected ? "Подключено" : "Отключено"}
@@ -89,7 +89,7 @@ export default function LiveLogs() {
           </button>
           <button
             onClick={clear}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
+            className="siem-btn-ghost text-sm px-4 py-2"
           >
             Очистить
           </button>
@@ -139,7 +139,7 @@ export default function LiveLogs() {
       <div className="siem-card overflow-hidden">
         <div className="overflow-auto font-mono text-xs leading-relaxed" style={{ maxHeight: "70vh" }}>
           {filtered.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
+            <div className="text-center siem-fg-soft py-12">
               {logs.length === 0 ? "Ожидание логов..." : "Нет логов, соответствующих фильтрам"}
             </div>
           ) : (
@@ -161,7 +161,7 @@ export default function LiveLogs() {
         </div>
       </div>
 
-      <div className="text-xs text-gray-500">
+      <div className="text-xs siem-fg-soft">
         {filtered.length} / {logs.length} логов показаны
       </div>
     </div>
@@ -169,24 +169,33 @@ export default function LiveLogs() {
 }
 
 function LogLine({ log, expanded, onToggle }: { log: LogEvent; expanded: boolean; onToggle: () => void }) {
-  const levelCls = LEVEL_COLORS[log.level.toUpperCase()] ?? "text-gray-400";
+  const levelCls = LEVEL_COLORS[log.level.toUpperCase()] ?? "siem-fg-muted";
   const time = formatTs(log.timestamp);
   const hasMeta = log.meta && Object.keys(log.meta).length > 0;
 
   return (
     <div>
-      <div className="flex gap-2 px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-white/[0.03]" onClick={onToggle}>
-        <span className="text-gray-600 shrink-0">{time}</span>
+      <div
+        className="flex gap-2 px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_6%,transparent)]"
+        onClick={onToggle}
+      >
+        <span className="siem-fg-soft shrink-0">{time}</span>
         <span className={`w-10 shrink-0 text-right ${levelCls}`}>{log.level}</span>
         <span className="text-cyan-600 shrink-0 w-24 truncate" title={log.host}>{log.host}</span>
         <span className="text-vault-400/90 shrink-0 w-28 truncate font-mono text-[11px]" title={log.agent_id}>
           {log.agent_id || "—"}
         </span>
-        <span className="text-gray-500 shrink-0 w-20 truncate" title={log.service}>{log.service}</span>
-        <span className="text-gray-300 break-all">{log.message}</span>
+        <span className="siem-fg-soft shrink-0 w-20 truncate" title={log.service}>{log.service}</span>
+        <span className="siem-fg-muted break-all">{log.message}</span>
       </div>
       {expanded && (
-        <div className="ml-2 mb-1 px-3 py-2 rounded-lg border-l-2" style={{ background: "rgba(13,11,22,0.6)", borderLeftColor: "#8b5cf6" }}>
+        <div
+          className="ml-2 mb-1 px-3 py-2 rounded-lg border-l-2"
+          style={{
+            background: "color-mix(in srgb, var(--surface-panel) 88%, var(--accent) 6%)",
+            borderLeftColor: "var(--accent-secondary)",
+          }}
+        >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-[11px]">
             <Field label="ID события" value={log.event_id} />
             <Field label="Время" value={log.timestamp} />
@@ -197,8 +206,8 @@ function LogLine({ log, expanded, onToggle }: { log: LogEvent; expanded: boolean
             <Field label="Уровень" value={log.level} />
           </div>
           {hasMeta && (
-            <div className="mt-1.5 pt-1.5 border-t border-gray-700/50">
-              <pre className="text-[11px] text-gray-300 whitespace-pre-wrap font-mono bg-gray-950/50 rounded p-2 max-h-48 overflow-auto">
+            <div className="mt-1.5 pt-1.5 border-t" style={{ borderColor: "color-mix(in srgb, var(--border) 55%, transparent)" }}>
+              <pre className="siem-code-block text-[11px] siem-fg-muted whitespace-pre-wrap p-2 max-h-48 overflow-auto">
                 {JSON.stringify(log.meta, null, 2)}
               </pre>
             </div>
@@ -213,8 +222,8 @@ function Field({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
     <div>
-      <span className="text-gray-500">{label}: </span>
-      <span className="text-gray-300">{value}</span>
+      <span className="siem-fg-soft">{label}: </span>
+      <span className="siem-fg-muted">{value}</span>
     </div>
   );
 }
