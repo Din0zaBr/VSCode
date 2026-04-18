@@ -12,7 +12,8 @@ from server.src.auth import verify_token
 from server.src.config import settings
 from server.src.routers import (
     agent_deploy, agents, alerts, assets, auth_router, correlation,
-    ingest, integrations, logs, metrics, ml, reports, search, stats, users_router,
+    custom_fields, ingest, integrations, logs, metrics, ml,
+    reports, scenarios, search, stats, users_router,
 )
 from server.src.routers import api_keys as api_keys_router
 from server.src.routers import sigma_rules as sigma_rules_router
@@ -134,6 +135,8 @@ app.include_router(agent_deploy.router)
 app.include_router(api_keys_router.router)
 app.include_router(sigma_rules_router.router)
 app.include_router(reports.router)
+app.include_router(custom_fields.router)
+app.include_router(scenarios.router)
 
 
 @app.get("/health")

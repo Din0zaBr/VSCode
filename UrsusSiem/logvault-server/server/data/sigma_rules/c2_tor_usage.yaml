@@ -1,0 +1,31 @@
+title: C2 Tor Network Usage - Connections to Tor Ports
+id: c2-net-002
+status: stable
+description: Detects outbound connections to Tor network ports 9050 and 9150 indicating anonymized C2 communication
+author: URSUS SIEM
+date: 2024-01-01
+category: command_and_control
+severity: high
+tags:
+  - attack.command_and_control
+  - attack.t1090
+logsource:
+  category: network
+  service: syslog
+detection:
+  selection:
+    dst.port|contains|any:
+      - "9050"
+      - "9150"
+  condition: selection
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - protocol
+  - action
+  - host
+falsepositives:
+  - Legitimate Tor Browser usage by authorized personnel
+  - Privacy research activities
+level: high

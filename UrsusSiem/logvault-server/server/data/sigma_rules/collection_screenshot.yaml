@@ -1,0 +1,39 @@
+title: Collection - Screenshot Utility Execution
+id: collect-data-002
+status: stable
+description: Detects execution of screenshot utilities and APIs that may be used by attackers or malware to capture screen contents for collection
+author: URSUS SIEM
+date: 2024-01-01
+category: collection
+severity: medium
+tags:
+  - attack.collection
+  - attack.t1113
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "scrot"
+      - "import -window root"
+      - "gnome-screenshot"
+      - "screencapture"
+      - "CopyFromScreen"
+      - "BitBlt"
+      - "PrintWindow"
+      - "screenshot"
+      - "nircmd.exe savescreenshot"
+      - "psr.exe"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.path
+  - action
+  - src.ip
+falsepositives:
+  - Authorized remote support tools taking screenshots
+  - Legitimate screen recording software for training or support
+level: medium

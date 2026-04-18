@@ -1,0 +1,36 @@
+title: Suspicious PowerShell ScriptBlock Content
+id: exec-psblock-001
+status: stable
+description: Detects suspicious PowerShell ScriptBlock logging entries containing obfuscation or known attack patterns.
+author: URSUS SIEM
+date: 2024-01-01
+category: execution
+severity: high
+tags:
+  - attack.execution
+  - attack.t1059.001
+logsource:
+  product: windows
+  service: powershell
+detection:
+  selection:
+    EventID: 4104
+    message|contains|any:
+      - "Invoke-Mimikatz"
+      - "Invoke-Empire"
+      - "Invoke-ReflectivePEInjection"
+      - "PowerSploit"
+      - "Get-GPPPassword"
+      - "Invoke-Shellcode"
+      - "IEX (New-Object"
+      - "[System.Convert]::FromBase64String"
+      - "amsiInitFailed"
+      - "AmsiScanBuffer"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+falsepositives:
+  - Security tooling and penetration testing frameworks in authorized engagements
+level: high
