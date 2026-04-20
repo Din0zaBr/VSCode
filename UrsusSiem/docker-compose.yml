@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: logvault
+      POSTGRES_PASSWORD: logvault-secret
+      POSTGRES_DB: logvault
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logvault"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  logvault-rust:
+    build:
+      context: ./logvault-rust
+    restart: unless-stopped
+    environment:
+      ENGINE_ADDR: "0.0.0.0:8001"
+      RUST_LOG: "info"
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  logvault-go:
+    build:
+      context: ./logvault-go
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      logvault-rust:
+        condition: service_healthy
+    environment:
+      ADDR: ":8080"
+      DATABASE_URL: "postgres://logvault:logvault-secret@postgres:5432/logvault"
+      JWT_SECRET: "${JWT_SECRET:-logvault-jwt-secret-change-in-production}"
+      TOKEN_TTL_HOURS: "8"
+      API_KEYS: "${API_KEYS:-changeme-agent-key}"
+      ENGINE_URL: "http://logvault-rust:8001"
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      MAX_BATCH_SIZE: "5000"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH}"
+    ports:
+      - "8080:8080"
+
+  # Frontend dev server (for development only)
+  ui:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./logvault-server/ui:/app
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      VITE_API_URL: "http://localhost:8080"
+    ports:
+      - "5173:5173"
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
