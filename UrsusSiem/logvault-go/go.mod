@@ -1,8 +1,6 @@
 module github.com/ursus-siem/logvault-go
 
-go 1.23
-
-toolchain go1.24.7
+go 1.21
 
 require (
 	github.com/gin-gonic/gin v1.9.1
