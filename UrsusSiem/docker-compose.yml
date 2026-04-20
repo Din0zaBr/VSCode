@@ -52,7 +52,7 @@ services:
       CORS_ORIGINS: "${CORS_ORIGINS:-*}"
       MAX_BATCH_SIZE: "5000"
       ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
-      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
     ports:
       - "8080:8080"
 

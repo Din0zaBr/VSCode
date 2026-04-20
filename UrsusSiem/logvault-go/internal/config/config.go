@@ -1,9 +1,12 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserConfig holds hashed credentials for a user in the config file.
@@ -39,7 +42,16 @@ type Config struct {
 }
 
 func Load() *Config {
-	adminHash := getEnv("ADMIN_PASSWORD_HASH", "$2a$12$placeholder-change-me")
+	adminHash := getEnv("ADMIN_PASSWORD_HASH", "")
+	if adminHash == "" {
+		plainPwd := getEnv("ADMIN_PASSWORD", "admin")
+		h, err := bcrypt.GenerateFromPassword([]byte(plainPwd), 12)
+		if err != nil {
+			slog.Error("failed to hash admin password", "error", err)
+		} else {
+			adminHash = string(h)
+		}
+	}
 	return &Config{
 		Addr:          getEnv("ADDR", ":8080"),
 		DatabaseURL:   getEnv("DATABASE_URL", "postgres://logvault:logvault-secret@localhost:5432/logvault"),
