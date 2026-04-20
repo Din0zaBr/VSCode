@@ -11,7 +11,7 @@ RUN touch src/main.rs && cargo build --release
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=builder /app/target/release/logvault-rust /app/logvault-rust
+COPY --from=builder /app/target/release/logvault-engine /app/logvault-engine
 ENV ENGINE_ADDR=0.0.0.0:8001
 EXPOSE 8001
-CMD ["/app/logvault-rust"]
+CMD ["/app/logvault-engine"]
