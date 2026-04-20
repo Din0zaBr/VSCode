@@ -56,19 +56,13 @@ services:
     ports:
       - "8080:8080"
 
-  # Frontend dev server (for development only)
   ui:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - ./logvault-server/ui:/app
-    command: sh -c "npm install && npm run dev -- --host"
-    environment:
-      VITE_API_URL: "http://localhost:8080"
+    build:
+      context: ./logvault-server/ui
     ports:
-      - "5173:5173"
-    profiles:
-      - dev
+      - "80:80"
+    depends_on:
+      - logvault-go
 
 volumes:
   postgres_data:
