@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: postgres/Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_USER: logvault
@@ -8,7 +10,6 @@ services:
       POSTGRES_DB: logvault
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro,z
     ports:
       - "5432:5432"
     healthcheck:
