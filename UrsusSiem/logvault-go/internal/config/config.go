@@ -45,7 +45,7 @@ func Load() *Config {
 	adminHash := getEnv("ADMIN_PASSWORD_HASH", "")
 	if adminHash == "" {
 		plainPwd := getEnv("ADMIN_PASSWORD", "admin")
-		h, err := bcrypt.GenerateFromPassword([]byte(plainPwd), 12)
+		h, err := bcrypt.GenerateFromPassword([]byte(plainPwd), 10)
 		if err != nil {
 			slog.Error("failed to hash admin password", "error", err)
 		} else {
