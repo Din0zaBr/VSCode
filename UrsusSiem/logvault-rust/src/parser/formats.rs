@@ -43,7 +43,7 @@ pub fn parse_syslog_rfc5424(message: &str) -> Option<HashMap<String, Value>> {
     meta.insert("event_src.host".into(), Value::String(caps[4].to_string()));
     meta.insert("event_src.title".into(), Value::String(caps[5].to_string()));
 
-    if caps[6] != "-" {
+    if caps.get(6).map(|m| m.as_str()) != Some("-") {
         meta.insert(
             "subject.process.id".into(),
             Value::String(caps[6].to_string()),

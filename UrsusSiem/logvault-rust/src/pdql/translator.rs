@@ -1,4 +1,4 @@
-use super::parser::{Ast, Command, Expr, SortItem};
+use super::parser::{Command, Expr, SortItem};
 use anyhow::{bail, Result};
 use serde_json::Value;
 
@@ -150,8 +150,7 @@ fn expr_to_sql(expr: &Expr, params: &mut Vec<Value>) -> Result<String> {
             let col = field_to_sql(field);
             let placeholders: Vec<String> = values
                 .iter()
-                .enumerate()
-                .map(|(i, v)| {
+                .map(|v| {
                     params.push(v.clone());
                     format!("${}", params.len())
                 })
