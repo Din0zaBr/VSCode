@@ -24,7 +24,7 @@ class HttpTransport(Transport):
         timeout: float = 10.0,
         verify_ssl: bool = True,
     ) -> None:
-        self.url = server_url.rstrip("/") + "/ingest"
+        self.url = server_url.rstrip("/") + "/api/ingest"
         self.agent_id = agent_id
         self.api_key = api_key
         self.retry_base = retry_base
