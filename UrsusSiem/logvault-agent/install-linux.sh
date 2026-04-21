@@ -199,9 +199,13 @@ install_python_dependencies() {
   python3 -m venv "${INSTALL_DIR}/venv"
   success "Virtual environment created"
 
-  # Install requirements
+  # Install requirements from requirements.txt if available, else install manually
   "${INSTALL_DIR}/venv/bin/pip" install -q --upgrade pip setuptools wheel
-  "${INSTALL_DIR}/venv/bin/pip" install -q pyyaml requests
+  if [[ -f "${SCRIPT_DIR}/requirements.txt" ]]; then
+    "${INSTALL_DIR}/venv/bin/pip" install -q -r "${SCRIPT_DIR}/requirements.txt"
+  else
+    "${INSTALL_DIR}/venv/bin/pip" install -q "pydantic>=2.0,<3.0" "pyyaml>=6.0" "requests>=2.31"
+  fi
 
   success "Dependencies installed"
 }
@@ -209,115 +213,135 @@ install_python_dependencies() {
 create_agent_code() {
   step "Creating agent code..."
 
-  # Create directories
-  mkdir -p "${INSTALL_DIR}/src"
+  # The agent is structured as 'agent' package:
+  #   /opt/ursus-agent/
+  #     agent/
+  #       __init__.py
+  #       src/
+  #         main.py, config.py, ...
+  # Run with: PYTHONPATH=/opt/ursus-agent python -m agent.src.main
+
+  mkdir -p "${INSTALL_DIR}/agent"
   mkdir -p "${DATA_DIR}"
 
   # Copy agent code from project directory
   if [[ -d "${SCRIPT_DIR}/src" ]]; then
-    cp -r "${SCRIPT_DIR}/src"/* "${INSTALL_DIR}/src/" 2>/dev/null || true
+    # Create package structure: agent/__init__.py + agent/src/...
+    touch "${INSTALL_DIR}/agent/__init__.py"
+    cp -r "${SCRIPT_DIR}/src" "${INSTALL_DIR}/agent/src"
+    # Ensure all __init__.py files exist
+    find "${INSTALL_DIR}/agent" -type d -exec touch {}/__init__.py \;
     success "Agent code copied"
   else
     warn "Agent source code not found in ${SCRIPT_DIR}/src"
-    info "Creating minimal agent code..."
+    info "Creating minimal standalone agent..."
 
-    # Create minimal agent if source not available
-    cat > "${INSTALL_DIR}/src/main.py" << 'AGENT_EOF'
+    mkdir -p "${INSTALL_DIR}/agent/src"
+    touch "${INSTALL_DIR}/agent/__init__.py"
+    touch "${INSTALL_DIR}/agent/src/__init__.py"
+
+    # Minimal agent that doesn't need complex package imports
+    cat > "${INSTALL_DIR}/agent/src/main.py" << 'AGENT_EOF'
 #!/usr/bin/env python3
-import sys
-import time
-import yaml
-import requests
-import json
-from datetime import datetime
+"""Minimal URSUS SIEM agent (standalone fallback)."""
+import os, sys, time, json, logging, subprocess
+from datetime import datetime, timezone
+import yaml, requests
 
-def load_config(config_file):
-    with open(config_file) as f:
-        return yaml.safe_load(f)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger("ursus-agent")
 
-def collect_logs(config):
-    """Minimal log collector - reads from /var/log files"""
-    import subprocess
+def load_config():
+    path = os.environ.get("URSUS_CONFIG", "/opt/ursus-agent/etc/config.yaml")
+    if not os.path.exists(path):
+        log.error("Config not found: %s", path)
+        sys.exit(1)
+    with open(path) as f:
+        return yaml.safe_load(f) or {}
 
-    logs = []
-    for log_file in config.get('log_sources', ['/var/log/syslog', '/var/log/auth.log']):
-        try:
-            # Get last 100 lines from each log file
-            result = subprocess.run(['tail', '-n', '100', log_file],
-                                  capture_output=True, text=True, timeout=5)
-            for line in result.stdout.strip().split('\n'):
-                if line.strip():
-                    logs.append({
-                        'timestamp': datetime.utcnow().isoformat() + 'Z',
-                        'host': config.get('agent_id', 'unknown'),
-                        'source': log_file,
-                        'message': line,
-                        'level': 'INFO'
-                    })
-        except Exception as e:
-            print(f"[ERROR] Failed to read {log_file}: {e}", file=sys.stderr)
-
-    return logs
-
-def send_logs(config, logs):
-    """Send logs to SIEM server"""
-    if not logs:
-        return True
-
+def collect_from_journald(agent_id, max_lines=200):
     try:
-        url = f"{config['server_url']}/api/ingest"
-        headers = {'X-Api-Key': config['api_key']}
-        payload = {
-            'agent_id': config['agent_id'],
-            'logs': logs[:100]  # Batch size
-        }
+        result = subprocess.run(
+            ["journalctl", "-n", str(max_lines), "--output=json", "--no-pager"],
+            capture_output=True, text=True, timeout=10
+        )
+        events = []
+        for line in result.stdout.strip().splitlines():
+            try:
+                entry = json.loads(line)
+                events.append({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "host": agent_id,
+                    "source": "journald",
+                    "service": entry.get("_SYSTEMD_UNIT", "system"),
+                    "message": entry.get("MESSAGE", ""),
+                    "level": "warn" if entry.get("PRIORITY", "6") in ("0","1","2","3","4") else "info",
+                    "agent_id": agent_id,
+                })
+            except Exception:
+                pass
+        return events
+    except Exception as e:
+        log.warning("journald read error: %s", e)
+        return []
 
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
+def collect_from_file(path, agent_id, max_lines=100):
+    try:
+        result = subprocess.run(["tail", "-n", str(max_lines), path],
+                                capture_output=True, text=True, timeout=5)
+        events = []
+        for line in result.stdout.strip().splitlines():
+            if line.strip():
+                events.append({
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "host": agent_id,
+                    "source": path,
+                    "service": os.path.basename(path),
+                    "message": line,
+                    "level": "info",
+                    "agent_id": agent_id,
+                })
+        return events
+    except Exception as e:
+        log.warning("file read error %s: %s", path, e)
+        return []
 
-        if response.status_code == 200:
-            result = response.json()
-            print(f"[INFO] Indexed {result.get('indexed', 0)} events")
-            return True
+def send(cfg, events):
+    if not events:
+        return
+    try:
+        url = f"{cfg['server_url']}/api/ingest"
+        headers = {"X-Api-Key": cfg["api_key"], "Content-Type": "application/json"}
+        resp = requests.post(url, json={"agent_id": cfg["agent_id"], "logs": events[:200]},
+                             headers=headers, timeout=10)
+        if resp.ok:
+            log.info("Sent %d events", len(events))
         else:
-            error_msg = response.json().get('error', 'Unknown error')
-            print(f"[WARN] Server returned {response.status_code}: {error_msg}", file=sys.stderr)
-            return False
-    except requests.exceptions.RequestException as e:
-        print(f"[WARN] Connection error: {e}", file=sys.stderr)
-        return False
+            log.warning("Server %s: %s", resp.status_code, resp.text[:200])
+    except Exception as e:
+        log.warning("Send error: %s", e)
 
 def main():
-    import os
-    config_file = os.environ.get('URSUS_CONFIG', '/opt/ursus-agent/etc/config.yaml')
+    cfg = load_config()
+    agent_id = cfg.get("agent_id", "unknown")
+    interval = cfg.get("batch_interval", 5)
+    sources = cfg.get("log_sources", ["journald"])
 
-    if not os.path.exists(config_file):
-        print(f"[ERROR] Config file not found: {config_file}", file=sys.stderr)
-        sys.exit(1)
-
-    config = load_config(config_file)
-
-    print(f"[INFO] URSUS Agent starting for {config['agent_id']}")
-    print(f"[INFO] Server: {config['server_url']}")
-
-    interval = config.get('batch_interval', 5)
+    log.info("URSUS Agent starting: %s -> %s", agent_id, cfg.get("server_url"))
 
     while True:
-        try:
-            logs = collect_logs(config)
-            if logs:
-                send_logs(config, logs)
-            time.sleep(interval)
-        except KeyboardInterrupt:
-            print("\n[INFO] Shutting down...")
-            break
-        except Exception as e:
-            print(f"[ERROR] {e}", file=sys.stderr)
-            time.sleep(interval)
+        events = []
+        for src in sources:
+            if src == "journald":
+                events.extend(collect_from_journald(agent_id))
+            elif src.startswith("/"):
+                events.extend(collect_from_file(src, agent_id))
+        send(cfg, events)
+        time.sleep(interval)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 AGENT_EOF
-    chmod +x "${INSTALL_DIR}/src/main.py"
     success "Minimal agent created"
   fi
 }
@@ -333,7 +357,7 @@ create_config() {
   step "Creating configuration..."
 
   # Use Python to safely write YAML with any special characters in values
-  write_yaml_config "${CONFIG_DIR}/config.yaml" "$server_url" "$api_key" "$agent_id"
+  write_yaml_config "${CONFIG_DIR}/config.yaml" "$server_url" "$api_key" "$agent_id" "$log_sources"
 
   chmod 600 "${CONFIG_DIR}/config.yaml"
   success "Configuration created at ${CONFIG_DIR}/config.yaml"
@@ -355,7 +379,8 @@ Type=simple
 User=root
 WorkingDirectory=/opt/ursus-agent
 Environment="URSUS_CONFIG=/opt/ursus-agent/etc/config.yaml"
-ExecStart=/opt/ursus-agent/venv/bin/python3 /opt/ursus-agent/src/main.py
+Environment="PYTHONPATH=/opt/ursus-agent"
+ExecStart=/opt/ursus-agent/venv/bin/python3 -m agent.src.main
 
 # Auto-restart on failure
 Restart=always
@@ -442,31 +467,57 @@ PYSCRIPT
 }
 
 # Write YAML configuration with Python (safe for all characters)
+# $5 = log_sources choice: 1=journald, 2=files, 3=both
 write_yaml_config() {
   local file="$1"
   local server_url="$2"
   local api_key="$3"
   local agent_id="$4"
+  local log_sources="${5:-1}"
   local python_bin=$(get_python)
 
   $python_bin << PYSCRIPT
 import yaml
 import sys
 
-# Escape single quotes in shell string substitution
 server_url = """$server_url"""
 api_key = """$api_key"""
 agent_id = """$agent_id"""
+log_sources_choice = "$log_sources"
+
+# Build sources in the format the agent expects (list of SourceConfig dicts)
+sources = []
+if log_sources_choice in ("1", "3", ""):
+    sources.append({"type": "journald"})
+if log_sources_choice in ("2", "3"):
+    sources.append({"type": "file", "path": "/var/log/syslog",  "service": "syslog"})
+    sources.append({"type": "file", "path": "/var/log/auth.log", "service": "auth"})
+    sources.append({"type": "file", "path": "/var/log/messages", "service": "messages"})
+
+# Also keep log_sources for minimal fallback agent
+if log_sources_choice in ("1", "3", ""):
+    log_sources_list = ["journald"]
+else:
+    log_sources_list = ["/var/log/syslog", "/var/log/auth.log"]
+if log_sources_choice == "3":
+    log_sources_list = ["journald", "/var/log/syslog", "/var/log/auth.log"]
 
 config = {
     'server_url': server_url,
     'api_key': api_key,
     'agent_id': agent_id,
-    'log_sources': ['journald', '/var/log/syslog', '/var/log/auth.log'],
-    'batch_size': 100,
+    'hostname': agent_id,
+    # For the real agent (pydantic model)
+    'sources': sources,
+    # For the minimal fallback agent
+    'log_sources': log_sources_list,
+    'batch_size': 200,
+    'flush_interval': 5.0,
     'batch_interval': 5,
-    'enable_metrics': True,
-    'metrics_interval': 30
+    'retry_base': 1.0,
+    'retry_max': 60.0,
+    'buffer_db': '/var/lib/ursus-agent/buffer.db',
+    'verify_ssl': True,
 }
 
 try:
