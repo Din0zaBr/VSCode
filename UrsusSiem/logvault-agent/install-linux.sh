@@ -378,9 +378,8 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/ursus-agent
-Environment="URSUS_CONFIG=/opt/ursus-agent/etc/config.yaml"
 Environment="PYTHONPATH=/opt/ursus-agent"
-ExecStart=/opt/ursus-agent/venv/bin/python3 -m agent.src.main
+ExecStart=/opt/ursus-agent/venv/bin/python3 -m agent.src.main /opt/ursus-agent/etc/config.yaml
 
 # Auto-restart on failure
 Restart=always
