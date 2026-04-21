@@ -422,7 +422,7 @@ export interface UserInfo {
 
 export const api = {
   login(username: string, password: string) {
-    return request<LoginResponse>("/auth/login", {
+    return request<LoginResponse>("/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
