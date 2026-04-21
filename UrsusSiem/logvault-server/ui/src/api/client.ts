@@ -491,7 +491,7 @@ export const api = {
   },
 
   agents() {
-    return request<AgentInfo[]>("/agents");
+    return request<{ agents: AgentInfo[] }>("/agents").then((r) => r.agents ?? []);
   },
 
   latestMetrics() {
@@ -531,7 +531,7 @@ export const api = {
     size = 100,
     opts?: { from?: string; to?: string },
   ) {
-    const qs = new URLSearchParams({ query, page: String(page), size: String(size) });
+    const qs = new URLSearchParams({ q: query, page: String(page), size: String(size) });
     const isoFrom = opts?.from ? localToIso(opts.from) : "";
     const isoTo = opts?.to ? localToIso(opts.to) : "";
     if (isoFrom) qs.set("from", isoFrom);

@@ -896,7 +896,7 @@ export default function Events() {
     if (!data) return;
     const isGroupedData = !!(data && "rows" in data && "columns" in data);
     const rows = (data as any).rows ?? [];
-    const logs: LogEvent[] = (data as any).logs ?? [];
+    const logs: LogEvent[] = (data as any).hits ?? (data as any).logs ?? [];
     if (internalPage === 1) {
       if (isGroupedData) setAllGroupedRows(rows);
       else setAllEvents(logs);
@@ -1044,7 +1044,7 @@ export default function Events() {
     enabled: !!drillDownPdql,
   });
 
-  const drillEvents: LogEvent[] = (drillData as any)?.logs ?? [];
+  const drillEvents: LogEvent[] = (drillData as any)?.hits ?? (drillData as any)?.logs ?? [];
 
   // visibleFields still used for export (full set), activeFields for the table columns
   const visibleFields = currentFieldset?.fields ?? ["criticality", "time", "event_src.host", "text"];

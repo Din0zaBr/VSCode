@@ -15,7 +15,7 @@ func (h *Handler) CorrelationAlerts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"alerts": alerts})
+	c.JSON(http.StatusOK, gin.H{"alerts": alerts, "total": len(alerts)})
 }
 
 type UpdateAlertRequest struct {

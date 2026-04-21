@@ -116,7 +116,7 @@ export default function Dashboard() {
   const incAlerts    = incData?.alerts ?? [];
   const openInc      = incAlerts.filter((a) => a.status === "OPEN").length;
   const criticalInc  = incAlerts.filter((a) => a.severity === "CRITICAL").length;
-  const totalAssets  = assetsData?.total ?? 0;
+  const totalAssets  = assetsData?.assets?.length ?? assetsData?.total ?? 0;
   const activeAgents = (agents ?? []).filter((a) => a.active);
   const totalLogs    = data?.by_level.reduce((s, b) => s + b.doc_count, 0) ?? 0;
   const totalTasks   = incAlerts.flatMap((a) => getIncidentExtra(a.id).tasks.filter((t) => !t.done)).length;
@@ -128,7 +128,7 @@ export default function Dashboard() {
   const avgFlow = totalLogs > 0 ? (totalLogs / (minMap[step] ?? 60)).toFixed(1) : "0";
 
   const timelineData = (data?.over_time ?? []).map((b) => {
-    const byLevel = Object.fromEntries((b.by_level?.buckets ?? []).map((l) => [l.key, l.doc_count]));
+    const byLevel = Object.fromEntries((b.by_level ?? []).map((l) => [l.key, l.doc_count]));
     const d = new Date(b.key);
     const label = d.toLocaleString("ru-RU", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     return { label, total: b.doc_count, ...byLevel };
