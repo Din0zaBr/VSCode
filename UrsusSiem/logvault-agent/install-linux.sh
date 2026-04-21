@@ -333,38 +333,8 @@ create_config() {
 
   step "Creating configuration..."
 
-  # Determine log sources based on user choice
-  local sources='[]'
-  case "$log_sources" in
-    1)
-      # journald only
-      sources='["journald"]'
-      ;;
-    2)
-      # files only
-      sources='["/var/log/syslog", "/var/log/auth.log", "/var/log/kern.log"]'
-      ;;
-    3)
-      # both
-      sources='["journald", "/var/log/syslog", "/var/log/auth.log", "/var/log/kern.log"]'
-      ;;
-  esac
-
-  cat > "${CONFIG_DIR}/config.yaml" << EOF
-# URSUS SIEM Agent Configuration
-server_url: "${server_url}"
-api_key: "${api_key}"
-agent_id: "${agent_id}"
-
-# Log collection settings
-log_sources: ${sources}
-batch_size: 100
-batch_interval: 5
-
-# Monitoring
-enable_metrics: true
-metrics_interval: 30
-EOF
+  # Use Python to safely write YAML with any special characters in values
+  write_yaml_config "${CONFIG_DIR}/config.yaml" "$server_url" "$api_key" "$agent_id"
 
   chmod 600 "${CONFIG_DIR}/config.yaml"
   success "Configuration created at ${CONFIG_DIR}/config.yaml"
@@ -441,6 +411,75 @@ show_status() {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
+# YAML CONFIGURATION MANAGEMENT
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Use venv Python if available, fall back to system Python
+get_python() {
+  if [[ -f "${INSTALL_DIR}/venv/bin/python3" ]]; then
+    echo "${INSTALL_DIR}/venv/bin/python3"
+  else
+    echo "python3"
+  fi
+}
+
+# Read a YAML value safely
+read_yaml_value() {
+  local file="$1"
+  local key="$2"
+  local python_bin=$(get_python)
+
+  $python_bin << PYSCRIPT
+import yaml
+try:
+  with open('$file') as f:
+    config = yaml.safe_load(f) or {}
+  value = config.get('$key', '')
+  if value:
+    print(str(value))
+except Exception as e:
+  pass
+PYSCRIPT
+}
+
+# Write YAML configuration with Python (safe for all characters)
+write_yaml_config() {
+  local file="$1"
+  local server_url="$2"
+  local api_key="$3"
+  local agent_id="$4"
+  local python_bin=$(get_python)
+
+  $python_bin << PYSCRIPT
+import yaml
+import sys
+
+# Escape single quotes in shell string substitution
+server_url = """$server_url"""
+api_key = """$api_key"""
+agent_id = """$agent_id"""
+
+config = {
+    'server_url': server_url,
+    'api_key': api_key,
+    'agent_id': agent_id,
+    'log_sources': ['journald', '/var/log/syslog', '/var/log/auth.log'],
+    'batch_size': 100,
+    'batch_interval': 5,
+    'enable_metrics': True,
+    'metrics_interval': 30
+}
+
+try:
+  with open('$file', 'w') as f:
+    yaml.dump(config, f, default_flow_style=False)
+except Exception as e:
+  print(f"Error writing config: {e}", file=sys.stderr)
+  sys.exit(1)
+PYSCRIPT
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
 # UPDATE CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -451,25 +490,22 @@ update_config() {
 
   echo ""
   info "Current configuration:"
-  grep -E "^(server_url|api_key|agent_id):" "${CONFIG_DIR}/config.yaml" || true
+  read_yaml_value "${CONFIG_DIR}/config.yaml" "server_url" | xargs -I {} echo "  server_url: {}"
+  read_yaml_value "${CONFIG_DIR}/config.yaml" "api_key" | head -c 20 | xargs -I {} echo "  api_key: {}..."
+  read_yaml_value "${CONFIG_DIR}/config.yaml" "agent_id" | xargs -I {} echo "  agent_id: {}"
   echo ""
 
   # Read new values (use existing as defaults)
-  current_server=$(grep "^server_url:" "${CONFIG_DIR}/config.yaml" | cut -d' ' -f2)
-  current_key=$(grep "^api_key:" "${CONFIG_DIR}/config.yaml" | cut -d' ' -f2)
-  current_id=$(grep "^agent_id:" "${CONFIG_DIR}/config.yaml" | cut -d' ' -f2)
+  current_server=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "server_url")
+  current_key=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "api_key")
+  current_id=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "agent_id")
 
   SERVER_URL=$(read_server_url "$current_server")
   API_KEY=$(read_api_key "$current_key")
   AGENT_ID=$(read_agent_id "$current_id")
 
   step "Updating configuration..."
-
-  # Use sed to update config
-  sed -i "s|^server_url:.*|server_url: ${SERVER_URL}|" "${CONFIG_DIR}/config.yaml"
-  sed -i "s|^api_key:.*|api_key: ${API_KEY}|" "${CONFIG_DIR}/config.yaml"
-  sed -i "s|^agent_id:.*|agent_id: ${AGENT_ID}|" "${CONFIG_DIR}/config.yaml"
-
+  write_yaml_config "${CONFIG_DIR}/config.yaml" "$SERVER_URL" "$API_KEY" "$AGENT_ID"
   success "Configuration updated"
 
   step "Restarting service..."
@@ -482,15 +518,18 @@ change_api_key() {
     error "Configuration file not found"
   fi
 
-  current_key=$(grep "^api_key:" "${CONFIG_DIR}/config.yaml" | cut -d' ' -f2)
+  current_server=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "server_url")
+  current_key=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "api_key")
+  current_id=$(read_yaml_value "${CONFIG_DIR}/config.yaml" "agent_id")
+
   echo ""
-  echo "Current API key: ${current_key}"
+  echo "Current API key: $(echo "$current_key" | head -c 20)..."
   echo ""
 
   API_KEY=$(read_api_key "$current_key")
 
   step "Updating API key..."
-  sed -i "s|^api_key:.*|api_key: ${API_KEY}|" "${CONFIG_DIR}/config.yaml"
+  write_yaml_config "${CONFIG_DIR}/config.yaml" "$current_server" "$API_KEY" "$current_id"
   success "API key updated"
 
   step "Restarting service..."
