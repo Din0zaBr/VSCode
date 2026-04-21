@@ -94,41 +94,40 @@ show_main_menu() {
 
 read_server_url() {
   local default="${1:-http://localhost:8080}"
-  echo ""
-  echo "Enter SIEM server URL:"
-  echo "  (default: ${default})"
-  read -p "  > " input
+  echo "" >&2
+  echo "Enter SIEM server URL:" >&2
+  echo "  (default: ${default})" >&2
+  read -p "  > " input </dev/tty
   echo "${input:-$default}"
 }
 
 read_api_key() {
-  local default="${1:-changeme-agent-key}"
-  echo ""
-  echo "Enter API key for agent:"
-  echo "  (default: ${default})"
-  read -sp "  > " input
-  echo ""
+  local default="${1:-}"
+  echo "" >&2
+  echo "Enter API key:" >&2
+  read -sp "  > " input </dev/tty
+  echo "" >&2
   echo "${input:-$default}"
 }
 
 read_agent_id() {
   local default="${1:-$(hostname -s)}"
-  echo ""
-  echo "Enter agent ID (name):"
-  echo "  (default: ${default})"
-  read -p "  > " input
+  echo "" >&2
+  echo "Enter agent ID (name for this host):" >&2
+  echo "  (default: ${default})" >&2
+  read -p "  > " input </dev/tty
   echo "${input:-$default}"
 }
 
 read_log_sources() {
-  echo ""
-  echo "Select log sources to monitor:"
-  echo "  1) systemd journal (journald) - recommended"
-  echo "  2) Files only (syslog, auth.log, etc.)"
-  echo "  3) Both"
-  echo ""
-  read -p "Choose [1-3]: " choice
-  echo "$choice"
+  echo "" >&2
+  echo "Select log sources to monitor:" >&2
+  echo "  1) systemd journal (journald) — recommended" >&2
+  echo "  2) Files only (/var/log/syslog, auth.log)" >&2
+  echo "  3) Both" >&2
+  echo "" >&2
+  read -p "  Choose [1-3] (default: 1): " choice </dev/tty
+  echo "${choice:-1}"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -572,11 +571,24 @@ main() {
     AGENT_ID=$(read_agent_id)
     LOG_SOURCES=$(read_log_sources)
 
+    # Mask API key in summary (show only first 8 chars)
+    local key_preview="${API_KEY:0:8}..."
+    [[ -z "$API_KEY" ]] && key_preview="(not set)"
+
+    local sources_label
+    case "$LOG_SOURCES" in
+      2) sources_label="Files only (syslog, auth.log)" ;;
+      3) sources_label="journald + files" ;;
+      *) sources_label="journald (systemd journal)" ;;
+    esac
+
     echo ""
-    echo "Summary:"
-    echo "  Server URL: $SERVER_URL"
-    echo "  Agent ID: $AGENT_ID"
-    echo "  Install path: $INSTALL_DIR"
+    echo -e "${BOLD}Summary:${NC}"
+    echo "  Server URL : $SERVER_URL"
+    echo "  API key    : $key_preview"
+    echo "  Agent ID   : $AGENT_ID"
+    echo "  Log sources: $sources_label"
+    echo "  Install dir: $INSTALL_DIR"
     echo ""
 
     read -p "Proceed with installation? (y/N): " confirm
