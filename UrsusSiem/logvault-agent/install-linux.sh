@@ -544,6 +544,8 @@ change_api_key() {
 main() {
   show_header
 
+  local choice=""
+
   if existing_install_check; then
     while true; do
       show_main_menu
@@ -564,7 +566,7 @@ main() {
   fi
 
   # Fresh install flow
-  if [[ "$choice" == "1" ]] || ! existing_install_check; then
+  if [[ "$choice" == "1" ]] || [[ -z "$choice" ]]; then
     SERVER_URL=$(read_server_url)
     API_KEY=$(read_api_key)
     AGENT_ID=$(read_agent_id)
