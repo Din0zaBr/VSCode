@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -71,26 +72,74 @@ func NewRouter(cfg *config.Config, db *storage.DB, eng *engine.Client) *gin.Engi
 	r.GET("/health", h.Health)
 	r.POST("/api/login", h.Login)
 
-	// Agent ingestion (API key auth)
+	// Agent ingestion: check static config keys first, then DB keys
 	ingest := r.Group("/api")
-	ingest.Use(middleware.APIKeyAuth(cfg.APIKeys))
+	ingest.Use(func(c *gin.Context) {
+		key := c.GetHeader("X-Api-Key")
+		if key == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing X-Api-Key header"})
+			return
+		}
+		// Check static keys from config (fast)
+		for _, k := range cfg.APIKeys {
+			if k == key {
+				c.Next()
+				return
+			}
+		}
+		// Check DB keys (SHA256 lookup)
+		if db.ValidateApiKey(c.Request.Context(), key) {
+			c.Next()
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid API key"})
+	})
 	ingest.POST("/ingest", h.HandleIngest)
 
 	// Authenticated user endpoints
 	api := r.Group("/api")
 	api.Use(middleware.JWTAuth(cfg.JWTSecret))
 	{
+		// Auth
+		api.GET("/auth/me", h.Me)
+
+		// Search & stats
 		api.GET("/search", h.Search)
 		api.GET("/search/pdql", h.SearchPDQL)
 		api.GET("/stats", h.Stats)
+
+		// Agents & hosts
 		api.GET("/agents", h.Agents)
 		api.GET("/hosts", h.Hosts)
+
+		// Correlation alerts
 		api.GET("/correlation/alerts", h.CorrelationAlerts)
 		api.PATCH("/correlation/alerts/:id", h.UpdateAlertStatus)
+
+		// Correlation rules (new)
+		api.GET("/correlation/rules", h.ListCorrelationRules)
+		api.POST("/correlation/rules", h.CreateCorrelationRule)
+		api.PUT("/correlation/rules/:id", h.UpdateCorrelationRule)
+		api.DELETE("/correlation/rules/:id", h.DeleteCorrelationRule)
+
+		// Assets
 		api.GET("/assets", h.ListAssets)
+
+		// User management
+		api.GET("/users/", h.ListUsers)
+		api.POST("/users/", h.CreateUser)
+		api.DELETE("/users/:id", h.DeleteUser)
+		api.PUT("/users/:id/role", h.UpdateUserRole)
+		api.PUT("/users/:id/agents", h.SetUserAgents)
+
+		// API key management
+		api.GET("/admin/api-keys", h.ListApiKeys)
+		api.POST("/admin/api-keys", h.CreateApiKey)
+		api.DELETE("/admin/api-keys/:id", h.DeleteApiKey)
+		api.PATCH("/admin/api-keys/:id", h.ToggleApiKey)
 	}
 
-	// WebSocket live stream (JWT auth via query param token=...)
+	// WebSocket live stream
 	r.GET("/api/logs/live", h.LiveLogs)
 
 	return r
@@ -106,14 +155,19 @@ func corsMiddleware(origins []string) gin.HandlerFunc {
 				break
 			}
 		}
-		if allowed {
-			c.Header("Access-Control-Allow-Origin", origin)
+		if allowed || len(origins) == 0 {
+			ao := origin
+			if len(origins) == 1 && origins[0] == "*" {
+				ao = "*"
+			}
+			c.Header("Access-Control-Allow-Origin", ao)
 		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Api-Key")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, X-Api-Key")
 		c.Header("Access-Control-Allow-Credentials", "true")
+
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 		c.Next()

@@ -33,6 +33,12 @@ func main() {
 	defer db.Close()
 	slog.Info("database connected")
 
+	if err := db.RunMigrations(ctx); err != nil {
+		slog.Error("failed to run migrations", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("migrations complete")
+
 	eng := engine.NewClient(cfg.EngineURL)
 
 	if err := eng.Health(ctx); err != nil {
