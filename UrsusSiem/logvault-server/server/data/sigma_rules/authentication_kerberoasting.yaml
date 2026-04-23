@@ -1,0 +1,28 @@
+title: Kerberoasting Attack
+id: auth-kerb-001
+status: stable
+description: Detects Kerberoasting attacks by monitoring for TGS requests for service accounts with RC4 encryption.
+author: URSUS SIEM
+date: 2024-01-01
+category: credential_access
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1558.003
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4769
+    message|contains:
+      - "Ticket Encryption Type: 0x17"
+  condition: selection | count() by subject.name > 3 within 60s
+fields:
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legacy applications using RC4
+  - Some Kerberos-based services
+level: high

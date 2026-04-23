@@ -30,31 +30,44 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #08090e 0%, #0d0a18 50%, #090e10 100%)" }}>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: "linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%)" }}
+    >
       {/* Background glow */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 40%, rgba(106,13,173,0.12) 0%, transparent 70%)" }} />
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent-secondary) 18%, transparent) 0%, transparent 70%)" }}
+      />
 
       <div className="w-full max-w-sm relative z-10">
-        <div className="rounded-2xl p-8 shadow-2xl" style={{ background: "#0d0f18", border: "1px solid #2d1860", boxShadow: "0 0 60px rgba(106,13,173,0.2)" }}>
+        <div
+          className="rounded-2xl p-8 shadow-2xl"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border-strong)",
+            boxShadow: "0 0 60px color-mix(in srgb, var(--accent-secondary) 24%, transparent)",
+          }}
+        >
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <img src="/logo.png" alt="URSUS" className="w-10 h-10 object-contain"
+              <img src="/logo_app.png" alt="URSUS" className="w-12 h-12 object-contain"
                 onError={(e) => { e.currentTarget.style.display = "none"; (e.currentTarget.nextSibling as HTMLElement).style.display = "block"; }} />
-              <span style={{ display: "none", fontSize: "36px" }}>🐻</span>
+              <span style={{ display: "none", fontSize: "42px" }}>🐻</span>
               <div className="text-left">
-                <div className="text-xl font-bold tracking-widest leading-none" style={{ color: "#BF40BF" }}>URSUS</div>
-                <div className="text-[10px] tracking-[0.3em] font-light leading-none" style={{ color: "#6A0DAD" }}>INSIGHT</div>
+                <div className="text-xl font-bold tracking-widest leading-none" style={{ color: "var(--accent)" }}>URSUS</div>
+                <div className="text-[10px] tracking-[0.3em] font-light leading-none" style={{ color: "var(--accent-secondary)" }}>INSIGHT</div>
               </div>
             </div>
-            <p className="text-xs mt-2" style={{ color: "#64748b" }}>
+            <p className="text-xs mt-2" style={{ color: "var(--text-soft)" }}>
               Security Information & Event Management
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Логин</label>
+              <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "var(--text-soft)" }}>Логин</label>
               <input
                 type="text" value={username} onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username" autoFocus
@@ -63,7 +76,7 @@ export default function Login() {
               />
             </div>
             <div>
-              <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Пароль</label>
+              <label className="block text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "var(--text-soft)" }}>Пароль</label>
               <input
                 type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
@@ -77,7 +90,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-[10px]" style={{ color: "#2d1860" }}>
+          <div className="mt-6 text-center text-[10px]" style={{ color: "var(--border-strong)" }}>
             URSUS Insight SIEM · Protected Access
           </div>
         </div>

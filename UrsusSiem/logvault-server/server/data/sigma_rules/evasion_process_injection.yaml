@@ -1,0 +1,37 @@
+title: Defense Evasion - Process Injection via CreateRemoteThread or WriteProcessMemory
+id: evasion-proc-001
+status: stable
+description: Detects process injection techniques using CreateRemoteThread or WriteProcessMemory APIs commonly used by malware to execute in another process context
+author: URSUS SIEM
+date: 2024-01-01
+category: defense_evasion
+severity: high
+tags:
+  - attack.defense_evasion
+  - attack.t1055
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "CreateRemoteThread"
+      - "WriteProcessMemory"
+      - "VirtualAllocEx"
+      - "NtCreateThreadEx"
+      - "RtlCreateUserThread"
+      - "QueueUserAPC"
+      - "SetThreadContext"
+      - "NtUnmapViewOfSection"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.name
+  - action
+  - src.ip
+falsepositives:
+  - Legitimate debugging tools and software
+  - Security products that perform code injection for monitoring
+level: high

@@ -1,0 +1,36 @@
+title: Discovery - Network Share Enumeration
+id: disc-net-001
+status: stable
+description: Detects net view and share enumeration commands used by attackers to discover network resources and shared folders
+author: URSUS SIEM
+date: 2024-01-01
+category: discovery
+severity: low
+tags:
+  - attack.discovery
+  - attack.t1135
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "net view"
+      - "net share"
+      - "net use"
+      - "smbclient -L"
+      - "showmount -e"
+      - "Get-SmbShare"
+      - "Invoke-ShareFinder"
+      - "netscan"
+  condition: selection
+fields:
+  - src.ip
+  - host
+  - subject.name
+  - message
+  - action
+falsepositives:
+  - System administrators inventorying network shares
+  - IT helpdesk troubleshooting connectivity issues
+level: low

@@ -1,0 +1,34 @@
+title: Lateral Movement via PsExec
+id: lm-psexec-001
+status: stable
+description: Detects the use of PsExec or similar tools for lateral movement within the network.
+author: URSUS SIEM
+date: 2024-01-01
+category: lateral_movement
+severity: high
+tags:
+  - attack.lateral_movement
+  - attack.t1021.002
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID:
+      - 7045
+      - 7036
+    message|contains:
+      - "PSEXESVC"
+      - "psexec"
+  selection_net:
+    EventID: 4648
+    message|contains: "PSEXEC"
+  condition: selection or selection_net
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Authorized administrative use of PsExec
+level: high

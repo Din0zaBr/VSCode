@@ -1,0 +1,30 @@
+title: SSH Brute Force Attack
+id: bf-ssh-001
+status: stable
+description: Detects multiple failed SSH authentication attempts from a single source IP, indicating a brute force attack.
+author: URSUS SIEM
+date: 2024-01-01
+category: brute_force
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1110
+logsource:
+  category: authentication
+  service: sshd
+detection:
+  selection:
+    message|contains:
+      - "Failed password"
+      - "authentication failure"
+      - "Invalid user"
+    source: sshd
+  condition: selection | count(src.ip) > 5 within 60s
+fields:
+  - src.ip
+  - subject.name
+  - host
+falsepositives:
+  - Legitimate users who mistype their password multiple times
+  - Automated scripts with incorrect credentials
+level: high

@@ -1,0 +1,89 @@
+# LogVault Agent — Windows Security Audit configuration
+#
+# USE CASE: Security monitoring and threat detection on Windows endpoints
+#           or domain controllers.
+#
+# FOCUSES ON:
+#   - Authentication events (logon / logoff / lockout)
+#   - Privilege use and elevation
+#   - Process execution tracking (requires audit policy — see note below)
+#   - Scheduled task and service persistence events
+#   - Account lifecycle changes
+#
+# REQUIREMENTS:
+#   - Agent must run as SYSTEM or with explicit Security log read rights.
+#   - Enable Process Creation auditing so Event ID 4688 is generated:
+#       auditpol /set /subcategory:"{0CCE922B-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
+#   - For command-line logging in 4688 events, also set:
+#       reg add "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit" /v ProcessCreationIncludeCmdLine_Enabled /t REG_DWORD /d 1 /f
+#
+# Copy to: C:\ProgramData\logvault-agent\config.yaml
+# Install : .\install-windows.ps1 -ServerUrl <url> -ApiKey <key>
+# ─────────────────────────────────────────────────────────────────────────────
+
+server_url: "http://localhost:8000"   # replace with your LogVault server URL
+agent_id:   "win-security-audit-01"  # unique per host
+api_key:    "changeme-agent-key"      # must match AGENT_API_KEY on the server
+hostname:   ""                        # leave blank to auto-detect
+
+batch_size:     200
+flush_interval: 2.0   # flush every 2 s for near-real-time alerting
+retry_base:     1.0
+retry_max:      60.0
+buffer_db:      "C:/ProgramData/logvault-agent/buffer.db"
+verify_ssl:     false  # set true when server uses a trusted certificate
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Log sources
+# ─────────────────────────────────────────────────────────────────────────────
+sources:
+
+  # ── Windows Security Event Log ──────────────────────────────────────────────
+  # Filtered to the highest-value event IDs for security audit use cases.
+  # Forwarding all Security events is not recommended on busy systems —
+  # use event_ids to keep volume manageable.
+  - type: winevent
+    channel: "Security"
+    service: "windows-security"
+    event_ids:
+      # ── Authentication ──────────────────────────────────────────────────────
+      - 4624   # An account was successfully logged on
+      - 4625   # An account failed to log on
+      - 4634   # An account was logged off
+      - 4647   # User initiated logoff
+      - 4648   # A logon was attempted using explicit credentials (RunAs)
+      - 4675   # SIDs were filtered (Kerberos trust policy)
+
+      # ── Privilege use ───────────────────────────────────────────────────────
+      - 4672   # Special privileges assigned to new logon (admin-level logon)
+      - 4673   # A privileged service was called
+      - 4674   # An operation was attempted on a privileged object
+
+      # ── Process execution ───────────────────────────────────────────────────
+      - 4688   # A new process has been created (requires audit policy above)
+      - 4689   # A process has exited
+
+      # ── Scheduled tasks (persistence mechanism) ─────────────────────────────
+      - 4698   # A scheduled task was created
+      - 4699   # A scheduled task was deleted
+      - 4700   # A scheduled task was enabled
+      - 4701   # A scheduled task was disabled
+      - 4702   # A scheduled task was updated
+
+      # ── Account management ──────────────────────────────────────────────────
+      - 4720   # A user account was created
+      - 4722   # A user account was enabled
+      - 4723   # An attempt was made to change an account's password
+      - 4724   # An attempt was made to reset an account's password
+      - 4725   # A user account was disabled
+      - 4726   # A user account was deleted
+      - 4728   # A member was added to a security-enabled global group
+      - 4729   # A member was removed from a security-enabled global group
+      - 4732   # A member was added to a security-enabled local group
+      - 4733   # A member was removed from a security-enabled local group
+      - 4740   # A user account was locked out
+      - 4767   # A user account was unlocked
+      - 4781   # The name of an account was changed
+
+      # ── Services (persistence mechanism) ────────────────────────────────────
+      - 7045   # A new service was installed in the system

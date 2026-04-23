@@ -5,6 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from server.src.auth import require_admin, verify_token
+from server.src.integrations.webhook_receiver import push_webhook_event
+from server.src.services.integrations_service import (
+    sync_integration as svc_sync,
+    get_sync_log,
+    get_sync_stats,
+)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
@@ -86,9 +92,31 @@ async def test_integration(name: str, request: Request, user: dict = Depends(req
 
 
 @router.post("/{name}/sync")
-async def sync_integration(name: str, request: Request, user: dict = Depends(require_admin)):
-    integration = request.app.state.integration_registry.get(name)
-    if not integration:
-        raise HTTPException(404, f"Integration '{name}' not found")
-    events = integration.pull_events()
-    return {"ok": True, "events_pulled": len(events)}
+async def sync_integration_endpoint(name: str, request: Request, user: dict = Depends(require_admin)):
+    result = svc_sync(request.app.state.integration_registry, name, request.app.state.pipeline)
+    if not result.get("ok", True) and result.get("error"):
+        raise HTTPException(400, result["error"])
+    return result
+
+
+@router.get("/sync/log")
+async def sync_log(integration: str = "", limit: int = 100, user: dict = Depends(verify_token)):
+    return get_sync_log(integration=integration, limit=limit)
+
+
+@router.get("/sync/stats")
+async def sync_stats(user: dict = Depends(verify_token)):
+    return get_sync_stats()
+
+
+# ── Webhook ingest endpoint ───────────────────────────────────────────────────
+
+@router.post("/webhook/{source_name}")
+async def ingest_webhook(source_name: str, request: Request):
+    """Receive inbound webhook from any external service."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    push_webhook_event(payload, source_name=source_name)
+    return {"ok": True, "source": source_name}

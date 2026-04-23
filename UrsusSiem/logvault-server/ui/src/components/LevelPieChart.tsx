@@ -25,7 +25,7 @@ interface Props {
 
 export default function LevelPieChart({ data }: Props) {
   if (!data.length) {
-    return <div className="text-center text-gray-500 py-8">Нет данных еще</div>;
+    return <div className="text-center siem-fg-soft py-8">Нет данных еще</div>;
   }
 
   const chartData = data.map((b) => ({

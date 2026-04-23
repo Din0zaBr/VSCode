@@ -1,0 +1,35 @@
+title: Persistence - New Windows Service Creation
+id: persist-win-001
+status: stable
+description: Detects new Windows service creation events (EventID 7045) which may indicate malware establishing persistence via a service
+author: URSUS SIEM
+date: 2024-01-01
+category: persistence
+severity: medium
+tags:
+  - attack.persistence
+  - attack.t1543.003
+logsource:
+  category: process_creation
+  service: windows_security
+detection:
+  selection:
+    message|contains|any:
+      - "EventID: 7045"
+      - "7045"
+      - "A new service was installed"
+      - "Service File Name"
+      - "sc create"
+      - "New-Service"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.name
+  - action
+  - status
+falsepositives:
+  - Legitimate software installation creating services
+  - System administrator service deployments
+level: medium

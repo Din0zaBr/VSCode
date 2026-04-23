@@ -12,10 +12,14 @@ from server.src.auth import verify_token
 from server.src.config import settings
 from server.src.routers import (
     agent_deploy, agents, alerts, assets, auth_router, correlation,
-    ingest, integrations, logs, metrics, ml, search, stats, users_router,
+    custom_fields, ingest, integrations, logs, metrics, ml,
+    reports, scenarios, search, stats, users_router,
 )
 from server.src.routers import api_keys as api_keys_router
+from server.src.routers import sigma_rules as sigma_rules_router
 from server.src.services.alerting import alert_loop
+from server.src.services import sigma_rules as sigma_rules_svc
+from server.src.tasks.sync_integrations import integration_sync_loop
 from server.src.services.correlator import correlation_loop
 from server.src.services.ml_engine import MLEngine
 from server.src.services.pipeline import IngestPipeline
@@ -27,6 +31,12 @@ from server.src.integrations.kaspersky_edr import KasperskyEDR
 from server.src.integrations.positive_technologies import PTSandbox, PTNAD
 from server.src.integrations.generic_syslog import SyslogReceiver
 from server.src.integrations.generic_cef import CEFReceiver
+from server.src.integrations.suricata import SuricataIDS
+from server.src.integrations.elastic import ElasticIntegration
+from server.src.integrations.splunk import SplunkIntegration
+from server.src.integrations.ml_anomaly import MLAnomalyDetector
+from server.src.integrations.webhook_receiver import WebhookReceiver
+from server.src.integrations.rest_generic import GenericRESTConnector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -58,11 +68,19 @@ async def lifespan(app: FastAPI):
         )
     app.state.ad_connector = ad
 
-    # Integration registry
+    # Integration registry - register all available connectors
     registry = IntegrationRegistry()
-    for cls in (KasperskyEDR, PTSandbox, PTNAD, SyslogReceiver, CEFReceiver):
+    for cls in (
+        KasperskyEDR, PTSandbox, PTNAD, SyslogReceiver, CEFReceiver,
+        SuricataIDS, ElasticIntegration, SplunkIntegration,
+        MLAnomalyDetector, WebhookReceiver, GenericRESTConnector,
+    ):
         registry.register(cls())
     app.state.integration_registry = registry
+
+    # SIGMA Rules - load from disk on startup
+    loaded = sigma_rules_svc.load_rules_from_disk()
+    logger.info("SIGMA rules loaded: %d", loaded)
 
     # System Health
     system_health = SystemHealth(db_service)
@@ -72,6 +90,12 @@ async def lifespan(app: FastAPI):
     threading.Thread(target=alert_loop, args=(db_service,), daemon=True).start()
     threading.Thread(target=correlation_loop, args=(db_service,), daemon=True).start()
     threading.Thread(target=health_loop, args=(system_health,), daemon=True).start()
+    threading.Thread(
+        target=integration_sync_loop,
+        args=(registry, app.state.pipeline),
+        kwargs={"interval": 300},
+        daemon=True,
+    ).start()
 
     logger.info("URSUS SIEM started, PG at %s", settings.DATABASE_URL.split("@")[-1])
     yield
@@ -109,6 +133,10 @@ app.include_router(ml.router)
 app.include_router(integrations.router)
 app.include_router(agent_deploy.router)
 app.include_router(api_keys_router.router)
+app.include_router(sigma_rules_router.router)
+app.include_router(reports.router)
+app.include_router(custom_fields.router)
+app.include_router(scenarios.router)
 
 
 @app.get("/health")

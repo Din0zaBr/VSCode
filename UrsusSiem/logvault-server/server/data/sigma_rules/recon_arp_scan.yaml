@@ -1,0 +1,34 @@
+title: ARP Broadcast Storm / ARP Scan Detected
+id: recon-arp-001
+status: stable
+description: Detects ARP scanning activity where a single host sends an unusually high number of ARP requests in a short time window, indicating network reconnaissance.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: low
+tags:
+  - attack.discovery
+  - attack.t1018
+logsource:
+  category: network
+  service: firewall
+detection:
+  selection:
+    protocol: arp
+    message|contains:
+      - "ARP who-has"
+      - "arp request"
+  selection_broadcast:
+    dst.ip: "255.255.255.255"
+    protocol: arp
+  condition: selection | count(dst.ip) by src.ip > 50 within 30s or selection_broadcast | count() by src.ip > 50 within 30s
+fields:
+  - src.ip
+  - dst.ip
+  - protocol
+  - message
+  - host
+falsepositives:
+  - Network management tools performing discovery
+  - DHCP servers or routers during initial startup
+level: low

@@ -1,0 +1,32 @@
+title: FTP Brute Force Authentication Attack
+id: bf-ftp-001
+status: stable
+description: Detects multiple failed FTP authentication attempts from a single source IP, indicating a brute force attack against an FTP server.
+author: URSUS SIEM
+date: 2024-01-01
+category: brute_force
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1110.001
+logsource:
+  category: authentication
+  service: vsftpd
+detection:
+  selection:
+    message|contains:
+      - "FAIL LOGIN"
+      - "Login incorrect"
+      - "530 Login incorrect"
+      - "Authentication failed"
+    source: ftpd
+  condition: selection | count(src.ip) > 10 within 60s
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Misconfigured FTP clients with wrong credentials
+  - Automated backup tools using stale credentials
+level: high

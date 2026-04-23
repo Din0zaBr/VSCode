@@ -66,7 +66,7 @@ export default function Users() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-100">Управление пользователями</h2>
+        <h2 className="siem-page-title">Управление пользователями</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-vault-600 hover:bg-vault-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -78,37 +78,34 @@ export default function Users() {
       {showForm && (
         <form
           onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }}
-          className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4"
+          className="siem-card rounded-xl p-5 space-y-4"
         >
-          <h3 className="text-sm font-semibold text-gray-300">Создание пользователя</h3>
+          <h3 className="text-sm font-semibold siem-fg">Создание пользователя</h3>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Логин</label>
+              <label className="text-xs siem-fg-soft mb-1 block">Логин</label>
               <input
                 value={form.username}
                 onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
-                           focus:outline-none focus:border-vault-500"
+                className="siem-input w-full text-sm"
                 placeholder="operator1"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Пароль</label>
+              <label className="text-xs siem-fg-soft mb-1 block">Пароль</label>
               <input
                 type="password"
                 value={form.password}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
-                           focus:outline-none focus:border-vault-500"
+                className="siem-input w-full text-sm"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Роль</label>
+              <label className="text-xs siem-fg-soft mb-1 block">Роль</label>
               <select
                 value={form.role}
                 onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200
-                           focus:outline-none focus:border-vault-500"
+                className="siem-input w-full text-sm"
               >
                 <option value="operator">Оператор</option>
                 <option value="admin">Администратор</option>
@@ -127,29 +124,28 @@ export default function Users() {
       )}
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-12">Загрузка...</div>
+        <div className="text-center siem-fg-soft py-12">Загрузка...</div>
       ) : (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="siem-card rounded-xl overflow-hidden p-0">
+          <table className="w-full text-sm siem-table">
             <thead>
-              <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
-                <th className="px-4 py-3">Пользователь</th>
-                <th className="px-4 py-3">Роль</th>
-                <th className="px-4 py-3">Назначенные агенты</th>
-                <th className="px-4 py-3">Создан</th>
+              <tr>
+                <th className="px-4 py-3 text-left">Пользователь</th>
+                <th className="px-4 py-3 text-left">Роль</th>
+                <th className="px-4 py-3 text-left">Назначенные агенты</th>
+                <th className="px-4 py-3 text-left">Создан</th>
                 <th className="px-4 py-3 text-right">Действия</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50">
+            <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-800/30">
-                  <td className="px-4 py-3 font-mono text-vault-300">{u.username}</td>
+                <tr key={u.id}>
+                  <td className="px-4 py-3 font-mono text-sm" style={{ color: "var(--accent)" }}>{u.username}</td>
                   <td className="px-4 py-3">
                     <select
                       value={u.role}
                       onChange={(e) => roleMut.mutate({ id: u.id, role: e.target.value })}
-                      className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200
-                                 focus:outline-none focus:border-vault-500"
+                      className="siem-input text-xs py-1 px-2 min-w-[9rem]"
                     >
                       <option value="admin">Администратор</option>
                       <option value="operator">Оператор</option>
@@ -161,33 +157,35 @@ export default function Users() {
                         <div className="flex flex-wrap gap-1">
                           {u.agents.length > 0 ? (
                             u.agents.map((a) => (
-                              <span key={a} className="bg-vault-600/20 text-vault-300 px-2 py-0.5 rounded text-xs">
+                              <span key={a} className="text-xs px-2 py-0.5 rounded border" style={{ background: "var(--accent-chip-bg)", color: "var(--accent)", borderColor: "var(--accent-chip-border)" }}>
                                 {a}
                               </span>
                             ))
                           ) : (
-                            <span className="text-gray-600 text-xs">нет агентов</span>
+                            <span className="siem-fg-soft text-xs">нет агентов</span>
                           )}
                         </div>
                         <button
+                          type="button"
                           onClick={() => openAgentsEditor(u)}
-                          className="text-xs text-vault-400 hover:text-vault-300 shrink-0"
+                          className="text-xs text-vault-600 hover:text-vault-500 dark:text-vault-400 dark:hover:text-vault-300 shrink-0"
                         >
                           Изменить
                         </button>
                       </div>
                     ) : (
-                      <span className="text-gray-500 text-xs">все (админ)</span>
+                      <span className="siem-fg-soft text-xs">все (админ)</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 siem-fg-soft text-xs">
                     {new Date(u.created_at).toLocaleDateString("ru-RU")}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
+                      type="button"
                       onClick={() => deleteMut.mutate(u.id)}
                       disabled={deleteMut.isPending}
-                      className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                      className="text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                     >
                       Удалить
                     </button>
@@ -226,29 +224,30 @@ function AgentsModal({ userId, allAgents, selected, onToggle, onSave, onClose, s
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md max-h-[80vh] overflow-auto"
+        className="siem-card rounded-xl p-6 w-full max-w-md max-h-[80vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Назначить агентов</h3>
+        <h3 className="text-lg font-semibold siem-fg mb-4">Назначить агентов</h3>
 
         {allAgents.length === 0 ? (
-          <p className="text-gray-500 text-sm">Нет доступных агентов</p>
+          <p className="siem-fg-soft text-sm">Нет доступных агентов</p>
         ) : (
           <div className="space-y-1 mb-4">
             {allAgents.map((a) => (
               <label
                 key={a.agent_id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800/50 cursor-pointer"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_6%,transparent)]"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(a.agent_id)}
                   onChange={() => onToggle(a.agent_id)}
-                  className="rounded bg-gray-800 border-gray-600 text-vault-500 focus:ring-vault-500"
+                  className="h-4 w-4 rounded border cursor-pointer"
+                  style={{ borderColor: "var(--border)", accentColor: "var(--accent-secondary)" }}
                 />
                 <div>
-                  <span className="text-sm text-gray-200 font-mono">{a.agent_id}</span>
-                  {a.host && <span className="text-xs text-gray-500 ml-2">{a.host}</span>}
+                  <span className="text-sm siem-fg font-mono">{a.agent_id}</span>
+                  {a.host && <span className="text-xs siem-fg-soft ml-2">{a.host}</span>}
                 </div>
               </label>
             ))}
@@ -257,8 +256,9 @@ function AgentsModal({ userId, allAgents, selected, onToggle, onSave, onClose, s
 
         <div className="flex justify-end gap-2">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            className="px-4 py-2 text-sm siem-fg-soft hover:text-[color:var(--text)] transition-colors"
           >
             Отмена
           </button>

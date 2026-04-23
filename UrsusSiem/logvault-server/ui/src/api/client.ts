@@ -694,6 +694,127 @@ export const api = {
   latestAgentMetrics() {
     return request<AgentInfo[]>("/metrics/latest");
   },
+
+  // ── SIGMA Rules ───────────────────────────────────────────────────────────
+  listSigmaRules(params: { category?: string; severity?: string; status?: string; search?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set("category", params.category);
+    if (params.severity) qs.set("severity", params.severity);
+    if (params.status) qs.set("status", params.status);
+    if (params.search) qs.set("search", params.search);
+    return request<any[]>(`/sigma-rules?${qs}`);
+  },
+
+  getSigmaRule(id: string) {
+    return request<any>(`/sigma-rules/${id}`);
+  },
+
+  createSigmaRule(data: object) {
+    return request<any>("/sigma-rules", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateSigmaRule(id: string, data: object) {
+    return request<any>(`/sigma-rules/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  toggleSigmaRule(id: string, enabled: boolean) {
+    return request<any>(`/sigma-rules/${id}/toggle`, { method: "POST", body: JSON.stringify({ enabled }) });
+  },
+
+  deleteSigmaRule(id: string) {
+    return request<{ ok: boolean }>(`/sigma-rules/${id}`, { method: "DELETE" });
+  },
+
+  importSigmaRule(rule_yaml: string) {
+    return request<any>("/sigma-rules/import", { method: "POST", body: JSON.stringify({ rule_yaml }) });
+  },
+
+  sigmaRulesStats() {
+    return request<any>("/sigma-rules/stats");
+  },
+
+  // ── Custom Fields ─────────────────────────────────────────────────────────
+  listCustomFields(entity_type = "") {
+    const qs = entity_type ? `?entity_type=${encodeURIComponent(entity_type)}` : "";
+    return request<any[]>(`/custom-fields${qs}`);
+  },
+
+  createCustomField(data: object) {
+    return request<any>("/custom-fields", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateCustomField(id: string, data: object) {
+    return request<any>(`/custom-fields/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteCustomField(id: string) {
+    return request<{ ok: boolean }>(`/custom-fields/${id}`, { method: "DELETE" });
+  },
+
+  interpolateTemplate(text: string, field_values: Record<string, string>) {
+    return request<{ result: string }>("/custom-fields/interpolate", {
+      method: "POST",
+      body: JSON.stringify({ text, field_values }),
+    });
+  },
+
+  // ── Incident Scenarios ────────────────────────────────────────────────────
+  listScenarios(params: { criticality?: string; search?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.criticality) qs.set("criticality", params.criticality);
+    if (params.search) qs.set("search", params.search);
+    return request<any[]>(`/scenarios?${qs}`);
+  },
+
+  getScenario(id: string) {
+    return request<any>(`/scenarios/${id}`);
+  },
+
+  createScenario(data: object) {
+    return request<any>("/scenarios", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateScenario(id: string, data: object) {
+    return request<any>(`/scenarios/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+
+  deleteScenario(id: string) {
+    return request<{ ok: boolean }>(`/scenarios/${id}`, { method: "DELETE" });
+  },
+
+  // ── Reports ───────────────────────────────────────────────────────────────
+  exportReportHtml(type: string, params: { from?: string; to?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set("from_ts", params.from);
+    if (params.to) qs.set("to_ts", params.to);
+    return fetch(`${BASE}/reports/html/${type}?${qs}`, {
+      headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+    });
+  },
+
+  exportReportCsv(type: string, params: { from?: string; to?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set("from_ts", params.from);
+    if (params.to) qs.set("to_ts", params.to);
+    return fetch(`${BASE}/reports/csv/${type}?${qs}`, {
+      headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+    });
+  },
+
+  // ── Integration Sync ──────────────────────────────────────────────────────
+  integrationSyncLog(integration = "", limit = 100) {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (integration) qs.set("integration", integration);
+    return request<any[]>(`/integrations/sync/log?${qs}`);
+  },
+
+  integrationSyncStats() {
+    return request<any>("/integrations/sync/stats");
+  },
+
+  syncIntegration(name: string) {
+    return request<any>(`/integrations/${name}/sync`, { method: "POST" });
+  },
 };
 
 export function wsUrl(): string {

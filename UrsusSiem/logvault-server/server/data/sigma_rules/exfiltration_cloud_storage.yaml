@@ -1,0 +1,43 @@
+title: Exfiltration - Upload to Cloud Storage Domains
+id: exfil-net-001
+status: stable
+description: Detects data upload activity to known cloud storage domains that may indicate data exfiltration via cloud services
+author: URSUS SIEM
+date: 2024-01-01
+category: exfiltration
+severity: medium
+tags:
+  - attack.exfiltration
+  - attack.t1567.002
+logsource:
+  category: network
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "drive.google.com"
+      - "dropbox.com"
+      - "onedrive.live.com"
+      - "box.com"
+      - "mega.nz"
+      - "wetransfer.com"
+      - "sendspace.com"
+      - "anonfiles.com"
+      - "gofile.io"
+    action|contains|any:
+      - "POST"
+      - "PUT"
+      - "upload"
+  condition: selection
+fields:
+  - src.ip
+  - dst.ip
+  - host
+  - message
+  - count.bytes
+  - action
+  - subject.name
+falsepositives:
+  - Legitimate business use of cloud storage services
+  - Authorized file sharing activities
+level: medium

@@ -10,7 +10,6 @@ interface ComboBoxProps {
 
 export default function ComboBox({ value, onChange, options, placeholder, className }: ComboBoxProps) {
   const [open, setOpen] = useState(false);
-  const [focused, setFocused] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
@@ -42,25 +41,18 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
           onChange(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => {
-          setFocused(true);
-          setOpen(true);
-        }}
-        onBlur={() => setFocused(false)}
+        onFocus={() => setOpen(true)}
         role="combobox"
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
-        className={`bg-gray-900 border rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500
-                    focus:outline-none transition-colors
-                    ${focused ? "border-vault-500" : "border-gray-700"}
-                    ${className ?? ""}`}
+        className={`siem-input ${className ?? ""}`}
       />
       {value && (
         <button
           type="button"
           onClick={() => { onChange(""); inputRef.current?.focus(); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs leading-none"
+          className="absolute right-2 top-1/2 -translate-y-1/2 siem-fg-soft hover:text-[color:var(--text-muted)] text-xs leading-none"
           tabIndex={-1}
           aria-label="Clear"
         >
@@ -71,8 +63,8 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-auto
-                     bg-gray-900 border border-gray-700 rounded-lg shadow-xl"
+          className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-auto rounded-lg shadow-xl"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-md)" }}
         >
           {filtered.map((opt) => (
             <li
@@ -84,11 +76,10 @@ export default function ComboBox({ value, onChange, options, placeholder, classN
                 onChange(opt);
                 setOpen(false);
               }}
-              className={`px-3 py-1.5 text-sm cursor-pointer transition-colors
-                ${opt === value
-                  ? "bg-vault-600/20 text-vault-300"
-                  : "text-gray-300 hover:bg-gray-800"
-                }`}
+              className="px-3 py-1.5 text-sm cursor-pointer transition-colors siem-fg"
+              style={opt === value ? { background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-secondary)" } : undefined}
+              onMouseEnter={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = "color-mix(in srgb, var(--accent) 8%, var(--surface-2))"; }}
+              onMouseLeave={(e) => { if (opt !== value) (e.currentTarget as HTMLLIElement).style.background = ""; }}
             >
               {opt}
             </li>

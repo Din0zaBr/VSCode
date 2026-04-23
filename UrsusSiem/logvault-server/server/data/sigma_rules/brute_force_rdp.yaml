@@ -1,0 +1,26 @@
+title: RDP Brute Force Attack
+id: bf-rdp-001
+status: stable
+description: Detects multiple failed RDP authentication attempts indicating brute force against Windows Remote Desktop.
+author: URSUS SIEM
+date: 2024-01-01
+category: brute_force
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1110.001
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4625
+    LogonType: 10
+  condition: selection | count(src.ip) > 10 within 120s
+fields:
+  - src.ip
+  - subject.name
+  - host
+falsepositives:
+  - Legitimate users with forgotten passwords
+level: high

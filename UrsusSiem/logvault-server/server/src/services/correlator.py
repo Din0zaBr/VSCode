@@ -66,7 +66,7 @@ def _eval_threshold(db: Any, rule: dict, cond: dict, events: list, now: float) -
         if not pattern.search(ev.get("raw_message", "") or ev.get("message", "")):
             continue
         key = ev.get(group_by) or ev.get("source_ip") or "unknown"
-        buckets[key].append(ev.get("id", 0))
+        buckets[key].append(ev.get("event_id", ""))
 
     for key, ids in buckets.items():
         if len(ids) >= threshold:
@@ -95,7 +95,7 @@ def _eval_pattern(db: Any, rule: dict, cond: dict, events: list, now: float) -> 
                 db, rule,
                 source_ip=ev.get("source_ip"),
                 description=f"{rule['name']}: matched pattern from {ev.get('source_ip', '?')}",
-                event_ids=[ev.get("id", 0)],
+                event_ids=[ev.get("event_id", "")],
             )
 
 
@@ -117,7 +117,7 @@ def _eval_keyword(db: Any, rule: dict, cond: dict, events: list, now: float) -> 
                 db, rule,
                 source_ip=ev.get("source_ip"),
                 description=f"{rule['name']}: keywords {matched} from {ev.get('source_ip', '?')}",
-                event_ids=[ev.get("id", 0)],
+                event_ids=[ev.get("event_id", "")],
             )
 
 
@@ -141,7 +141,7 @@ def _eval_port_scan(db: Any, rule: dict, cond: dict, events: list, now: float) -
         if m:
             port = m.group(1) or m.group(2)
             buckets[src]["ports"].add(port)
-            buckets[src]["ids"].append(ev.get("id", 0))
+            buckets[src]["ids"].append(ev.get("event_id", ""))
 
     for src, data in buckets.items():
         if len(data["ports"]) >= threshold_ports:

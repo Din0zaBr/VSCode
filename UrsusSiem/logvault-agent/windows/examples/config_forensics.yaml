@@ -1,0 +1,146 @@
+# LogVault Agent — Windows Forensics / Threat Hunting configuration
+#
+# USE CASE: Deep forensic visibility and threat hunting on Windows endpoints.
+#           Collects high-fidelity telemetry from Sysmon, PowerShell script
+#           block logging, and the Security event log.
+#
+# FOCUSES ON:
+#   - Sysmon: process, network, file, registry, and driver events
+#   - PowerShell: script block logging, module logging, command history
+#   - Security: authentication, lateral movement, and credential access
+#
+# REQUIREMENTS:
+#   1. Sysmon must be installed and configured with a ruleset:
+#        https://docs.microsoft.com/sysinternals/downloads/sysmon
+#        Recommended starter config: https://github.com/SwiftOnSecurity/sysmon-config
+#        Install: sysmon64.exe -accepteula -i sysmonconfig.xml
+#
+#   2. Enable PowerShell Script Block Logging via Group Policy or registry:
+#        reg add "HKLM\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
+#
+#   3. Enable PowerShell Module Logging:
+#        reg add "HKLM\Software\Policies\Microsoft\Windows\PowerShell\ModuleLogging" /v EnableModuleLogging /t REG_DWORD /d 1 /f
+#
+#   4. Agent must run as SYSTEM for Security + Sysmon channel access.
+#
+# Copy to: C:\ProgramData\logvault-agent\config.yaml
+# Install : .\install-windows.ps1 -ServerUrl <url> -ApiKey <key>
+# ─────────────────────────────────────────────────────────────────────────────
+
+server_url: "http://localhost:8000"   # replace with your LogVault server URL
+agent_id:   "win-forensics-01"        # unique per host
+api_key:    "changeme-agent-key"      # must match AGENT_API_KEY on the server
+hostname:   ""                        # leave blank to auto-detect
+
+batch_size:     200
+flush_interval: 1.0   # 1 s flush for minimal latency during incident response
+retry_base:     1.0
+retry_max:      60.0
+buffer_db:      "C:/ProgramData/logvault-agent/buffer.db"
+verify_ssl:     false  # set true when server uses a trusted certificate
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Log sources
+# ─────────────────────────────────────────────────────────────────────────────
+sources:
+
+  # ── Sysmon — process, network, file, registry, driver telemetry ─────────────
+  # Collects ALL Sysmon event IDs (no filter) for maximum forensic fidelity.
+  # On high-volume endpoints consider restricting to specific event IDs or
+  # using a Sysmon ruleset to reduce noise before it reaches the agent.
+  - type: winevent
+    channel: "Microsoft-Windows-Sysmon/Operational"
+    service: "sysmon"
+    # Key Sysmon event IDs for reference (no filter applied here):
+    #   1  - Process Create
+    #   2  - File creation time changed
+    #   3  - Network connection
+    #   5  - Process terminated
+    #   6  - Driver loaded
+    #   7  - Image loaded (DLL)
+    #   8  - CreateRemoteThread (process injection)
+    #   9  - RawAccessRead (disk access bypass)
+    #  10  - ProcessAccess (credential dumping indicator)
+    #  11  - FileCreate
+    #  12  - RegistryEvent (key/value create/delete)
+    #  13  - RegistryEvent (value set)
+    #  14  - RegistryEvent (key/value rename)
+    #  15  - FileCreateStreamHash (alternate data streams)
+    #  17  - PipeEvent (named pipe created)
+    #  18  - PipeEvent (named pipe connected)
+    #  19  - WmiEvent (filter registered)
+    #  20  - WmiEvent (consumer registered)
+    #  21  - WmiEvent (consumer bound to filter)
+    #  22  - DNS query
+    #  23  - FileDelete (file deleted from disk)
+    #  24  - ClipboardChange
+    #  25  - ProcessTampering (image change / hollowing / herpaderping)
+    #  26  - FileDeleteDetected
+    #  27  - FileBlockExecutable
+    #  28  - FileBlockShredding
+    #  29  - FileExecutableDetected
+
+  # ── PowerShell — script block and module logging ─────────────────────────────
+  # Captures the full content of PowerShell scripts run on this host,
+  # including deobfuscated script blocks (event 4104 decodes obfuscated code).
+  - type: winevent
+    channel: "Microsoft-Windows-PowerShell/Operational"
+    service: "powershell"
+    event_ids:
+      - 4100   # PowerShell pipeline execution details (error context)
+      - 4103   # Module logging — pipeline execution details
+      - 4104   # Script block logging — script block text (captures obfuscated code)
+      - 4105   # CommandStart — a command started
+      - 4106   # CommandStop  — a command stopped
+
+  # ── Windows Security Event Log ──────────────────────────────────────────────
+  # Lateral movement, credential access, and privilege escalation events.
+  - type: winevent
+    channel: "Security"
+    service: "windows-security"
+    event_ids:
+      # ── Authentication & lateral movement ───────────────────────────────────
+      - 4624   # Logon (especially Type 3 = network, Type 10 = RemoteInteractive)
+      - 4625   # Logon failure
+      - 4634   # Logoff
+      - 4648   # Explicit credential logon (RunAs / pass-the-hash indicator)
+      - 4672   # Special privileges assigned (admin-level logon)
+      - 4768   # Kerberos TGT requested
+      - 4769   # Kerberos service ticket requested
+      - 4771   # Kerberos pre-authentication failed
+      - 4776   # NTLM authentication attempted
+      - 4778   # Session reconnected (RDP)
+      - 4779   # Session disconnected (RDP)
+
+      # ── Process and object access ────────────────────────────────────────────
+      - 4688   # Process creation (command line if audit policy enabled)
+      - 4689   # Process terminated
+
+      # ── Persistence ──────────────────────────────────────────────────────────
+      - 4698   # Scheduled task created
+      - 4699   # Scheduled task deleted
+      - 4702   # Scheduled task updated
+      - 7045   # New service installed
+
+      # ── Account changes ──────────────────────────────────────────────────────
+      - 4720   # User account created
+      - 4726   # User account deleted
+      - 4728   # Member added to global security group
+      - 4732   # Member added to local security group
+      - 4740   # Account locked out
+
+  # ── Windows System Log ──────────────────────────────────────────────────────
+  # Kernel, driver, and service crash events relevant to forensic timelines.
+  - type: winevent
+    channel: "System"
+    service: "windows-system"
+    event_ids:
+      - 7034   # Service crashed unexpectedly (potential anti-forensic tool)
+      - 7036   # Service state change
+      - 7040   # Service start type changed
+      - 7045   # New service installed (also in Security — belt-and-suspenders)
+      - 41     # System rebooted without clean shutdown (crash / hard reset)
+      - 1074   # System shutdown / restart initiated
+      - 6005   # Event Log service started (system boot marker)
+      - 6006   # Event Log service stopped (shutdown marker)
+      - 6013   # System uptime in seconds (useful for timeline anchoring)

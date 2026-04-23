@@ -1,0 +1,42 @@
+title: Defense Evasion - Antivirus Service Stop or Disable
+id: evasion-av-001
+status: stable
+description: Detects attempts to stop or disable antivirus and security services which attackers do to prevent detection of their tools and activities
+author: URSUS SIEM
+date: 2024-01-01
+category: defense_evasion
+severity: high
+tags:
+  - attack.defense_evasion
+  - attack.t1562.001
+logsource:
+  category: process_creation
+  service: windows_security
+detection:
+  selection:
+    message|contains|any:
+      - "sc stop"
+      - "sc config"
+      - "net stop"
+      - "Set-MpPreference -DisableRealtimeMonitoring"
+      - "Stop-Service"
+      - "MpsSvc"
+      - "WinDefend"
+      - "wscsvc"
+      - "MsMpEng"
+      - "kavservice"
+      - "avp"
+      - "mcshield"
+      - "mfemactl"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.name
+  - action
+  - src.ip
+falsepositives:
+  - Authorized system administrators managing security services
+  - Security software updates requiring service restart
+level: high

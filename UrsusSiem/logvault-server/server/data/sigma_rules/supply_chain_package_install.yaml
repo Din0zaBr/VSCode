@@ -1,0 +1,36 @@
+title: Suspicious Package Installation
+id: supply-pkg-001
+status: stable
+description: Detects installation of packages from untrusted sources or suspicious package managers.
+author: URSUS SIEM
+date: 2024-01-01
+category: supply_chain
+severity: medium
+tags:
+  - attack.initial_access
+  - attack.t1195
+logsource:
+  category: process_creation
+detection:
+  selection:
+    message|contains|any:
+      - "pip install"
+      - "npm install"
+      - "gem install"
+      - "curl | bash"
+      - "wget | sh"
+      - "curl | sh"
+  filter_known:
+    src.ip|startswith:
+      - "10."
+      - "192.168."
+  condition: selection and not filter_known
+fields:
+  - subject.name
+  - host
+  - message
+  - src.ip
+falsepositives:
+  - Development environments
+  - Authorized software installations
+level: medium

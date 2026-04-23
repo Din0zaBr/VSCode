@@ -48,104 +48,132 @@ export default function Exclusions() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-2xl font-bold text-gray-100">Исключения</h2>
-        {isAdmin() && <button onClick={openCreate} className="px-4 py-2 bg-vault-600 hover:bg-vault-700 text-white rounded-lg text-sm font-medium transition-colors">+ Создать</button>}
+        <h2 className="siem-page-title">Исключения</h2>
+        {isAdmin() && (
+          <button type="button" onClick={openCreate} className="siem-btn text-sm">
+            + Создать
+          </button>
+        )}
       </div>
 
       <div className="flex gap-2">
-        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
+        <select
+          value={typeFilter}
+          onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+          className="siem-input text-sm min-w-[160px]"
+        >
           <option value="">Все типы</option>
           {["event", "host", "user", "ip", "rule"].map((s) => <option key={s}>{s}</option>)}
         </select>
       </div>
 
       {showForm && (
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-100">{editEx ? "Редактировать исключение" : "Новое исключение"}</h3>
+        <div className="siem-card rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-semibold siem-fg">{editEx ? "Редактировать исключение" : "Новое исключение"}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Название</label>
-              <input value={form.name} onChange={(e) => setForm((d) => ({ ...d, name: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-vault-500" />
+              <label className="text-xs siem-fg-soft mb-1 block">Название</label>
+              <input value={form.name} onChange={(e) => setForm((d) => ({ ...d, name: e.target.value }))} className="siem-input w-full text-sm" />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Тип</label>
-              <select value={form.exclusion_type} onChange={(e) => setForm((d) => ({ ...d, exclusion_type: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
+              <label className="text-xs siem-fg-soft mb-1 block">Тип</label>
+              <select value={form.exclusion_type} onChange={(e) => setForm((d) => ({ ...d, exclusion_type: e.target.value }))} className="siem-input w-full text-sm">
                 {["event", "host", "user", "ip", "rule"].map((s) => <option key={s}>{s}</option>)}
               </select>
             </div>
           </div>
-          <div className="text-sm text-gray-400 font-medium mt-2">Условие</div>
+          <div className="text-sm siem-fg-soft font-medium mt-2">Условие</div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Поле</label>
-              <input value={form.field} onChange={(e) => setForm((d) => ({ ...d, field: e.target.value }))} placeholder="src.ip" className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-vault-500" />
+              <label className="text-xs siem-fg-soft mb-1 block">Поле</label>
+              <input value={form.field} onChange={(e) => setForm((d) => ({ ...d, field: e.target.value }))} placeholder="src.ip" className="siem-input w-full text-sm font-mono" />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Оператор</label>
-              <select value={form.operator} onChange={(e) => setForm((d) => ({ ...d, operator: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
+              <label className="text-xs siem-fg-soft mb-1 block">Оператор</label>
+              <select value={form.operator} onChange={(e) => setForm((d) => ({ ...d, operator: e.target.value }))} className="siem-input w-full text-sm">
                 {["=", "contains", "startswith", "regex"].map((s) => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Значение</label>
-              <input value={form.value} onChange={(e) => setForm((d) => ({ ...d, value: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 font-mono focus:outline-none focus:border-vault-500" />
+              <label className="text-xs siem-fg-soft mb-1 block">Значение</label>
+              <input value={form.value} onChange={(e) => setForm((d) => ({ ...d, value: e.target.value }))} className="siem-input w-full text-sm font-mono" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Область применения</label>
-              <select value={form.scope} onChange={(e) => setForm((d) => ({ ...d, scope: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
+              <label className="text-xs siem-fg-soft mb-1 block">Область применения</label>
+              <select value={form.scope} onChange={(e) => setForm((d) => ({ ...d, scope: e.target.value }))} className="siem-input w-full text-sm">
                 {["all", "correlation", "alerts"].map((s) => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Истекает (оставить пустым = бессрочно)</label>
-              <input type="datetime-local" value={form.expires_at} onChange={(e) => setForm((d) => ({ ...d, expires_at: e.target.value }))} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-vault-500" />
+              <label className="text-xs siem-fg-soft mb-1 block">Истекает (оставить пустым = бессрочно)</label>
+              <input type="datetime-local" value={form.expires_at} onChange={(e) => setForm((d) => ({ ...d, expires_at: e.target.value }))} className="siem-input w-full text-sm" />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending} className="px-4 py-2 bg-vault-600 hover:bg-vault-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">Сохранить</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm font-medium transition-colors">Отмена</button>
+            <button type="button" onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending} className="siem-btn text-sm disabled:opacity-50">
+              Сохранить
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} className="siem-btn-ghost text-sm">
+              Отмена
+            </button>
           </div>
         </div>
       )}
 
-      {isLoading && <div className="text-center text-gray-500 py-12">Загрузка...</div>}
+      {isLoading && <div className="text-center siem-fg-soft py-12">Загрузка...</div>}
 
       <div className="space-y-2">
         {(data?.exclusions ?? []).map((ex: Exclusion) => (
-          <div key={ex.id} className={`bg-gray-800 border rounded-xl p-4 flex items-center gap-4 ${ex.enabled ? "border-gray-700" : "border-gray-800 opacity-60"}`}>
+          <div key={ex.id} className={`siem-card rounded-xl p-4 flex items-center gap-4 ${!ex.enabled ? "opacity-60" : ""}`}>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-100">{ex.name}</span>
-                <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-400 rounded">{ex.exclusion_type}</span>
-                <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-400 rounded">{ex.scope}</span>
-                {!ex.enabled && <span className="text-xs text-gray-600">отключено</span>}
+                <span className="text-sm font-medium siem-fg">{ex.name}</span>
+                <span className="text-xs px-2 py-0.5 rounded border siem-fg-soft" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>{ex.exclusion_type}</span>
+                <span className="text-xs px-2 py-0.5 rounded border siem-fg-soft" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>{ex.scope}</span>
+                {!ex.enabled && <span className="text-xs siem-fg-soft">отключено</span>}
               </div>
-              <div className="text-xs text-gray-500 font-mono mt-1">
+              <div className="text-xs siem-fg-soft font-mono mt-1">
                 {(ex.conditions as any)?.field} {(ex.conditions as any)?.operator} "{(ex.conditions as any)?.value}"
               </div>
-              {ex.expires_at && <div className="text-xs text-gray-600">Истекает: {new Date(ex.expires_at).toLocaleString("ru")}</div>}
+              {ex.expires_at && <div className="text-xs siem-fg-soft">Истекает: {new Date(ex.expires_at).toLocaleString("ru")}</div>}
             </div>
             {isAdmin() && (
               <div className="flex gap-2">
-                <button onClick={() => toggleMutation.mutate(ex)} className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${ex.enabled ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-green-900/40 hover:bg-green-800/40 text-green-400"}`}>
+                <button
+                  type="button"
+                  onClick={() => toggleMutation.mutate(ex)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                    ex.enabled
+                      ? "siem-btn-ghost"
+                      : "border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15"
+                  }`}
+                >
                   {ex.enabled ? "Отключить" : "Включить"}
                 </button>
-                <button onClick={() => openEdit(ex)} className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors">Изменить</button>
-                <button onClick={() => deleteMutation.mutate(ex.id)} className="px-3 py-1.5 text-xs bg-red-900/40 hover:bg-red-800/40 text-red-400 rounded-lg transition-colors">Удалить</button>
+                <button type="button" onClick={() => openEdit(ex)} className="siem-btn-ghost text-xs px-3 py-1.5">
+                  Изменить
+                </button>
+                <button type="button" onClick={() => deleteMutation.mutate(ex.id)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/35 text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/15 transition-colors">
+                  Удалить
+                </button>
               </div>
             )}
           </div>
         ))}
-        {!isLoading && !data?.exclusions?.length && <div className="text-center text-gray-500 py-8">Нет исключений</div>}
+        {!isLoading && !data?.exclusions?.length && <div className="text-center siem-fg-soft py-8">Нет исключений</div>}
       </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
-          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-sm transition-colors">Prev</button>
-          <span className="text-sm text-gray-400">Стр. {page} / {totalPages}</span>
-          <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-sm transition-colors">Next</button>
+          <button type="button" disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="siem-btn-ghost text-sm px-3 py-1.5 disabled:opacity-40">
+            Prev
+          </button>
+          <span className="text-sm siem-fg-soft">Стр. {page} / {totalPages}</span>
+          <button type="button" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="siem-btn-ghost text-sm px-3 py-1.5 disabled:opacity-40">
+            Next
+          </button>
         </div>
       )}
     </div>

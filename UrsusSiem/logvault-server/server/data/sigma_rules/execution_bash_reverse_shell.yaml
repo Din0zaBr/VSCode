@@ -1,0 +1,37 @@
+title: Bash Reverse Shell Execution
+id: exec-revsh-001
+status: stable
+description: Detects common bash reverse shell patterns used by attackers to establish interactive command shell access.
+author: URSUS SIEM
+date: 2024-01-01
+category: execution
+severity: critical
+tags:
+  - attack.execution
+  - attack.t1059.004
+  - attack.command_and_control
+  - attack.t1071.004
+logsource:
+  category: process_creation
+detection:
+  selection:
+    message|contains|any:
+      - "bash -i >& /dev/tcp/"
+      - "bash -i >&/dev/tcp/"
+      - "0>&1"
+      - "nc -e /bin/bash"
+      - "nc -e /bin/sh"
+      - "ncat -e /bin/bash"
+      - "/dev/tcp/"
+      - "python -c 'import socket"
+      - "perl -e 'use Socket"
+      - "ruby -rsocket"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - src.ip
+falsepositives:
+  - Security research or CTF challenges in isolated environments
+level: critical

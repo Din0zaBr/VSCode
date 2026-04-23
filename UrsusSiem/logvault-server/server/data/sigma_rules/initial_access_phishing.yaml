@@ -1,0 +1,45 @@
+title: Initial Access - Phishing Attachment Execution from Email Client
+id: init-acc-001
+status: stable
+description: Detects phishing indicators including suspicious attachment execution spawned from email client processes
+author: URSUS SIEM
+date: 2024-01-01
+category: initial_access
+severity: high
+tags:
+  - attack.initial_access
+  - attack.t1566.001
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "outlook.exe"
+      - "thunderbird"
+      - "winmail"
+      - "OUTLOOK.EXE"
+    object.name|contains|any:
+      - ".doc"
+      - ".docm"
+      - ".xls"
+      - ".xlsm"
+      - ".pdf"
+      - ".js"
+      - ".vbs"
+      - ".hta"
+      - ".iso"
+      - ".lnk"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.path
+  - object.name
+  - action
+  - src.ip
+falsepositives:
+  - Legitimate business email attachments opened by employees
+  - Authorized document review processes
+level: high

@@ -1,0 +1,39 @@
+title: Persistence - SSH Authorized Keys File Modification
+id: persist-lin-001
+status: stable
+description: Detects modifications to SSH authorized_keys files which attackers use to maintain persistent access to Linux systems
+author: URSUS SIEM
+date: 2024-01-01
+category: persistence
+severity: medium
+tags:
+  - attack.persistence
+  - attack.t1098.004
+logsource:
+  category: file
+  service: syslog
+detection:
+  selection:
+    object.path|contains|any:
+      - ".ssh/authorized_keys"
+      - "authorized_keys2"
+      - "/.ssh/"
+    message|contains|any:
+      - "write"
+      - "modify"
+      - "create"
+      - "append"
+      - "echo"
+      - "tee"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - object.path
+  - object.name
+  - message
+  - action
+falsepositives:
+  - Legitimate system administrators adding SSH keys
+  - Automated deployment tools managing SSH access
+level: medium

@@ -5,7 +5,7 @@ interface Props {
 }
 
 function getColor(count: number, max: number): string {
-  if (max === 0 || count === 0) return "bg-gray-800";
+  if (max === 0 || count === 0) return "bg-[var(--surface-2)]";
   const ratio = count / max;
   if (ratio > 0.8) return "bg-red-500";
   if (ratio > 0.6) return "bg-orange-500";
@@ -31,7 +31,7 @@ export default function HeatMap({ data }: Props) {
   });
 
   if (!data.length) {
-    return <div className="text-center text-gray-500 py-8">No data yet</div>;
+    return <div className="text-center siem-fg-soft py-8">No data yet</div>;
   }
 
   return (
@@ -39,14 +39,14 @@ export default function HeatMap({ data }: Props) {
       <div className="inline-block">
         <div className="flex gap-0.5 mb-1 ml-10">
           {HOURS.map((h) => (
-            <div key={h} className="w-6 text-center text-[10px] text-gray-500">
+            <div key={h} className="w-6 text-center text-[10px] siem-fg-soft">
               {h}
             </div>
           ))}
         </div>
         {DAYS.map((day, di) => (
           <div key={day} className="flex items-center gap-0.5 mb-0.5">
-            <div className="w-9 text-right text-[10px] text-gray-500 pr-1">{day}</div>
+            <div className="w-9 text-right text-[10px] siem-fg-soft pr-1">{day}</div>
             {HOURS.map((h) => {
               const count = grid[`${di}-${h}`] || 0;
               return (
@@ -60,11 +60,11 @@ export default function HeatMap({ data }: Props) {
           </div>
         ))}
         <div className="flex items-center gap-2 mt-3 ml-10">
-          <span className="text-[10px] text-gray-500">Less</span>
-          {["bg-gray-800", "bg-blue-900", "bg-blue-500", "bg-yellow-500", "bg-orange-500", "bg-red-500"].map((c) => (
+          <span className="text-[10px] siem-fg-soft">Less</span>
+          {["bg-[var(--surface-2)]", "bg-blue-900", "bg-blue-500", "bg-yellow-500", "bg-orange-500", "bg-red-500"].map((c) => (
             <div key={c} className={`w-4 h-4 rounded-sm ${c}`} />
           ))}
-          <span className="text-[10px] text-gray-500">More</span>
+          <span className="text-[10px] siem-fg-soft">More</span>
         </div>
       </div>
     </div>

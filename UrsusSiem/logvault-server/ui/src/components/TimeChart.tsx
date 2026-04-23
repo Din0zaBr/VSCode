@@ -84,7 +84,7 @@ export default function TimeChart({ data, interval = "1h" }: Props) {
   const levels = Array.from(allLevels);
 
   if (!chartData.length) {
-    return <div className="text-center text-gray-500 py-8">No data yet</div>;
+    return <div className="text-center siem-fg-soft py-8">No data yet</div>;
   }
 
   const ticks = generateTicks(chartData as { ts: number }[], interval);

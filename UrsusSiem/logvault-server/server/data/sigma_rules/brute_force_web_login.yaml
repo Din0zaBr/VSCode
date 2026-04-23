@@ -1,0 +1,37 @@
+title: Web Login Brute Force Attack
+id: bf-web-001
+status: stable
+description: Detects a storm of HTTP 401 or 403 responses from a single source IP against web login endpoints, indicating a brute force or credential stuffing attack.
+author: URSUS SIEM
+date: 2024-01-01
+category: brute_force
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1110.003
+logsource:
+  category: webserver
+  service: access_log
+detection:
+  selection:
+    http.status_code:
+      - 401
+      - 403
+    http.url|contains:
+      - "/login"
+      - "/signin"
+      - "/auth"
+      - "/wp-login.php"
+      - "/admin"
+  condition: selection | count(src.ip) > 20 within 60s
+fields:
+  - src.ip
+  - dst.ip
+  - http.url
+  - http.status_code
+  - subject.name
+  - host
+falsepositives:
+  - Security scanners during authorized assessments
+  - Users who repeatedly enter wrong credentials
+level: high

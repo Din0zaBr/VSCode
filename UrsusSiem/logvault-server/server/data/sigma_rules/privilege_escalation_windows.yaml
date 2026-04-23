@@ -1,0 +1,31 @@
+title: Windows Privilege Escalation via Token Impersonation
+id: pe-win-001
+status: stable
+description: Detects Windows privilege escalation by token impersonation or elevated process creation.
+author: URSUS SIEM
+date: 2024-01-01
+category: privilege_escalation
+severity: high
+tags:
+  - attack.privilege_escalation
+  - attack.t1134
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID:
+      - 4672
+      - 4673
+    message|contains:
+      - "SeDebugPrivilege"
+      - "SeTcbPrivilege"
+      - "SeImpersonatePrivilege"
+  condition: selection
+fields:
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legitimate administrative tools
+level: high
