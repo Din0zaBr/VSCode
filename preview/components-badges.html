@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:24px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.head{font-size:9px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase}
+.status{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.ip{font-size:11px;color:#00BFFF;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.3);padding:1px 6px;border-radius:3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div>
+  <div class="head">severity badges</div>
+  <div class="row">
+    <span class="badge" style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.4)">CRITICAL</span>
+    <span class="badge" style="background:rgba(255,107,0,0.13);color:#FF6B00;border:1px solid rgba(255,107,0,0.4)">HIGH</span>
+    <span class="badge" style="background:rgba(255,215,0,0.13);color:#FFD700;border:1px solid rgba(255,215,0,0.4)">MEDIUM</span>
+    <span class="badge" style="background:rgba(0,191,255,0.13);color:#00BFFF;border:1px solid rgba(0,191,255,0.4)">LOW</span>
+    <span class="badge" style="background:rgba(136,136,136,0.13);color:#888;border:1px solid rgba(136,136,136,0.4)">INFO</span>
+  </div>
+</div>
+<div>
+  <div class="head">status badges</div>
+  <div class="row">
+    <span class="status" style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.27)">OPEN</span>
+    <span class="status" style="background:rgba(255,215,0,0.13);color:#FFD700;border:1px solid rgba(255,215,0,0.27)">IN_PROGRESS</span>
+    <span class="status" style="background:rgba(57,255,20,0.13);color:#39FF14;border:1px solid rgba(57,255,20,0.27)">RESOLVED</span>
+    <span class="status" style="background:rgba(136,136,136,0.13);color:#888;border:1px solid rgba(136,136,136,0.27)">FALSE_POSITIVE</span>
+  </div>
+</div>
+<div>
+  <div class="head">agent status</div>
+  <div class="row">
+    <span class="status" style="background:rgba(57,255,20,0.13);color:#39FF14;border:1px solid rgba(57,255,20,0.27)">ONLINE</span>
+    <span class="status" style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.27)">OFFLINE</span>
+    <span class="status" style="background:rgba(136,136,136,0.13);color:#888;border:1px solid rgba(136,136,136,0.27)">UNKNOWN</span>
+  </div>
+</div>
+<div>
+  <div class="head">ip tag + status dots</div>
+  <div class="row">
+    <span class="ip">192.168.1.42</span>
+    <span class="ip">10.0.0.1</span>
+    <span class="dot" style="background:#39FF14;box-shadow:0 0 6px #39FF14"></span>
+    <span style="font-size:10px;color:#D4D4E8">online</span>
+    <span class="dot" style="background:#FF3131;box-shadow:0 0 6px #FF3131"></span>
+    <span style="font-size:10px;color:#D4D4E8">offline</span>
+    <span class="dot" style="background:#888"></span>
+    <span style="font-size:10px;color:#D4D4E8">unknown</span>
+  </div>
+</div>
+</body>
+</html>

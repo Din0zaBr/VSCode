@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:24px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.head{font-size:9px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;border:1px solid #2A2A4A;background:#1E1E36;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:0.5px;cursor:pointer}
+.btn-primary{border-color:#6A0DAD;color:#BF40BF;background:rgba(106,13,173,0.2)}
+.btn-danger{border-color:#FF3131;color:#FF3131;background:transparent}
+.btn-success{border-color:#39FF14;color:#39FF14;background:transparent}
+.btn-sm{padding:3px 10px;font-size:10px}
+.btn-hover{border-color:#6A0DAD;color:#BF40BF;background:rgba(106,13,173,0.12)}
+.btn-glass{border:1px solid rgba(255,255,255,0.08);background:rgba(22,22,42,0.65);backdrop-filter:blur(14px);color:#BF40BF;box-shadow:0 4px 16px rgba(0,0,0,0.3),0 0 0 1px rgba(106,13,173,0.1)}
+</style>
+</head>
+<body>
+<div>
+  <div class="head">default variants</div>
+  <div class="row">
+    <button class="btn">↺ Default</button>
+    <button class="btn btn-hover">⊕ Hover</button>
+    <button class="btn btn-primary">+ Новое правило</button>
+    <button class="btn btn-danger">✗ Danger</button>
+    <button class="btn btn-success">✓ Success</button>
+  </div>
+</div>
+<div>
+  <div class="head">small size</div>
+  <div class="row">
+    <button class="btn btn-sm">↺ Обновить</button>
+    <button class="btn btn-sm btn-primary">▶ В работу</button>
+    <button class="btn btn-sm btn-success">✓ Закрыть</button>
+    <button class="btn btn-sm btn-danger">✗ Ложная</button>
+    <button class="btn btn-sm">Все →</button>
+    <button class="btn btn-sm">⊕</button>
+  </div>
+</div>
+<div>
+  <div class="head">liquid glass variant</div>
+  <div class="row">
+    <button class="btn btn-glass">+ Добавить</button>
+    <button class="btn btn-glass">↺ Обновить</button>
+  </div>
+</div>
+</body>
+</html>

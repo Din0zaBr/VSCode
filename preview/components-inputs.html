@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:24px;display:flex;flex-direction:column;gap:16px}
+.head{font-size:9px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.input{background:#1E1E36;border:1px solid #2A2A4A;border-radius:6px;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 10px;outline:none;height:30px}
+.input-focus{background:#1E1E36;border:1px solid #6A0DAD;box-shadow:0 0 0 2px rgba(106,13,173,0.2);border-radius:6px;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:11px;padding:5px 10px;height:30px}
+.form-label{font-size:10px;color:#7A7A9A;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px}
+.form-control{width:100%;background:#1E1E36;border:1px solid #2A2A4A;border-radius:6px;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:12px;padding:7px 10px;outline:none}
+
+/* Toggle */
+.toggle{position:relative;display:inline-block;width:36px;height:18px}
+.toggle input{display:none}
+.toggle-slider{position:absolute;inset:0;background:#2A2A4A;border-radius:9px;cursor:pointer}
+.toggle-slider::before{content:'';position:absolute;width:12px;height:12px;top:3px;left:3px;background:#7A7A9A;border-radius:50%;transition:transform 0.2s}
+.toggle-on .toggle-slider{background:#6A0DAD}
+.toggle-on .toggle-slider::before{transform:translateX(18px);background:#BF40BF}
+</style>
+</head>
+<body>
+<div>
+  <div class="head">text inputs</div>
+  <div class="row">
+    <input class="input" placeholder="Поиск в логах..." style="width:180px"/>
+    <input class="input-focus" value="admin" style="width:120px"/>
+    <input class="input" placeholder="IP-адрес..." style="width:120px"/>
+    <select class="input">
+      <option>Все severity</option>
+      <option>CRITICAL</option>
+      <option>HIGH</option>
+    </select>
+  </div>
+</div>
+<div>
+  <div class="head">form field</div>
+  <div style="max-width:280px">
+    <label class="form-label">правило корреляции</label>
+    <input class="form-control" placeholder="SSH Brute Force"/>
+  </div>
+</div>
+<div>
+  <div class="head">toggle switches</div>
+  <div class="row" style="gap:20px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="toggle"><div class="toggle-slider"></div></div>
+      <span style="font-size:11px;color:#7A7A9A">Отключено</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="toggle toggle-on"><div class="toggle-slider"></div></div>
+      <span style="font-size:11px;color:#BF40BF">Включено</span>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="head">spinner</div>
+  <div class="row">
+    <div style="width:18px;height:18px;border:2px solid #2A2A4A;border-top-color:#BF40BF;border-radius:50%;animation:spin 0.7s linear infinite"></div>
+    <span style="font-size:11px;color:#7A7A9A">Загрузка...</span>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;padding:20px;display:flex;flex-direction:column;gap:16px}
+.head{font-family:'Share Tech Mono',monospace;font-size:9px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+
+/* Scanlines */
+.scan-demo{width:100%;height:50px;background:#111122;position:relative;border-radius:4px;overflow:hidden;border:1px solid #2A2A4A}
+.scan-demo::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);animation:scanMove 4s linear infinite}
+@keyframes scanMove{from{background-position-y:0}to{background-position-y:100px}}
+.scan-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:12px;color:#BF40BF;letter-spacing:3px;z-index:1}
+
+/* Cyber grid */
+.grid-demo{width:100%;height:50px;background:#0D0D1A;background-image:linear-gradient(#2A2A4A 1px,transparent 1px),linear-gradient(90deg,#2A2A4A 1px,transparent 1px);background-size:40px 40px;border-radius:4px;border:1px solid #2A2A4A;position:relative;overflow:hidden}
+.grid-text{position:absolute;top:50%;left:16px;transform:translateY(-50%);font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A;letter-spacing:2px}
+
+/* Gradient top bar */
+.topbar-demo{height:2px;background:linear-gradient(90deg,transparent,#6A0DAD,#BF40BF,transparent);border-radius:1px;opacity:0.7}
+
+/* Glass panel */
+.glass-demo{padding:14px 16px;background:rgba(22,22,42,0.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.08);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.45),0 0 0 1px rgba(106,13,173,0.15),inset 0 0 0 1px rgba(255,255,255,0.04)}
+.glass-inner{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(212,212,232,0.85);letter-spacing:1.5px}
+
+/* Pulse badge */
+.pulse-demo{display:flex;align-items:center;gap:10px}
+.pulse-badge{background:#FF3131;color:#fff;padding:2px 8px;border-radius:10px;font-family:'Share Tech Mono',monospace;font-size:10px;animation:pulseBadge 1.5s ease-in-out infinite;letter-spacing:1px}
+@keyframes pulseBadge{0%,100%{box-shadow:0 0 4px #FF3131}50%{box-shadow:0 0 12px #FF3131}}
+.dot-online{width:8px;height:8px;border-radius:50%;background:#39FF14;box-shadow:0 0 6px #39FF14;animation:dotPulse 2s ease-in-out infinite;display:inline-block}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+<div>
+  <div class="head">scanline overlay</div>
+  <div class="scan-demo"><span class="scan-text">CYBER FOREST</span></div>
+</div>
+<div>
+  <div class="head">cyber grid background</div>
+  <div class="grid-demo"><span class="grid-text">CONTENT AREA</span></div>
+</div>
+<div>
+  <div class="head">gradient accent bar</div>
+  <div class="topbar-demo"></div>
+</div>
+<div>
+  <div class="head">liquid glass panel</div>
+  <div class="glass-demo"><span class="glass-inner">◈ ЖУРНАЛ СОБЫТИЙ · blur(14px) · rgba bg</span></div>
+</div>
+<div>
+  <div class="head">pulse animations</div>
+  <div class="pulse-demo">
+    <span class="pulse-badge">3</span>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">active alerts</span>
+    <span class="dot-online"></span>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#39FF14">Система активна</span>
+  </div>
+</div>
+</body>
+</html>

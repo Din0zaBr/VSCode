@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;padding:20px}
+.table-panel{background:#16162A;border:1px solid #2A2A4A;border-radius:6px;overflow:hidden}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #2A2A4A;background:#1E1E36}
+.table-title{font-family:'Share Tech Mono',monospace;font-size:10px;color:#BF40BF;letter-spacing:2px;text-transform:uppercase}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{padding:8px 12px;text-align:left;font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:normal;color:#7A7A9A;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid #2A2A4A;background:#1E1E36;white-space:nowrap}
+.data-table td{padding:7px 12px;border-bottom:1px solid #2A2A4A;color:#D4D4E8;vertical-align:middle;font-family:'Rajdhani',sans-serif;font-size:13px}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover{background:rgba(106,13,173,0.08)}
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:9px;font-weight:bold;letter-spacing:1px;text-transform:uppercase}
+.ip{font-family:'Share Tech Mono',monospace;font-size:10px;color:#00BFFF;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.3);padding:1px 5px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="table-panel">
+  <div class="table-header">
+    <span class="table-title">◈ ЖУРНАЛ СОБЫТИЙ</span>
+    <button style="background:#1E1E36;border:1px solid #2A2A4A;border-radius:6px;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:10px;padding:2px 8px;cursor:pointer">↺ Обновить</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Severity</th>
+        <th>Category</th>
+        <th>Source</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">14:32:07</td>
+        <td><span class="badge" style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.4)">CRITICAL</span></td>
+        <td>Authentication</td>
+        <td><span class="ip">10.0.0.42</span></td>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">Failed password for root…</td>
+      </tr>
+      <tr>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">14:31:55</td>
+        <td><span class="badge" style="background:rgba(255,107,0,0.13);color:#FF6B00;border:1px solid rgba(255,107,0,0.4)">HIGH</span></td>
+        <td>Network</td>
+        <td><span class="ip">192.168.1.2</span></td>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">Port scan detected on…</td>
+      </tr>
+      <tr>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">14:31:20</td>
+        <td><span class="badge" style="background:rgba(255,215,0,0.13);color:#FFD700;border:1px solid rgba(255,215,0,0.4)">MEDIUM</span></td>
+        <td>Privilege</td>
+        <td><span class="ip">172.16.0.5</span></td>
+        <td style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A">sudo COMMAND=/bin/bash…</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
