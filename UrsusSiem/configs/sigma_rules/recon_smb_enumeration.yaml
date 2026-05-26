@@ -1,0 +1,42 @@
+title: SMB Share Enumeration Activity
+id: recon-smb-001
+status: stable
+description: Detects SMB share enumeration activity commonly performed during reconnaissance, including null session attempts and NetShareEnum calls from external or unusual hosts.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: medium
+tags:
+  - attack.discovery
+  - attack.t1135
+logsource:
+  product: windows
+  service: security
+detection:
+  selection_share:
+    EventID: 5140
+    message|contains:
+      - "\\\\*\\IPC$"
+      - "\\\\*\\ADMIN$"
+      - "\\\\*\\C$"
+  selection_null:
+    EventID: 4624
+    LogonType: 3
+    subject.name: "ANONYMOUS LOGON"
+  selection_enum:
+    EventID:
+      - 5142
+      - 5143
+    message|contains:
+      - "share"
+  condition: selection_share or selection_null or selection_enum
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+  - object.path
+falsepositives:
+  - Legitimate file server access by administrators
+  - Network monitoring and inventory tools
+level: medium

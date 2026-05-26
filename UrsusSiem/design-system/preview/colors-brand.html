@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.swatch{width:110px}
+.color-block{height:72px;border-radius:6px;margin-bottom:8px;position:relative;display:flex;align-items:flex-end;padding:6px 8px}
+.color-block .hex{font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:1px}
+.label{font-size:10px;color:#7A7A9A;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+.name{font-size:11px;color:#D4D4E8;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="swatch">
+  <div class="color-block" style="background:#6A0DAD;box-shadow:0 0 20px rgba(106,13,173,0.5)"><span class="hex">#6A0DAD</span></div>
+  <div class="label">primary</div>
+  <div class="name">Purple</div>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:#BF40BF;box-shadow:0 0 20px rgba(191,64,191,0.5)"><span class="hex">#BF40BF</span></div>
+  <div class="label">accent</div>
+  <div class="name">Orchid</div>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:linear-gradient(135deg,#6A0DAD,#BF40BF);box-shadow:0 0 20px rgba(191,64,191,0.3)"><span class="hex">gradient</span></div>
+  <div class="label">brand grad</div>
+  <div class="name">Primary→Accent</div>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:#4A0880"><span class="hex">#4A0880</span></div>
+  <div class="label">primary-dim</div>
+  <div class="name">Deep Purple</div>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(106,13,173,0.27);border:1px solid rgba(106,13,173,0.27)"><span class="hex">27% α</span></div>
+  <div class="label">border2</div>
+  <div class="name">Purple Tint</div>
+</div>
+</body>
+</html>

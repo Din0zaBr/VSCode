@@ -1,0 +1,33 @@
+title: SMTP AUTH Brute Force Attack
+id: bf-smtp-001
+status: stable
+description: Detects multiple failed SMTP authentication attempts from a single source IP, indicating brute force against mail server credentials.
+author: URSUS SIEM
+date: 2024-01-01
+category: brute_force
+severity: high
+tags:
+  - attack.credential_access
+  - attack.t1110.001
+logsource:
+  category: authentication
+  service: postfix
+detection:
+  selection:
+    message|contains:
+      - "SASL authentication failed"
+      - "authentication failed"
+      - "535 5.7.8"
+      - "535 Incorrect authentication data"
+    protocol: smtp
+  condition: selection | count(src.ip) > 15 within 120s
+fields:
+  - src.ip
+  - dst.ip
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Mail clients with outdated or incorrect passwords
+  - Misconfigured relay servers
+level: high

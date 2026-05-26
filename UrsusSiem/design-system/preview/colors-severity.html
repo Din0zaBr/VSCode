@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.swatch{width:110px}
+.color-block{height:66px;border-radius:6px;margin-bottom:8px;display:flex;flex-direction:column;justify-content:space-between;padding:8px}
+.top{font-size:11px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase}
+.hex{font-size:9px;opacity:0.6;letter-spacing:1px}
+.label{font-size:9px;color:#7A7A9A;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+.badge{display:inline-block;padding:3px 10px;border-radius:3px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(255,49,49,0.13);border:1px solid rgba(255,49,49,0.4)">
+    <span class="top" style="color:#FF3131">CRITICAL</span>
+    <span class="hex" style="color:#FF3131">#FF3131</span>
+  </div>
+  <span class="badge" style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.4)">CRITICAL</span>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(255,107,0,0.13);border:1px solid rgba(255,107,0,0.4)">
+    <span class="top" style="color:#FF6B00">HIGH</span>
+    <span class="hex" style="color:#FF6B00">#FF6B00</span>
+  </div>
+  <span class="badge" style="background:rgba(255,107,0,0.13);color:#FF6B00;border:1px solid rgba(255,107,0,0.4)">HIGH</span>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(255,215,0,0.13);border:1px solid rgba(255,215,0,0.4)">
+    <span class="top" style="color:#FFD700">MEDIUM</span>
+    <span class="hex" style="color:#FFD700">#FFD700</span>
+  </div>
+  <span class="badge" style="background:rgba(255,215,0,0.13);color:#FFD700;border:1px solid rgba(255,215,0,0.4)">MEDIUM</span>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(0,191,255,0.13);border:1px solid rgba(0,191,255,0.4)">
+    <span class="top" style="color:#00BFFF">LOW</span>
+    <span class="hex" style="color:#00BFFF">#00BFFF</span>
+  </div>
+  <span class="badge" style="background:rgba(0,191,255,0.13);color:#00BFFF;border:1px solid rgba(0,191,255,0.4)">LOW</span>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(136,136,136,0.13);border:1px solid rgba(136,136,136,0.4)">
+    <span class="top" style="color:#888">INFO</span>
+    <span class="hex" style="color:#888">#888888</span>
+  </div>
+  <span class="badge" style="background:rgba(136,136,136,0.13);color:#888;border:1px solid rgba(136,136,136,0.4)">INFO</span>
+</div>
+<div class="swatch">
+  <div class="color-block" style="background:rgba(57,255,20,0.13);border:1px solid rgba(57,255,20,0.4)">
+    <span class="top" style="color:#39FF14">SUCCESS</span>
+    <span class="hex" style="color:#39FF14">#39FF14</span>
+  </div>
+  <span class="badge" style="background:rgba(57,255,20,0.13);color:#39FF14;border:1px solid rgba(57,255,20,0.4)">ONLINE</span>
+</div>
+</body>
+</html>

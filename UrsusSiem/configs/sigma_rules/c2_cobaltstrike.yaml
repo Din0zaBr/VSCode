@@ -1,0 +1,43 @@
+title: C2 CobaltStrike Beacon Network Patterns
+id: c2-net-003
+status: stable
+description: Detects CobaltStrike beacon network patterns including characteristic HTTP/S malleable C2 profiles and staging URIs
+author: URSUS SIEM
+date: 2024-01-01
+category: command_and_control
+severity: critical
+tags:
+  - attack.command_and_control
+  - attack.t1071.001
+logsource:
+  category: network
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "/jquery-3.3.1.min.js"
+      - "/updates.rss"
+      - "/load"
+      - "/ca"
+      - "checksum8"
+      - "User-Agent: Mozilla/5.0 (compatible; MSIE 9.0"
+      - "/api/v"
+      - "/push"
+      - "/poll"
+    dst.port|contains|any:
+      - "80"
+      - "443"
+      - "8080"
+      - "8443"
+  condition: selection
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - message
+  - host
+  - protocol
+falsepositives:
+  - Legitimate jQuery CDN downloads
+  - RSS feed readers
+level: critical

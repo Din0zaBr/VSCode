@@ -1,0 +1,274 @@
+/* ═══════════════════════════════════════════════════════════════
+   URSUS INSIGHT SIEM — Design System
+   Theme: Cyber Forest
+   Primary: #6A0DAD (purple) | Accent: #BF40BF (magenta/orchid)
+   User direction: minimalist, purple/lilac accent, liquid glass elements
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+
+  /* ── Brand colors ──────────────────────────────────────────── */
+  --color-primary:        #6A0DAD;   /* purple — main brand */
+  --color-primary-dim:    #4A0880;   /* darker purple */
+  --color-primary-glow:   rgba(106,13,173,0.35);
+  --color-accent:         #BF40BF;   /* magenta/orchid — active, glow */
+  --color-accent-dim:     #9B2F9B;
+  --color-accent-glow:    rgba(191,64,191,0.5);
+
+  /* ── Background scale ──────────────────────────────────────── */
+  --color-bg-void:        #070710;   /* deepest — not in original, for glass */
+  --color-bg-deep:        #0D0D1A;   /* content area base */
+  --color-bg:             #111122;   /* page base */
+  --color-bg2:            #16162A;   /* sidebar, panels */
+  --color-bg3:            #1E1E36;   /* panel headers, inputs, table headers */
+  --color-bg4:            #252542;   /* slightly elevated surface */
+
+  /* ── Legacy login theme (slate/teal) ───────────────────────── */
+  --color-slate:          #2F4F4F;
+  --color-slate-light:    #3D6060;
+
+  /* ── Borders ───────────────────────────────────────────────── */
+  --color-border:         #2A2A4A;   /* default border */
+  --color-border2:        rgba(106,13,173,0.27);  /* purple tinted */
+  --color-border-glass:   rgba(255,255,255,0.07); /* glass edge */
+  --color-border-bright:  rgba(255,255,255,0.12); /* bright glass edge */
+
+  /* ── Text ──────────────────────────────────────────────────── */
+  --color-text:           #D4D4E8;   /* body text */
+  --color-text-dim:       #7A7A9A;   /* muted / meta */
+  --color-text-bright:    #EEEEFF;   /* headings */
+  --color-text-inverse:   #FFFFFF;
+
+  /* ── Severity scale ────────────────────────────────────────── */
+  --color-critical:       #FF3131;
+  --color-high:           #FF6B00;
+  --color-medium:         #FFD700;
+  --color-low:            #00BFFF;
+  --color-info:           #888888;
+
+  /* ── Semantic ──────────────────────────────────────────────── */
+  --color-success:        #39FF14;   /* neon green — online/active */
+  --color-danger:         #FF3131;   /* alias for critical */
+  --color-warning:        #FFD700;   /* alias for medium */
+
+  /* ── Glass effect (liquid glass — user direction) ──────────── */
+  --glass-bg:             rgba(22,22,42,0.65);
+  --glass-bg-light:       rgba(30,30,54,0.55);
+  --glass-blur:           blur(14px);
+  --glass-blur-sm:        blur(8px);
+  --glass-border:         1px solid rgba(255,255,255,0.08);
+  --glass-border-accent:  1px solid rgba(191,64,191,0.25);
+  --glass-inner:          inset 0 0 0 1px rgba(255,255,255,0.04);
+  --glass-shadow:         0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(106,13,173,0.15);
+
+  /* ── Shadows & glows ───────────────────────────────────────── */
+  --shadow-panel:         4px 0 24px rgba(106,13,173,0.15);
+  --shadow-card:          0 2px 12px rgba(0,0,0,0.3);
+  --shadow-modal:         0 0 40px rgba(106,13,173,0.3);
+  --shadow-glow-primary:  0 0 10px rgba(106,13,173,0.6);
+  --shadow-glow-accent:   0 0 10px rgba(191,64,191,0.6);
+  --shadow-glow-critical: 0 0 8px rgba(255,49,49,0.5);
+  --shadow-glow-success:  0 0 6px rgba(57,255,20,0.6);
+
+  /* ── Spacing scale ─────────────────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+
+  /* ── Layout ────────────────────────────────────────────────── */
+  --sidebar-w:    220px;
+  --topbar-h:     64px;
+  --content-pad:  24px;
+
+  /* ── Border radii ──────────────────────────────────────────── */
+  --radius-sm:    3px;    /* badges, tags */
+  --radius:       6px;    /* cards, buttons, panels */
+  --radius-md:    8px;    /* modals */
+  --radius-lg:    12px;   /* glass panels (user direction) */
+  --radius-full:  9999px; /* pills */
+
+  /* ── Typography ────────────────────────────────────────────── */
+  --font-title:   'Orbitron', 'Courier New', monospace;
+  --font-ui:      'Rajdhani', 'Segoe UI', sans-serif;
+  --font-mono:    'Share Tech Mono', 'Courier New', monospace;
+
+  /* ── Type scale ────────────────────────────────────────────── */
+  --text-xs:      10px;
+  --text-sm:      11px;
+  --text-base:    14px;
+  --text-md:      16px;
+  --text-lg:      18px;
+  --text-xl:      24px;
+  --text-2xl:     28px;
+  --text-3xl:     36px;
+
+  /* ── Letter spacing ────────────────────────────────────────── */
+  --tracking-tight:  0.5px;
+  --tracking-normal: 1px;
+  --tracking-wide:   2px;
+  --tracking-wider:  3px;
+  --tracking-widest: 6px;
+
+  /* ── Line heights ──────────────────────────────────────────── */
+  --leading-none:  1;
+  --leading-tight: 1.25;
+  --leading-normal:1.5;
+
+  /* ── Transitions ───────────────────────────────────────────── */
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.2s ease;
+  --transition-slow:   0.3s ease;
+
+  /* ── Z-index layers ────────────────────────────────────────── */
+  --z-base:        0;
+  --z-sidebar:     100;
+  --z-topbar:      90;
+  --z-modal:       1000;
+  --z-overlay:     9999;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SEMANTIC ELEMENT STYLES
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Headings ────────────────────────────────────────────────── */
+.h1, h1 {
+  font-family: var(--font-title);
+  font-size: var(--text-3xl);
+  font-weight: 900;
+  color: var(--color-text-bright);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  line-height: var(--leading-none);
+}
+
+.h2, h2 {
+  font-family: var(--font-title);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text-bright);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  line-height: var(--leading-tight);
+}
+
+.h3, h3 {
+  font-family: var(--font-title);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Logo / brand name */
+.brand-name {
+  font-family: var(--font-title);
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: var(--color-accent);
+  letter-spacing: var(--tracking-widest);
+  text-shadow: 0 0 10px var(--color-accent);
+}
+
+.brand-sub {
+  font-family: var(--font-title);
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--color-text-dim);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+/* Panel / section title */
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-accent);
+  text-transform: uppercase;
+}
+
+/* Body text */
+p, .body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  line-height: var(--leading-normal);
+}
+
+/* Label (form / table header) */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-dim);
+  letter-spacing: var(--tracking-normal);
+  text-transform: uppercase;
+}
+
+/* Monospace value / timestamp */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+/* Stat value — large number display */
+.stat-value {
+  font-family: var(--font-title);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-bright);
+  line-height: var(--leading-none);
+}
+
+/* Code / raw log */
+code, .code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: var(--color-bg3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+pre, .raw-log {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: var(--color-bg3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ── Utility text classes ─────────────────────────────────────── */
+.text-primary   { color: var(--color-primary); }
+.text-accent    { color: var(--color-accent); }
+.text-dim       { color: var(--color-text-dim); }
+.text-bright    { color: var(--color-text-bright); }
+.text-critical  { color: var(--color-critical); }
+.text-high      { color: var(--color-high); }
+.text-medium    { color: var(--color-medium); }
+.text-low       { color: var(--color-low); }
+.text-success   { color: var(--color-success); }
+.text-mono      { font-family: var(--font-mono); }
+.text-title     { font-family: var(--font-title); }
+.text-upper     { text-transform: uppercase; letter-spacing: var(--tracking-wide); }
+
+.glow-primary   { color: var(--color-accent); text-shadow: 0 0 8px var(--color-accent); }
+.glow-critical  { color: var(--color-critical); text-shadow: 0 0 8px var(--color-critical); }
+.glow-success   { color: var(--color-success); text-shadow: 0 0 6px var(--color-success); }

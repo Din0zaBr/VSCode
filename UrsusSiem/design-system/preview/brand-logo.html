@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;padding:28px;display:flex;align-items:center;gap:40px}
+
+.bear-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.bear{font-size:64px;animation:bearGlow 3s ease-in-out infinite alternate;display:block;line-height:1}
+@keyframes bearGlow{
+  from{filter:drop-shadow(0 0 12px #6A0DAD)}
+  to{filter:drop-shadow(0 0 28px #BF40BF)}
+}
+.logo-name{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#BF40BF;letter-spacing:6px;text-shadow:0 0 18px rgba(191,64,191,0.5)}
+.logo-sub{font-family:'Orbitron',monospace;font-size:9px;color:#7A7A9A;letter-spacing:5px;text-transform:uppercase;margin-top:2px}
+
+.divider{width:1px;height:110px;background:#2A2A4A}
+
+.variants{display:flex;flex-direction:column;gap:14px}
+.v-row{display:flex;flex-direction:column;gap:3px}
+.v-label{font-family:'Share Tech Mono',monospace;font-size:8px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase}
+
+.sidebar-preview{background:#16162A;border-right:1px solid rgba(106,13,173,0.27);padding:14px 12px;border-radius:6px;width:130px}
+.sh{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.version{font-family:'Share Tech Mono',monospace;font-size:8px;color:#7A7A9A;border:1px solid #2A2A4A;border-radius:3px;padding:3px 6px;text-align:center;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-left:3px solid transparent;font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A;border-radius:0 3px 3px 0}
+.nav-item.active{color:#BF40BF;background:linear-gradient(90deg,rgba(106,13,173,0.25),transparent);border-left-color:#BF40BF}
+.nav-icon{color:#6A0DAD;width:14px;text-align:center}
+.nav-item.active .nav-icon{color:#BF40BF}
+</style>
+</head>
+<body>
+<div class="bear-wrap">
+  <span class="bear">🐻</span>
+  <span class="logo-name">URSUS</span>
+  <span class="logo-sub">INSIGHT</span>
+</div>
+<div class="divider"></div>
+<div class="variants">
+  <div class="v-row">
+    <span class="v-label">sidebar context</span>
+    <div class="sidebar-preview">
+      <div class="sh">
+        <span style="font-size:22px;filter:drop-shadow(0 0 6px #BF40BF)">🐻</span>
+        <div>
+          <div class="logo-name" style="font-size:13px;letter-spacing:3px">URSUS</div>
+          <div class="logo-sub" style="font-size:7px;letter-spacing:4px">INSIGHT</div>
+        </div>
+      </div>
+      <div class="version">v1.0.0 // PROTOTYPE</div>
+      <div class="nav-item active"><span class="nav-icon">⬡</span> Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">◈</span> События</div>
+      <div class="nav-item"><span class="nav-icon">⚡</span> Инциденты</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

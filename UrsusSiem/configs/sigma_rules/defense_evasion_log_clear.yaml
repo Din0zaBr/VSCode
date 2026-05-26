@@ -1,0 +1,32 @@
+title: Security Log Clearing
+id: evasion-log-001
+status: stable
+description: Detects clearing of Windows Security Event Log or Linux auth logs, a common defense evasion technique.
+author: URSUS SIEM
+date: 2024-01-01
+category: defense_evasion
+severity: high
+tags:
+  - attack.defense_evasion
+  - attack.t1070.001
+logsource:
+  category: system
+detection:
+  selection_win:
+    EventID: 1102
+    message|contains: "The audit log was cleared"
+  selection_linux:
+    message|contains|any:
+      - "> /var/log/auth.log"
+      - "> /var/log/syslog"
+      - "truncate -s 0 /var/log"
+      - "rm -rf /var/log"
+  condition: selection_win or selection_linux
+fields:
+  - host
+  - subject.name
+  - message
+falsepositives:
+  - Log rotation
+  - Authorized log management
+level: high

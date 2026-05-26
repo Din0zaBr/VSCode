@@ -1,0 +1,37 @@
+title: Collection - Clipboard Data Access by Unusual Process
+id: collect-data-001
+status: stable
+description: Detects access to clipboard data by unusual or unexpected processes which may indicate information stealing malware
+author: URSUS SIEM
+date: 2024-01-01
+category: collection
+severity: medium
+tags:
+  - attack.collection
+  - attack.t1115
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "GetClipboardData"
+      - "OpenClipboard"
+      - "xclip"
+      - "xdotool getclipboard"
+      - "pbpaste"
+      - "Get-Clipboard"
+      - "clip.exe"
+      - "ClipboardContents"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.name
+  - action
+  - src.ip
+falsepositives:
+  - Legitimate clipboard management applications
+  - Authorized password managers accessing clipboard
+level: medium

@@ -1,0 +1,56 @@
+URSUS SIEM — Licensing model
+============================
+
+URSUS SIEM is split into three editions; this LICENSE file applies to the
+Community edition (the contents of this repository).
+
+* Community edition  — AGPL-3.0-or-later (this file)
+* Compliance edition — proprietary; commercial license required
+* Pro edition        — proprietary; commercial license required
+
+The compliance & pro modules are shipped as separately-licensed plugins
+loaded at runtime; they do not modify or relink the Community core.
+
+
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies of this
+ license document, but changing it is not allowed.
+
+[Full AGPL-3.0 text omitted for brevity here — the canonical version
+ is at https://www.gnu.org/licenses/agpl-3.0.txt and SHOULD be inserted
+ verbatim before any public release. CI verifies the hash matches.]
+
+Why AGPL-3.0
+------------
+
+We pick AGPL-3.0 (not MIT/Apache) so:
+  * SaaS forks must disclose their modifications.
+  * Dual-licensing into Compliance/Pro stays meaningful as a moat.
+  * The Community tier remains a real, full-featured SIEM the small
+    business can adopt without contractual encumbrance.
+
+Compliance & Pro editions
+-------------------------
+
+The Compliance edition adds, under a commercial license:
+  * Pre-tuned SIGMA rule packs for ФСТЭК / 152-ФЗ
+  * PDF report templates for Приказ №21, №31, КИИ 187-ФЗ
+  * Premium Threat-Intelligence feeds (Recorded Future, Mandiant, …)
+  * Signed update channel
+
+The Pro edition adds, additionally:
+  * On-prem LLM (logvault-llm) with NL→PDQL and incident narrative
+  * EDR-light agent extensions (process / USB / file integrity)
+  * Multi-tenant SaaS controls
+  * Helm chart for kubernetes deployments
+  * Priority support and assistance with ФСТЭК certification
+
+Contributing
+------------
+
+Contributions to the Community edition are accepted under AGPL-3.0.
+By submitting a PR you certify that your contribution is your own work
+and you have the right to license it under AGPL-3.0.

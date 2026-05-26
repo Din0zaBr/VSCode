@@ -1,0 +1,39 @@
+title: Discovery - Local User and Group Enumeration
+id: disc-acc-001
+status: stable
+description: Detects local user and group enumeration via net user, id, getent and similar commands used by attackers during the discovery phase
+author: URSUS SIEM
+date: 2024-01-01
+category: discovery
+severity: low
+tags:
+  - attack.discovery
+  - attack.t1087.001
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "net user"
+      - "net localgroup"
+      - "net group"
+      - "id -a"
+      - "getent passwd"
+      - "getent group"
+      - "cat /etc/passwd"
+      - "Get-LocalUser"
+      - "Get-LocalGroup"
+      - "wmic useraccount"
+      - "query user"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - src.ip
+  - action
+falsepositives:
+  - System administrators performing user account audits
+  - Legitimate IT scripts enumerating accounts for management purposes
+level: low

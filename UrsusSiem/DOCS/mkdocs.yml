@@ -1,0 +1,58 @@
+site_name: URSUS SIEM
+site_description: Документация SIEM-системы URSUS Insight для МСБ
+site_url: https://docs.ursus-siem.ru
+repo_url: https://github.com/Din0zaBr/VSCode
+
+theme:
+  name: material
+  language: ru
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+  features:
+    - navigation.tabs
+    - navigation.expand
+    - content.code.copy
+    - search.highlight
+
+nav:
+  - Главная: index.md
+  - Установка:
+    - Быстрый старт: getting-started.md
+    - Auto-installer: install-sh.md
+    - Docker Compose: docker-compose.md
+  - Эксплуатация:
+    - Агенты: agent-deploy.md
+    - Vector-профили: vector-profiles.md
+    - Syslog: syslog.md
+    - Сценарии: scenarios.md
+    - Корреляция: correlation.md
+    - PDQL: pdql.md
+  - Уведомления:
+    - Telegram: notifications/telegram.md
+    - Email: notifications/email.md
+    - Webhook: notifications/webhook.md
+  - ML:
+    - Auto-baseline: ml/baseline.md
+    - DGA: ml/dga.md
+    - Beaconing: ml/beaconing.md
+    - UEBA: ml/ueba.md
+  - Compliance:
+    - 152-ФЗ: compliance/152-fz.md
+    - Приказ ФСТЭК №21: compliance/fstec-21.md
+    - Приказ ФСТЭК №31: compliance/fstec-31.md
+    - КИИ 187-ФЗ: compliance/kii-187.md
+  - Threat Intelligence: threat-intel.md
+  - Troubleshooting: troubleshooting.md
+  - API reference: api.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - tables
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true

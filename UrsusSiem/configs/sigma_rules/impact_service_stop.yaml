@@ -1,0 +1,40 @@
+title: Critical Service Stop or Disable
+id: impact-svc-001
+status: stable
+description: Detects stopping or disabling of critical services such as antivirus, backup, or database services.
+author: URSUS SIEM
+date: 2024-01-01
+category: impact
+severity: high
+tags:
+  - attack.impact
+  - attack.t1489
+logsource:
+  category: process_creation
+detection:
+  selection:
+    message|contains|any:
+      - "net stop"
+      - "sc stop"
+      - "sc config"
+      - "systemctl stop"
+      - "systemctl disable"
+      - "service stop"
+    message|contains|any:
+      - "mssql"
+      - "mysql"
+      - "postgresql"
+      - "backup"
+      - "veeam"
+      - "defender"
+      - "antivir"
+      - "splunk"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+falsepositives:
+  - Authorized maintenance windows
+  - Planned service restarts
+level: high

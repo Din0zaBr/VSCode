@@ -1,0 +1,60 @@
+# Python
+.env
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Node / Vite
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.cursor/
+.idea/
+.vscode/
+
+# Build artifacts
+logvault-agent/release/
+logvault-agent/build/
+logvault-agent/*.spec
+
+# Go
+*.test
+*.out
+logvault-go/logvault-go
+logvault-go/coverage.html
+logvault-go/internal/webui/dist/
+!logvault-go/internal/webui/dist/.gitkeep
+
+# Rust
+logvault-rust/target/
+
+# LLM models (NEVER commit — ~5 GB each)
+models/
+*.gguf
+
+# Runtime data
+data/
+data.duckdb
+data.duckdb.wal
+*.sqlite
+*.db
+!UrsusSiem/data/ursus.db.example
+
+# Secrets / TLS
+*.pem
+*.key
+*.crt
+secrets/
+
+# Compliance report outputs (transient)
+reports/*.pdf
+
+# Temporary
+.commitmsg
+*.tmp

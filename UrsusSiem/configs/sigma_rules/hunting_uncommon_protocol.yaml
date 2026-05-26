@@ -1,0 +1,56 @@
+title: Uncommon Protocol Usage to External Host
+id: hunt-proto-001
+status: stable
+description: Detects use of uncommon or legacy protocols (IRC, Telnet, TFTP, rsh) to external hosts which may indicate C2 or data exfiltration.
+author: URSUS SIEM
+date: 2024-01-01
+category: command_and_control
+severity: medium
+tags:
+  - attack.command_and_control
+  - attack.t1095
+logsource:
+  category: network
+  service: firewall
+detection:
+  selection:
+    dst.port|in:
+      - 6667
+      - 6668
+      - 6669
+      - 23
+      - 69
+      - 514
+      - 512
+      - 513
+  filter_internal:
+    dst.ip|startswith:
+      - "10."
+      - "192.168."
+      - "172.16."
+      - "172.17."
+      - "172.18."
+      - "172.19."
+      - "172.20."
+      - "172.21."
+      - "172.22."
+      - "172.23."
+      - "172.24."
+      - "172.25."
+      - "172.26."
+      - "172.27."
+      - "172.28."
+      - "172.29."
+      - "172.30."
+      - "172.31."
+  condition: selection and not filter_internal
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - protocol
+  - host
+falsepositives:
+  - Legacy systems using Telnet internally
+  - Authorized TFTP-based network device management
+level: medium

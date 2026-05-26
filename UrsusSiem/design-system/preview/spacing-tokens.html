@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:20px;display:flex;flex-direction:column;gap:14px}
+.section{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.token-row{display:flex;align-items:center;gap:10px}
+.bar{background:#6A0DAD;height:12px;border-radius:2px;flex-shrink:0}
+.tname{font-size:9px;color:#BF40BF;width:80px;letter-spacing:1px}
+.tval{font-size:9px;color:#7A7A9A}
+.head{font-size:9px;color:#7A7A9A;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #2A2A4A}
+
+.radius-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.r-box{width:44px;height:44px;background:#16162A;border:1px solid #6A0DAD;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+.r-label{font-size:8px;color:#7A7A9A;text-align:center}
+.r-val{font-size:9px;color:#BF40BF;text-align:center}
+</style>
+</head>
+<body>
+<div>
+  <div class="head">spacing scale</div>
+  <div class="section" style="flex-direction:column;gap:6px">
+    <div class="token-row"><div class="bar" style="width:4px"></div><span class="tname">--space-1</span><span class="tval">4px</span></div>
+    <div class="token-row"><div class="bar" style="width:8px"></div><span class="tname">--space-2</span><span class="tval">8px</span></div>
+    <div class="token-row"><div class="bar" style="width:12px"></div><span class="tname">--space-3</span><span class="tval">12px</span></div>
+    <div class="token-row"><div class="bar" style="width:16px"></div><span class="tname">--space-4</span><span class="tval">16px</span></div>
+    <div class="token-row"><div class="bar" style="width:20px"></div><span class="tname">--space-5</span><span class="tval">20px</span></div>
+    <div class="token-row"><div class="bar" style="width:24px"></div><span class="tname">--space-6</span><span class="tval">24px</span></div>
+    <div class="token-row"><div class="bar" style="width:32px"></div><span class="tname">--space-8</span><span class="tval">32px</span></div>
+    <div class="token-row"><div class="bar" style="width:40px"></div><span class="tname">--space-10</span><span class="tval">40px</span></div>
+  </div>
+</div>
+<div>
+  <div class="head">border radii</div>
+  <div class="radius-row">
+    <div><div class="r-box" style="border-radius:3px"></div><div class="r-label">--radius-sm</div><div class="r-val">3px</div></div>
+    <div><div class="r-box" style="border-radius:6px"></div><div class="r-label">--radius</div><div class="r-val">6px</div></div>
+    <div><div class="r-box" style="border-radius:8px"></div><div class="r-label">--radius-md</div><div class="r-val">8px</div></div>
+    <div><div class="r-box" style="border-radius:12px"></div><div class="r-label">--radius-lg</div><div class="r-val">12px</div></div>
+    <div><div class="r-box" style="border-radius:50%"></div><div class="r-label">--radius-full</div><div class="r-val">50%</div></div>
+  </div>
+</div>
+<div>
+  <div class="head">layout</div>
+  <div class="section" style="flex-direction:column;gap:6px">
+    <div class="token-row"><div class="bar" style="width:220px;background:#2A2A4A"></div><span class="tname">--sidebar-w</span><span class="tval">220px</span></div>
+    <div class="token-row"><div class="bar" style="width:64px;background:#2A2A4A;height:8px"></div><span class="tname">--topbar-h</span><span class="tval">64px</span></div>
+    <div class="token-row"><div class="bar" style="width:24px;background:#BF40BF44"></div><span class="tname">content-pad</span><span class="tval">24px</span></div>
+  </div>
+</div>
+</body>
+</html>

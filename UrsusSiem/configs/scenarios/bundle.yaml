@@ -1,0 +1,218 @@
+# URSUS SIEM — bundle of 20 ready-to-use scenarios.
+# Loaded at startup by logvault-go. Override per-tenant via the UI.
+
+scenarios:
+
+  - id:           rdp-brute-force
+    name:         Bruteforce RDP-доступа
+    category:     auth
+    severity:     critical
+    enabled:      true
+    description:  Множественные неудачные попытки RDP-логина с одного IP за короткое время.
+    mitre:        [T1110]
+    sigma_rules:  [brute_force_rdp]
+    threshold: { events: 10, window_minutes: 5, group_by: [src.ip] }
+    actions:      [notify_telegram, create_incident]
+    remediation: |
+      1. Заблокировать src.ip на периметре
+      2. Проверить логи на успешный логин с того же IP
+      3. Сбросить пароль атакуемой учётки
+
+  - id:           ssh-brute-force
+    name:         Bruteforce SSH-доступа
+    category:     auth
+    severity:     critical
+    enabled:      true
+    description:  Серия failed password для одного пользователя или хоста.
+    mitre:        [T1110]
+    sigma_rules:  [brute_force_ssh]
+    threshold: { events: 15, window_minutes: 5, group_by: [host, user] }
+    actions:      [notify_telegram, create_incident]
+
+  - id:           ad-password-spray
+    name:         Password spray по Active Directory
+    category:     auth
+    severity:     high
+    enabled:      true
+    description:  Один источник пробует один пароль против многих учёток.
+    mitre:        [T1110.003]
+    sigma_rules:  [cred_access_password_spray]
+    threshold: { events: 20, window_minutes: 10, group_by: [src.ip], unique: user }
+    actions:      [notify_telegram]
+
+  - id:           suspicious-powershell
+    name:         Подозрительный PowerShell
+    category:     execution
+    severity:     high
+    enabled:      true
+    description:  PowerShell с обфускацией, EncodedCommand или известными malicious cmdlet'ами.
+    mitre:        [T1059.001]
+    sigma_rules:  [execution_scriptblock]
+    actions:      [notify_telegram, create_incident]
+    remediation: |
+      Изолировать хост; собрать дамп памяти; проверить родительский процесс.
+
+  - id:           mimikatz-indicators
+    name:         Mimikatz активность
+    category:     credentials
+    severity:     critical
+    enabled:      true
+    description:  Признаки запуска mimikatz — характерные строки, NTDS.dit копирование, доступ к LSASS.
+    mitre:        [T1003.001]
+    sigma_rules:  [credential_dumping_mimikatz]
+    actions:      [notify_telegram, create_incident, snapshot]
+
+  - id:           lateral-movement-smb
+    name:         Боковое перемещение через SMB
+    category:     lateral
+    severity:     high
+    enabled:      true
+    description:  PSExec / SMB-копирование на новый хост от непривилегированной учётки.
+    mitre:        [T1021.002]
+    sigma_rules:  [lateral_movement_psexec, lateral_movement_pass_the_hash]
+    actions:      [notify_telegram, create_incident]
+
+  - id:           1c-anomaly
+    name:         Аномалия активности 1С
+    category:     application
+    severity:     medium
+    enabled:      false                # off by default — false-positive prone
+    description:  Резкий всплеск активности 1С (вход в нерабочее время, массовая выгрузка).
+    threshold: { events: 200, window_minutes: 10, group_by: [user], baseline_ref: true }
+    actions:      [notify_email]
+
+  - id:           bitrix-attack
+    name:         Атаки на Bitrix CMS
+    category:     web
+    severity:     high
+    enabled:      true
+    description:  Попытки эксплуатации известных уязвимостей Bitrix (CVE-2022-27228 и т.п.).
+    mitre:        [T1190]
+    actions:      [notify_telegram, create_incident]
+
+  - id:           web-scanning
+    name:         Сканирование web-приложений
+    category:     recon
+    severity:     medium
+    enabled:      true
+    description:  Один IP за минуту запрашивает 50+ несуществующих путей (404 spray).
+    mitre:        [T1595]
+    threshold: { events: 50, window_minutes: 1, group_by: [src.ip], status: 404 }
+    actions:      [notify_email]
+
+  - id:           ransomware-mass-rename
+    name:         Признаки шифровальщика — массовое переименование
+    category:     impact
+    severity:     critical
+    enabled:      true
+    description:  За короткое время переименованы / зашифрованы сотни файлов на файл-сервере.
+    mitre:        [T1486]
+    sigma_rules:  [malware_ransomware_indicators]
+    threshold: { events: 100, window_minutes: 2, group_by: [host], event_action: rename }
+    actions:      [notify_telegram, create_incident, snapshot]
+    remediation: |
+      Срочно: отключить файл-сервер от сети, изолировать заражённый хост.
+
+  - id:           usb-anomaly
+    name:         Подозрительные USB-устройства
+    category:     impact
+    severity:     medium
+    enabled:      false
+    description:  Подключение USB-носителя на хосте, где это не происходило 30 дней.
+    mitre:        [T1052.001]
+    actions:      [notify_email]
+
+  - id:           priv-escalation
+    name:         Эскалация привилегий
+    category:     privilege
+    severity:     critical
+    enabled:      true
+    description:  Использование известных уязвимостей или sudo злоупотреблений для повышения прав.
+    mitre:        [T1068]
+    sigma_rules:  [privilege_escalation_sudo, privilege_escalation_windows]
+    actions:      [notify_telegram, create_incident]
+
+  - id:           log-clear
+    name:         Очистка логов
+    category:     evasion
+    severity:     critical
+    enabled:      true
+    description:  Выполнение wevtutil cl, очистка journald или /var/log на хосте.
+    mitre:        [T1070]
+    sigma_rules:  [defense_evasion_log_clear]
+    actions:      [notify_telegram, create_incident, snapshot]
+    remediation: |
+      Это сильный индикатор active intrusion. Изолировать хост.
+
+  - id:           cron-as-root
+    name:         Новые root-задания cron
+    category:     persistence
+    severity:     high
+    enabled:      true
+    description:  Изменения в /etc/crontab или /var/spool/cron от root.
+    mitre:        [T1053.003]
+    sigma_rules:  [persistence_cron_modification]
+    actions:      [notify_telegram]
+
+  - id:           new-service-install
+    name:         Установка новых служб
+    category:     persistence
+    severity:     high
+    enabled:      true
+    description:  Регистрация новой Windows-службы или systemd unit (часто = персистентность malware).
+    mitre:        [T1543]
+    sigma_rules:  [persistence_new_service]
+    actions:      [notify_telegram]
+
+  - id:           kerberoasting
+    name:         Kerberoasting
+    category:     credentials
+    severity:     critical
+    enabled:      true
+    description:  Множественные TGS-Req за SPN сервисных учёток.
+    mitre:        [T1558.003]
+    sigma_rules:  [authentication_kerberoasting]
+    threshold: { events: 5, window_minutes: 10, group_by: [user] }
+    actions:      [notify_telegram, create_incident]
+
+  - id:           pass-the-hash
+    name:         Pass-the-Hash
+    category:     credentials
+    severity:     critical
+    enabled:      true
+    description:  NTLM-логин с подозрительными признаками PtH.
+    mitre:        [T1550.002]
+    sigma_rules:  [lateral_movement_pass_the_hash]
+    actions:      [notify_telegram, create_incident]
+
+  - id:           dns-tunneling
+    name:         DNS-туннелирование
+    category:     c2
+    severity:     high
+    enabled:      true
+    description:  Необычно длинные DNS-запросы и/или высокая частота от одного хоста.
+    mitre:        [T1071.004]
+    sigma_rules:  [c2_dns_tunneling]
+    threshold: { events: 100, window_minutes: 5, group_by: [host], dns_length_min: 50 }
+    actions:      [notify_telegram, create_incident]
+
+  - id:           data-exfiltration
+    name:         Большой исходящий трафик
+    category:     exfiltration
+    severity:     high
+    enabled:      true
+    description:  Исходящий объём данных от одного хоста превышает baseline в N раз.
+    mitre:        [T1041]
+    sigma_rules:  [data_exfiltration_large_upload, exfiltration_cloud_storage]
+    actions:      [notify_telegram]
+    baseline:     { metric: data_out_mb, multiplier: 5 }
+
+  - id:           account-enumeration
+    name:         Перебор учётных записей
+    category:     discovery
+    severity:     medium
+    enabled:      true
+    description:  Один источник запрашивает список пользователей или групп AD.
+    mitre:        [T1087]
+    sigma_rules:  [discovery_account_enum]
+    actions:      [notify_email]

@@ -1,0 +1,647 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design System Fonts (Cyber Forest theme) ─────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  /* Brand font stacks — used by cyber theme & opt-in classes */
+  --font-title: 'Orbitron', 'Courier New', monospace;
+  --font-ui:    'Rajdhani', 'Segoe UI', sans-serif;
+  --font-mono:  'Share Tech Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Backgrounds — unchanged dark palette */
+  --bg: #111827;
+  --bg-gradient-start: #111827;
+  --bg-gradient-mid: #1f2937;
+  --bg-gradient-end: #111827;
+  --surface: #1f2937;
+  --surface-2: #374151;
+  --surface-panel: #1f2937;
+  --surface-inset: #111827;
+  /* Borders */
+  --border: #4b5563;
+  --border-strong: #6b7280;
+  /* Typography */
+  --text: #f3f4f6;
+  --text-soft: #9ca3af;
+  --text-muted: #d1d5db;
+  /* Accent (professional purple) */
+  --accent: #a78bfa;
+  --accent-secondary: #8b5cf6;
+  --accent-glow: rgba(167, 139, 250, 0.12);
+  --accent-chip-bg: rgba(167, 139, 250, 0.2);
+  --accent-chip-border: #4b5563;
+  --code-accent: #a78bfa;
+  --code-accent-2: #c4b5fd;
+  /* Spacing scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+[data-theme="light"] {
+  /* Same structure as dark: cool slate + subtle violet mid (parallel to dark purple mid) */
+  --bg: #e8ecf4;
+  --bg-gradient-start: #e4e9f2;
+  --bg-gradient-mid: #ebe7fb;
+  --bg-gradient-end: #e2e8f4;
+  --surface: #f7f8fc;
+  --surface-2: #eef1f8;
+  --surface-panel: #f0f2fa;
+  --surface-inset: #e6eaf3;
+  --border: #c8d0e0;
+  --border-strong: #a8b4cc;
+  --text: #0f172a;
+  --text-soft: #64748b;
+  --text-muted: #475569;
+  --accent: #7c3aed;
+  --accent-secondary: #6d28d9;
+  --accent-glow: rgba(124, 58, 237, 0.12);
+  --accent-chip-bg: rgba(124, 58, 237, 0.12);
+  --accent-chip-border: #c4b5fd;
+  --code-accent: #6d28d9;
+  --code-accent-2: #5b21b6;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(124, 58, 237, 0.04);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(124, 58, 237, 0.06);
+  --shadow-glow: 0 0 48px rgba(124, 58, 237, 0.07);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   URSUS INSIGHT — Cyber Forest theme
+   Imported from design-system (see UrsusSiem/design-system/)
+   Activated via document.documentElement.dataset.theme = "cyber"
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="cyber"] {
+  /* Backgrounds: deep navy + space-purple scale */
+  --bg: #0D0D1A;
+  --bg-gradient-start: #0D0D1A;
+  --bg-gradient-mid: #16162A;
+  --bg-gradient-end: #111122;
+  --surface: #16162A;
+  --surface-2: #1E1E36;
+  --surface-panel: #16162A;
+  --surface-inset: #111122;
+  /* Borders — purple-tinted */
+  --border: #2A2A4A;
+  --border-strong: rgba(106, 13, 173, 0.45);
+  /* Text */
+  --text: #D4D4E8;
+  --text-soft: #7A7A9A;
+  --text-muted: #B8B8D4;
+  /* Accent: purple primary + magenta accent */
+  --accent: #BF40BF;
+  --accent-secondary: #6A0DAD;
+  --accent-glow: rgba(191, 64, 191, 0.4);
+  --accent-chip-bg: rgba(106, 13, 173, 0.25);
+  --accent-chip-border: rgba(191, 64, 191, 0.35);
+  --code-accent: #BF40BF;
+  --code-accent-2: #D580D5;
+  /* Shadows — purple-glow */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(106, 13, 173, 0.08);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 24px rgba(106, 13, 173, 0.15);
+  --shadow-glow: 0 0 40px rgba(106, 13, 173, 0.3);
+  /* Liquid glass (user direction) */
+  --glass-bg: rgba(22, 22, 42, 0.65);
+  --glass-blur: blur(14px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(106, 13, 173, 0.15);
+}
+
+@layer base {
+  /* Native date/time inputs and scrollbars follow the active theme */
+  html {
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--surface-2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+  }
+}
+
+/* Theme-aware text (replaces fixed Tailwind gray-100 / gray-300) */
+@layer utilities {
+  .siem-fg {
+    color: var(--text);
+  }
+  .siem-fg-muted {
+    color: var(--text-muted);
+  }
+  .siem-fg-soft {
+    color: var(--text-soft);
+  }
+  .siem-surface-fill {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .siem-inset-fill {
+    background: var(--surface-inset);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  /* Pill / segmented control track (theme-aware) */
+  .siem-segment-track {
+    border-radius: 0.5rem;
+    padding: 0.125rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+}
+
+@layer components {
+  .app-shell {
+    background: linear-gradient(
+      165deg,
+      var(--bg-gradient-start) 0%,
+      var(--bg-gradient-mid) 45%,
+      var(--bg-gradient-end) 100%
+    );
+    color: var(--text);
+  }
+
+  header {
+    background: color-mix(in srgb, var(--surface) 84%, var(--bg));
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: saturate(140%) blur(12px);
+  }
+
+  .app-separator {
+    background: var(--border-strong);
+  }
+
+  .theme-toggle-btn {
+    @apply px-3 py-1.5 rounded-lg text-xs font-medium transition-colors;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .theme-toggle-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  /* SIEM Card */
+  .siem-card {
+    @apply rounded-lg border;
+    border-color: var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* SIEM Input */
+  .siem-input {
+    @apply border rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors;
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface-2);
+  }
+  .siem-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .siem-input::placeholder {
+    color: var(--text-soft);
+  }
+
+  /* SIEM Button primary */
+  .siem-btn {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+  }
+  .siem-btn:hover {
+    background: var(--accent-secondary);
+  }
+  .siem-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* SIEM Button ghost */
+  .siem-btn-ghost {
+    @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors border;
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+  .siem-btn-ghost:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* SIEM Table */
+  .siem-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .siem-table thead th {
+    @apply text-xs uppercase tracking-wider px-3 py-2;
+    color: var(--text-soft);
+  }
+  .siem-table tbody tr {
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+    transition: background 0.1s;
+  }
+  .siem-table tbody tr:hover {
+    background: color-mix(in srgb, var(--accent-secondary) 8%, transparent);
+  }
+  .siem-table tbody td {
+    @apply px-3 py-2 text-sm;
+    color: var(--text-muted);
+  }
+
+  /* Nav link active */
+  .nav-active {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* Severity badges */
+  .badge-critical {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .badge-high {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+  }
+  .badge-medium {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+  }
+  .badge-low {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .badge-info {
+    @apply text-xs px-2 py-0.5 rounded font-medium;
+    background: rgba(167, 139, 250, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+  }
+
+  /* Status badges */
+  .badge-open {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-investigating {
+    background: rgba(234, 179, 8, 0.12);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-resolved {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+  .badge-fp {
+    background: rgba(100, 116, 139, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    @apply text-xs px-2 py-0.5 rounded;
+  }
+
+  /* Criticality dot */
+  .crit-dot {
+    @apply inline-block w-2.5 h-2.5 rounded-full flex-shrink-0;
+  }
+  .crit-dot-critical {
+    background: #ef4444;
+  }
+  .crit-dot-high {
+    background: #f97316;
+  }
+  .crit-dot-medium {
+    background: #eab308;
+  }
+  .crit-dot-low {
+    background: #3b82f6;
+  }
+  .crit-dot-info {
+    background: #9ca3af;
+  }
+
+  /* Correlation star */
+  .corr-star {
+    color: #ef4444;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  /* PDQL input area */
+  .pdql-bar {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .pdql-bar:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+
+  /* Detail panel field row */
+  .field-row {
+    @apply flex items-start gap-2 py-1 px-2 rounded cursor-pointer;
+    transition: background 0.1s;
+  }
+  .field-row:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .field-row:hover .field-add-btn {
+    @apply visible;
+  }
+  .field-add-btn {
+    @apply invisible text-xs px-1 rounded flex-shrink-0;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+
+  /* Page header / section title */
+  .siem-page-title {
+    @apply text-2xl font-bold;
+    color: var(--text);
+  }
+  .siem-section-title {
+    @apply text-xs uppercase tracking-widest font-medium;
+    color: var(--text-soft);
+  }
+
+  /* Stat / metric card */
+  .siem-stat-card {
+    @apply rounded-xl p-4 flex flex-col gap-1;
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    border: 1px solid var(--border);
+  }
+  .siem-stat-value {
+    @apply text-2xl font-bold;
+    color: var(--text);
+  }
+  .siem-stat-label {
+    @apply text-xs;
+    color: var(--text-soft);
+  }
+
+  /* Empty state */
+  .siem-empty {
+    @apply flex flex-col items-center justify-center py-16 gap-2 text-sm;
+    color: var(--text-soft);
+  }
+
+  /* Divider */
+  .siem-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Scrollable panel */
+  .siem-scroll {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  /* Monospace / JSON preview */
+  .siem-code-block {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    background: var(--surface-inset);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+}
+
+/* Light theme: badge text contrast on pale backgrounds */
+[data-theme="light"] .badge-critical {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+[data-theme="light"] .badge-high {
+  color: #c2410c;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+[data-theme="light"] .badge-medium {
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(202, 138, 4, 0.4);
+}
+[data-theme="light"] .badge-low {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+[data-theme="light"] .badge-info {
+  color: var(--accent-secondary);
+  background: var(--accent-chip-bg);
+  border-color: var(--accent-chip-border);
+}
+[data-theme="light"] .badge-open {
+  color: #b91c1c;
+}
+[data-theme="light"] .badge-investigating {
+  color: #a16207;
+}
+[data-theme="light"] .badge-resolved {
+  color: #15803d;
+}
+[data-theme="light"] .badge-fp {
+  color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Cyber Forest — visual effects (active only when data-theme=cyber)
+   ═══════════════════════════════════════════════════════════════ */
+
+html[data-theme="cyber"] {
+  color-scheme: dark;
+}
+
+html[data-theme="cyber"] body {
+  font-family: var(--font-ui);
+  letter-spacing: 0.2px;
+}
+
+/* Cyber grid on app shell + animated scanlines overlay */
+html[data-theme="cyber"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0, transparent 39px, rgba(42, 42, 74, 0.4) 39px, rgba(42, 42, 74, 0.4) 40px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 39px, rgba(42, 42, 74, 0.4) 39px, rgba(42, 42, 74, 0.4) 40px);
+  opacity: 0.35;
+}
+
+html[data-theme="cyber"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 3px,
+    rgba(191, 64, 191, 0.025) 3px,
+    rgba(191, 64, 191, 0.025) 4px
+  );
+  animation: scanMove 8s linear infinite;
+  mix-blend-mode: screen;
+}
+
+html[data-theme="cyber"] #root {
+  position: relative;
+  z-index: 3;
+}
+
+@keyframes scanMove {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+@keyframes bearGlow {
+  0%   { filter: drop-shadow(0 0 4px rgba(191, 64, 191, 0.5)); }
+  100% { filter: drop-shadow(0 0 14px rgba(191, 64, 191, 0.95)); }
+}
+
+@keyframes pulseBadge {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 49, 49, 0.6); }
+  50%      { box-shadow: 0 0 12px rgba(255, 49, 49, 0.95); }
+}
+
+/* Brand typography helpers (opt-in via class) */
+.brand-title { font-family: var(--font-title); letter-spacing: 3px; text-transform: uppercase; }
+.brand-mono  { font-family: var(--font-mono); }
+.brand-ui    { font-family: var(--font-ui); }
+
+.brand-name {
+  font-family: var(--font-title);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+html[data-theme="cyber"] .brand-name {
+  text-shadow: 0 0 10px rgba(191, 64, 191, 0.6);
+}
+
+.brand-bear {
+  display: inline-block;
+  animation: bearGlow 3s ease-in-out infinite alternate;
+}
+
+/* Cyber theme: stronger panel headers using monospace */
+html[data-theme="cyber"] .siem-page-title {
+  font-family: var(--font-title);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+html[data-theme="cyber"] .siem-section-title {
+  font-family: var(--font-mono);
+}
+
+html[data-theme="cyber"] .siem-stat-value {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Cyber theme: sidebar/header glow */
+html[data-theme="cyber"] header {
+  box-shadow: 0 2px 24px rgba(106, 13, 173, 0.18);
+}
+
+html[data-theme="cyber"] .siem-card,
+html[data-theme="cyber"] .siem-stat-card {
+  box-shadow: var(--shadow-sm);
+}
+
+html[data-theme="cyber"] .siem-card:hover {
+  border-color: var(--accent);
+}
+
+/* Liquid glass panel (opt-in) */
+.liquid-glass {
+  background: var(--glass-bg, rgba(22, 22, 42, 0.65));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.08));
+  box-shadow: var(--glass-shadow, 0 8px 32px rgba(0, 0, 0, 0.4));
+  border-radius: 12px;
+}
+
+/* Print styles for incident PDF */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .incident-print-card {
+    page-break-inside: avoid;
+  }
+}

@@ -1,0 +1,44 @@
+title: WMI Remote Code Execution
+id: lm-wmi-001
+status: stable
+description: Detects WMI-based remote code execution used for lateral movement, including wmic.exe spawning remote processes and WMI subscription events.
+author: URSUS SIEM
+date: 2024-01-01
+category: lateral_movement
+severity: high
+tags:
+  - attack.lateral_movement
+  - attack.t1021.006
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_wmic:
+    EventID: 1
+    message|contains:
+      - "wmic"
+      - "Win32_Process"
+      - "wmiprvse.exe"
+    message|contains:
+      - "/node:"
+      - "process call create"
+  selection_event:
+    EventID:
+      - 19
+      - 20
+      - 21
+    message|contains:
+      - "__EventFilter"
+      - "__EventConsumer"
+      - "__FilterToConsumerBinding"
+  condition: selection_wmic or selection_event
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+  - object.name
+falsepositives:
+  - Authorized IT administration via WMI
+  - Legitimate remote management software using WMI
+level: high

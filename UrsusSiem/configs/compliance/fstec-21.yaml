@@ -1,0 +1,94 @@
+# Приказ ФСТЭК России №21 от 18.02.2013 — соответствие.
+# Каждая мера = SQL-запрос или критерий, которые URSUS умеет проверять
+# автоматически. Используется генератором отчётов в /api/reports/compliance.
+
+reference: "Приказ ФСТЭК №21 от 18.02.2013"
+target:    "Меры защиты ИСПДн уровня защищенности УЗ-3 и УЗ-4"
+
+sections:
+  - id: ИАФ
+    name: Идентификация и аутентификация
+    measures:
+      - id:    ИАФ.1
+        name:  Идентификация и аутентификация пользователей
+        check: events_table_filter
+        params:
+          source: logs
+          category: authentication
+          period_days: 90
+        evidence_query: |
+          SELECT COUNT(*) AS attempts, COUNT(*) FILTER (WHERE outcome='failure') AS failed
+          FROM logs
+          WHERE meta->>'category' = 'authentication'
+            AND timestamp > NOW() - INTERVAL '90 days'
+
+      - id:    ИАФ.5
+        name:  Регистрация событий безопасности
+        check: audit_log_present
+        evidence_query: |
+          SELECT COUNT(*) FROM audit_log
+          WHERE occurred_at > NOW() - INTERVAL '90 days'
+
+  - id: УПД
+    name: Управление доступом субъектов доступа
+    measures:
+      - id:    УПД.1
+        name:  Управление учётными записями
+        check: user_table_review
+        evidence_query: |
+          SELECT id, username, role, created_at FROM users ORDER BY created_at
+
+      - id:    УПД.4
+        name:  Разделение полномочий пользователей
+        check: rbac_present
+        evidence_query: |
+          SELECT role, COUNT(*) FROM users GROUP BY role
+
+  - id: РСБ
+    name: Регистрация событий безопасности
+    measures:
+      - id:    РСБ.1
+        name:  Определение событий, подлежащих регистрации
+        check: sigma_rules_active
+        evidence_query: |
+          SELECT COUNT(*) AS active_rules FROM sigma_rules WHERE status='enabled'
+
+      - id:    РСБ.3
+        name:  Сбор, запись и хранение событий
+        check: retention_policy
+        evidence_query: |
+          SELECT MIN(timestamp) AS earliest, MAX(timestamp) AS latest,
+                 COUNT(*) AS total FROM logs
+
+      - id:    РСБ.5
+        name:  Защита информации о событиях безопасности
+        check: audit_immutable
+        evidence_query: |
+          SELECT 'audit_log is INSERT-only by design' AS notice
+
+  - id: АНЗ
+    name: Анализ защищённости
+    measures:
+      - id:    АНЗ.1
+        name:  Выявление, анализ уязвимостей и установка обновлений
+        check: incidents_with_cve
+        evidence_query: |
+          SELECT COUNT(*) FROM correlation_alerts
+          WHERE created_at > NOW() - INTERVAL '90 days'
+
+  - id: ОЦЛ
+    name: Обеспечение целостности информации
+    measures:
+      - id:    ОЦЛ.1
+        name:  Контроль целостности ПО
+        check: edr_present
+        evidence_query: |
+          SELECT COUNT(DISTINCT agent_id) FROM logs WHERE source='edr'
+
+  - id: ОДТ
+    name: Обеспечение доступности информации
+    measures:
+      - id:    ОДТ.5
+        name:  Резервное копирование
+        check: backup_documented
+        evidence: "См. документ Backup-Strategy.md"

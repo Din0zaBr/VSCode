@@ -1,0 +1,72 @@
+# Vector profile: Linux server → URSUS SIEM
+#
+# Collects:
+#   * journald (systemd journal, including syslog)
+#   * /var/log/auth.log, kern.log, syslog (fallback for non-systemd hosts)
+#
+# Install:
+#   curl -1sLf https://repositories.timber.io/public/vector/setup.deb.sh | sudo -E bash
+#   sudo apt-get install -y vector
+#   sudo cp linux-server.yaml /etc/vector/vector.yaml
+#   sudo systemctl restart vector
+#
+# Configure the two URSUS variables below, then start:
+#   URSUS_SERVER=https://your-ursus.example.com
+#   URSUS_API_KEY=changeme-agent-key
+
+data_dir: /var/lib/vector
+
+sources:
+  journald:
+    type: journald
+    current_boot_only: true
+
+  auth_log:
+    type: file
+    include:
+      - /var/log/auth.log
+      - /var/log/secure
+    read_from: end
+
+  syslog_file:
+    type: file
+    include:
+      - /var/log/syslog
+      - /var/log/messages
+    read_from: end
+
+transforms:
+  enrich:
+    type: remap
+    inputs: [journald, auth_log, syslog_file]
+    source: |
+      # Map Vector fields to URSUS shape.
+      .source_type = .source_type || "linux"
+      .level = .PRIORITY || .level || "info"
+      .service = ._SYSTEMD_UNIT || .SYSLOG_IDENTIFIER || .source_type
+      .host = .host || get_hostname!()
+
+sinks:
+  ursus:
+    type: http
+    inputs: [enrich]
+    uri: "${URSUS_SERVER}/api/ingest/vector"
+    encoding:
+      codec: ndjson
+    framing:
+      method: newline_delimited
+    method: post
+    request:
+      headers:
+        X-Api-Key: "${URSUS_API_KEY}"
+        X-Agent-Id: "${HOSTNAME}"
+      timeout_secs: 10
+    batch:
+      max_events: 500
+      timeout_secs: 5
+    buffer:
+      type: disk
+      max_size: 268435456  # 256 MB on-disk buffer for outages
+      when_full: drop_newest
+    healthcheck:
+      enabled: true

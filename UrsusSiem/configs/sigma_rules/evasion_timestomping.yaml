@@ -1,0 +1,37 @@
+title: Defense Evasion - File Timestamp Modification (Timestomping)
+id: evasion-file-001
+status: stable
+description: Detects file timestamp modification via touch or attrib commands used by attackers to hide evidence of file creation or modification
+author: URSUS SIEM
+date: 2024-01-01
+category: defense_evasion
+severity: medium
+tags:
+  - attack.defense_evasion
+  - attack.t1070.006
+logsource:
+  category: process_creation
+  service: syslog
+detection:
+  selection:
+    message|contains|any:
+      - "touch -t"
+      - "touch -d"
+      - "touch -r"
+      - "attrib -a"
+      - "timestomp"
+      - "SetFileTime"
+      - "NtSetInformationFile"
+      - "touch --date"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.path
+  - object.name
+  - action
+falsepositives:
+  - Legitimate file management scripts modifying timestamps
+  - Backup and archival tools adjusting timestamps
+level: medium

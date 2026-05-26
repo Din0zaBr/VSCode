@@ -1,0 +1,57 @@
+# Vector profile: Syslog relay → URSUS SIEM
+#
+# Used as an aggregator for network devices (Cisco/MikroTik/pfSense/etc.)
+# that emit syslog. Open ports 514/udp + 514/tcp on the relay host, point
+# devices there. Vector parses + forwards to URSUS.
+#
+# Note: if URSUS itself is reachable from your devices, you can skip this
+# and point network gear at the URSUS syslog listener (also port 514).
+# This profile is useful when:
+#   * You need a DMZ relay between network gear and the SIEM
+#   * You want client-side parsing/enrichment before shipping
+
+data_dir: /var/lib/vector
+
+sources:
+  syslog_udp:
+    type: syslog
+    address: 0.0.0.0:514
+    mode: udp
+
+  syslog_tcp:
+    type: syslog
+    address: 0.0.0.0:514
+    mode: tcp
+
+transforms:
+  enrich:
+    type: remap
+    inputs: [syslog_udp, syslog_tcp]
+    source: |
+      .source_type = "syslog"
+      .level = .severity || .level || "info"
+      .service = .appname || "syslog"
+      .host = .hostname || .host || "unknown"
+
+sinks:
+  ursus:
+    type: http
+    inputs: [enrich]
+    uri: "${URSUS_SERVER}/api/ingest/vector"
+    encoding:
+      codec: ndjson
+    framing:
+      method: newline_delimited
+    method: post
+    request:
+      headers:
+        X-Api-Key: "${URSUS_API_KEY}"
+        X-Agent-Id: "syslog-relay-${HOSTNAME}"
+      timeout_secs: 10
+    batch:
+      max_events: 1000
+      timeout_secs: 2
+    buffer:
+      type: disk
+      max_size: 536870912  # 512 MB — network gear can be chatty
+      when_full: drop_newest

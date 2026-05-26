@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&family=Rajdhani:wght@600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D0D1A;font-family:'Share Tech Mono',monospace;padding:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.stat-card{background:#16162A;border:1px solid #2A2A4A;border-radius:6px;padding:16px 18px;position:relative;overflow:hidden;width:148px}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.stat-value{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:#EEEEFF;line-height:1}
+.stat-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:#7A7A9A;margin-top:4px}
+.panel{background:#16162A;border:1px solid #2A2A4A;border-radius:6px;overflow:hidden;width:260px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #2A2A4A;background:#1E1E36}
+.panel-title{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:#BF40BF;text-transform:uppercase}
+.panel-body{padding:12px}
+</style>
+</head>
+<body>
+<!-- Stat cards -->
+<div class="stat-card" style="border-color:#2A2A4A">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#6A0DAD,#BF40BF)"></div>
+  <div class="stat-label">ВСЕГО СОБЫТИЙ</div>
+  <div class="stat-value" style="color:#BF40BF">48,291</div>
+  <div class="stat-sub">за всё время</div>
+</div>
+<div class="stat-card">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF6B00"></div>
+  <div class="stat-label">СОБЫТИЯ / 24Ч</div>
+  <div class="stat-value" style="color:#FF6B00">1,247</div>
+  <div class="stat-sub">последние 24 часа</div>
+</div>
+<div class="stat-card">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#FF3131"></div>
+  <div class="stat-label">ОТКРЫТЫЕ</div>
+  <div class="stat-value" style="color:#FF3131;text-shadow:0 0 8px rgba(255,49,49,0.3)">7</div>
+  <div class="stat-sub">требуют внимания</div>
+</div>
+<div class="stat-card">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#39FF14"></div>
+  <div class="stat-label">АГЕНТЫ ONLINE</div>
+  <div class="stat-value" style="color:#39FF14;text-shadow:0 0 6px rgba(57,255,20,0.3)">12</div>
+  <div class="stat-sub">активных</div>
+</div>
+
+<!-- Panel -->
+<div class="panel">
+  <div class="panel-header">
+    <span class="panel-title">◈ ПОСЛЕДНИЕ СОБЫТИЯ</span>
+    <button style="background:#1E1E36;border:1px solid #2A2A4A;border-radius:6px;color:#D4D4E8;font-family:'Share Tech Mono',monospace;font-size:10px;padding:2px 8px;cursor:pointer">↺</button>
+  </div>
+  <div class="panel-body" style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:11px;color:#D4D4E8;border-bottom:1px solid #2A2A4A;padding-bottom:6px;display:flex;gap:6px;align-items:center">
+      <span style="background:rgba(255,49,49,0.13);color:#FF3131;border:1px solid rgba(255,49,49,0.4);padding:1px 6px;border-radius:3px;font-size:9px;letter-spacing:1px">CRITICAL</span>
+      <span style="color:#7A7A9A;font-size:10px">Auth</span>
+      <span style="color:#00BFFF;font-size:10px">10.0.0.1</span>
+    </div>
+    <div style="font-size:11px;color:#D4D4E8;border-bottom:1px solid #2A2A4A;padding-bottom:6px;display:flex;gap:6px;align-items:center">
+      <span style="background:rgba(255,107,0,0.13);color:#FF6B00;border:1px solid rgba(255,107,0,0.4);padding:1px 6px;border-radius:3px;font-size:9px;letter-spacing:1px">HIGH</span>
+      <span style="color:#7A7A9A;font-size:10px">Network</span>
+      <span style="color:#00BFFF;font-size:10px">192.168.1.2</span>
+    </div>
+    <div style="font-size:11px;color:#D4D4E8;display:flex;gap:6px;align-items:center">
+      <span style="background:rgba(255,215,0,0.13);color:#FFD700;border:1px solid rgba(255,215,0,0.4);padding:1px 6px;border-radius:3px;font-size:9px;letter-spacing:1px">MEDIUM</span>
+      <span style="color:#7A7A9A;font-size:10px">Malware</span>
+      <span style="color:#00BFFF;font-size:10px">172.16.0.5</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

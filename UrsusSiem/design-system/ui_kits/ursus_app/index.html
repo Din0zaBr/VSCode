@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ursus Insight SIEM — UI Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+/* ── CSS Variables ────────────────────────────────────────── */
+:root {
+  --primary:    #6A0DAD;
+  --accent:     #BF40BF;
+  --bg-deep:    #0D0D1A;
+  --bg:         #111122;
+  --bg2:        #16162A;
+  --bg3:        #1E1E36;
+  --border:     #2A2A4A;
+  --border2:    rgba(106,13,173,0.27);
+  --text:       #D4D4E8;
+  --text-dim:   #7A7A9A;
+  --text-bright:#EEEEFF;
+  --critical:   #FF3131;
+  --high:       #FF6B00;
+  --medium:     #FFD700;
+  --low:        #00BFFF;
+  --success:    #39FF14;
+  --font-mono:  'Share Tech Mono', 'Courier New', monospace;
+  --font-ui:    'Rajdhani', sans-serif;
+  --font-title: 'Orbitron', monospace;
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg-deep); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; overflow: hidden; }
+
+/* ── Scanlines ────────────────────────────────────────────── */
+.scanlines {
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  animation: scanMove 8s linear infinite;
+}
+@keyframes scanMove { from { background-position-y: 0; } to { background-position-y: 100px; } }
+
+/* ── App layout ───────────────────────────────────────────── */
+#root { height: 100%; }
+.app-layout { display: flex; height: 100vh; overflow: hidden; }
+.main-content { margin-left: 220px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.content-area {
+  flex: 1; overflow-y: auto;
+  background: var(--bg-deep);
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes bearGlow { from { filter: drop-shadow(0 0 8px #6A0DAD); } to { filter: drop-shadow(0 0 18px #BF40BF); } }
+@keyframes bearGlow2 { 0%,100% { filter: drop-shadow(0 0 16px #BF40BF); } 50% { filter: drop-shadow(0 0 32px #6A0DAD); } }
+@keyframes pulseBadge { 0%,100% { box-shadow: 0 0 4px #FF3131; } 50% { box-shadow: 0 0 10px #FF3131; } }
+@keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div id="root"></div>
+
+<!-- Component scripts (order matters — dependencies first) -->
+<script type="text/babel" src="Badges.jsx"></script>
+<script type="text/babel" src="StatCard.jsx"></script>
+<script type="text/babel" src="Modal.jsx"></script>
+<script type="text/babel" src="TopBar.jsx"></script>
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel" src="EventsScreen.jsx"></script>
+<script type="text/babel" src="AlertsScreen.jsx"></script>
+<script type="text/babel" src="LoginScreen.jsx"></script>
+
+<script type="text/babel">
+const PAGE_META = {
+  dashboard: { title: 'Dashboard',               breadcrumb: 'Ursus Insight / Dashboard' },
+  events:    { title: 'События',                  breadcrumb: 'Ursus Insight / События' },
+  alerts:    { title: 'Управление Инцидентами',   breadcrumb: 'Ursus Insight / Инциденты' },
+  rules:     { title: 'Правила Корреляции',        breadcrumb: 'Ursus Insight / Правила' },
+  agents:    { title: 'Управление Агентами',       breadcrumb: 'Ursus Insight / Агенты' },
+};
+
+/* ── Rules placeholder screen ─────────────────────────────── */
+const RulesScreen = () => {
+  const RULES = [
+    { id: 'brute_force_ssh',  name: 'SSH Brute Force',       desc: 'Multiple failed logins in short window', severity: 'CRITICAL', enabled: true,  hits: 47 },
+    { id: 'port_scan',        name: 'Port Scan Detected',    desc: 'Horizontal port scan to network range',   severity: 'HIGH',     enabled: true,  hits: 12 },
+    { id: 'malware_sig',      name: 'Malware Signature',     desc: 'ClamAV signature match on filesystem',   severity: 'HIGH',     enabled: true,  hits: 3 },
+    { id: 'privesc_sudo',     name: 'Privilege Escalation',  desc: 'sudo COMMAND as root by non-admin user', severity: 'MEDIUM',   enabled: true,  hits: 8 },
+    { id: 'sql_injection',    name: 'SQL Injection Attempt', desc: 'WAF: SQL pattern in HTTP request params', severity: 'CRITICAL', enabled: true,  hits: 2 },
+    { id: 'usb_connect',      name: 'USB Device Connected',  desc: 'External USB storage attached to host',  severity: 'LOW',      enabled: false, hits: 19 },
+  ];
+  const [rules, setRules] = React.useState(RULES);
+  const toggle = (id) => setRules(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+  return (
+    <div style={{ padding: '20px 24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
+        <button style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '6px', border: '1px solid #6A0DAD', background: 'rgba(106,13,173,0.2)', color: '#BF40BF', fontFamily: 'var(--font-mono)', fontSize: '11px', cursor: 'pointer', letterSpacing: '0.5px' }}>+ Новое правило</button>
+      </div>
+      {rules.map(rule => (
+        <div key={rule.id} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '12px', transition: 'border-color 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#6A0DAD'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+          {/* Toggle */}
+          <div onClick={() => toggle(rule.id)} style={{ position: 'relative', width: '36px', height: '18px', flexShrink: 0, cursor: 'pointer' }}>
+            <div style={{ position: 'absolute', inset: 0, background: rule.enabled ? '#6A0DAD' : '#2A2A4A', borderRadius: '9px', transition: 'background 0.2s' }}></div>
+            <div style={{ position: 'absolute', width: '12px', height: '12px', top: '3px', left: rule.enabled ? '21px' : '3px', background: rule.enabled ? '#BF40BF' : '#7A7A9A', borderRadius: '50%', transition: 'left 0.2s, background 0.2s' }}></div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: 'var(--text-bright)', fontSize: '13px', marginBottom: '2px', fontFamily: 'var(--font-ui)' }}>{rule.name}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>{rule.desc}</div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '5px', alignItems: 'center' }}>
+              <SeverityBadge level={rule.severity} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)' }}>id: {rule.id}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)' }}>↑ {rule.hits} срабатываний</span>
+            </div>
+          </div>
+          <button style={{ padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg3)', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontSize: '10px', cursor: 'pointer' }}>✎ Изменить</button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── Agents placeholder screen ─────────────────────────────── */
+const AgentsScreen = () => {
+  const AGENTS = [
+    { id: 'agt-001', hostname: 'srv-web01',  ip: '10.0.0.10', os_info: 'Ubuntu 22.04', version: '1.0.0', status: 'ONLINE',  last_seen: Date.now()/1000 - 30,   events_sent: 12847 },
+    { id: 'agt-002', hostname: 'db-01',      ip: '10.0.0.11', os_info: 'Debian 11',    version: '1.0.0', status: 'ONLINE',  last_seen: Date.now()/1000 - 60,   events_sent: 8423 },
+    { id: 'agt-003', hostname: 'fw-01',      ip: '10.0.0.1',  os_info: 'pfSense 2.7',  version: '1.0.0', status: 'ONLINE',  last_seen: Date.now()/1000 - 120,  events_sent: 34901 },
+    { id: 'agt-004', hostname: 'ws-034',     ip: '172.16.0.5',os_info: 'Windows 10',   version: '0.9.1', status: 'OFFLINE', last_seen: Date.now()/1000 - 3600, events_sent: 2311 },
+    { id: 'agt-005', hostname: 'admin-ws',   ip: '10.0.0.22', os_info: 'Windows 11',   version: '1.0.0', status: 'ONLINE',  last_seen: Date.now()/1000 - 45,   events_sent: 5677 },
+  ];
+  const ts2ago = ts => { const s = Math.floor(Date.now()/1000 - ts); if (s < 60) return `${s}с назад`; if (s < 3600) return `${Math.floor(s/60)}м назад`; return `${Math.floor(s/3600)}ч назад`; };
+  return (
+    <div style={{ padding: '20px 24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>◉ АКТИВНЫЕ АГЕНТЫ</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: '12px' }}>
+            {AGENTS.map(a => (
+              <div key={a.id} style={{ background: 'var(--bg2)', border: `1px solid var(--border)`, borderLeft: `3px solid ${a.status === 'ONLINE' ? '#39FF14' : '#FF3131'}`, borderRadius: '6px', padding: '14px', transition: 'border-color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#6A0DAD'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#BF40BF' }}>{a.hostname}</span>
+                  <StatusBadge status={a.status} />
+                </div>
+                {[['ID', a.id], ['IP', null], ['ОС', a.os_info], ['Версия', a.version], ['Активность', ts2ago(a.last_seen)], ['Событий', a.events_sent.toLocaleString()]].map(([lbl, val]) => (
+                  <div key={lbl} style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '3px', fontFamily: 'var(--font-mono)' }}>
+                    {lbl}: {lbl === 'IP' ? <IpTag ip={a.ip} /> : <span style={{ color: lbl === 'Событий' ? '#BF40BF' : 'var(--text)' }}>{val}</span>}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>⟁ УСТАНОВКА АГЕНТА</div>
+          <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border)', background: 'var(--bg3)' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2px', color: '#BF40BF', textTransform: 'uppercase' }}>БЫСТРЫЙ СТАРТ</span>
+            </div>
+            <div style={{ padding: '14px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '10px', fontFamily: 'var(--font-ui)' }}>Скопируйте агент на целевую ВМ:</p>
+              <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text)', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '4px', padding: '10px', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{`# Установить зависимости:
+pip3 install requests psutil
+
+# Запустить агент:
+python3 agent.py \\
+  --server http://10.0.0.100:8081 \\
+  --key "agent-dev-key"`}</pre>
+              <div style={{ marginTop: '12px' }}>
+                {[['📡','UDP Syslog','порт 514/1514'], ['🔌','REST API','/api/agent/ingest'], ['📁','File Tail','локальные логи'], ['🪟','Windows Events','через агент']].map(([ico, name, desc]) => (
+                  <div key={name} style={{ fontSize: '12px', color: 'var(--text-dim)', lineHeight: 1.8 }}>{ico} <span style={{ color: '#BF40BF' }}>{name}</span> — {desc}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Main App ──────────────────────────────────────────────── */
+const App = () => {
+  const [loggedIn, setLoggedIn] = React.useState(false);
+  const [page, setPage] = React.useState('dashboard');
+  const openAlerts = 7;
+
+  if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+
+  const meta = PAGE_META[page] || PAGE_META.dashboard;
+
+  const renderScreen = () => {
+    switch(page) {
+      case 'dashboard': return <Dashboard onNavigate={setPage} />;
+      case 'events':    return <EventsScreen />;
+      case 'alerts':    return <AlertsScreen />;
+      case 'rules':     return <RulesScreen />;
+      case 'agents':    return <AgentsScreen />;
+      default:          return <Dashboard onNavigate={setPage} />;
+    }
+  };
+
+  return (
+    <div className="app-layout">
+      <Sidebar activePage={page} onNavigate={setPage} alertCount={openAlerts} />
+      <div className="main-content">
+        <TopBar pageTitle={meta.title} breadcrumb={meta.breadcrumb} queueSize="142" />
+        <div className="content-area">
+          {renderScreen()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

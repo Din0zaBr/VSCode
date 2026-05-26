@@ -1,0 +1,30 @@
+title: Bulk File Download - Insider Threat Indicator
+id: insider-dl-001
+status: stable
+description: Detects unusual bulk file downloads by a single user, potentially indicating insider threat or compromised account.
+author: URSUS SIEM
+date: 2024-01-01
+category: data_exfiltration
+severity: medium
+tags:
+  - attack.collection
+  - attack.t1213
+logsource:
+  category: file_access
+detection:
+  selection:
+    action:
+      - "download"
+      - "read"
+      - "copy"
+  condition: selection | count() by subject.name > 100 within 300s
+fields:
+  - subject.name
+  - object.path
+  - host
+  - src.ip
+falsepositives:
+  - Authorized data migration
+  - Backup software
+  - Developers pulling large repositories
+level: medium

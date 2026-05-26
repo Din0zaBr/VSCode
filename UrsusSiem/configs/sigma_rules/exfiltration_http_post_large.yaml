@@ -1,0 +1,38 @@
+title: Exfiltration - Large HTTP POST to External IP
+id: exfil-net-002
+status: stable
+description: Detects large HTTP POST requests exceeding 10MB to external IP addresses indicating potential data exfiltration
+author: URSUS SIEM
+date: 2024-01-01
+category: exfiltration
+severity: high
+tags:
+  - attack.exfiltration
+  - attack.t1048.003
+logsource:
+  category: network
+  service: syslog
+detection:
+  selection:
+    action|contains|any:
+      - "POST"
+    message|contains|any:
+      - "Content-Length"
+      - "bytes_sent"
+      - "request_body_size"
+    count.bytes|contains|any:
+      - "1048576"
+      - "10485760"
+  condition: selection
+fields:
+  - src.ip
+  - dst.ip
+  - dst.port
+  - count.bytes
+  - action
+  - message
+  - host
+falsepositives:
+  - Legitimate large file uploads to external services
+  - Authorized backup operations over HTTP
+level: high

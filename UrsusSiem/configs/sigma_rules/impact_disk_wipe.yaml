@@ -1,0 +1,34 @@
+title: Disk Wipe Utility Execution
+id: impact-wipe-001
+status: stable
+description: Detects execution of disk wiping utilities that may indicate destructive attack or ransomware preparation.
+author: URSUS SIEM
+date: 2024-01-01
+category: impact
+severity: critical
+tags:
+  - attack.impact
+  - attack.t1561.001
+logsource:
+  category: process_creation
+detection:
+  selection:
+    message|contains|any:
+      - "dd if=/dev/zero"
+      - "dd if=/dev/random"
+      - "shred -u"
+      - "wipe -r"
+      - "diskpart"
+      - "format c:"
+      - "cipher /w:"
+      - "sdelete -p"
+  condition: selection
+fields:
+  - host
+  - subject.name
+  - message
+  - object.path
+falsepositives:
+  - Authorized secure data deletion by IT team
+  - Disk preparation for decommissioning
+level: critical

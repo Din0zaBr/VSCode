@@ -1,0 +1,67 @@
+# Vector profile: Windows server → URSUS SIEM
+#
+# Collects Windows Event Log channels: Security, System, Application.
+#
+# Install:
+#   Invoke-WebRequest https://packages.timber.io/vector/0.40.0/vector-0.40.0-x86_64-pc-windows-msvc.zip -OutFile vector.zip
+#   Expand-Archive vector.zip -DestinationPath C:\Program Files\Vector
+#   Copy windows-server.yaml to C:\Program Files\Vector\config\vector.yaml
+#   New-Service -Name Vector -BinaryPathName "C:\Program Files\Vector\bin\vector.exe --config C:\Program Files\Vector\config\vector.yaml"
+#   Start-Service Vector
+#
+# Required environment variables (set in Vector service properties or
+# system env): URSUS_SERVER, URSUS_API_KEY
+
+data_dir: C:\ProgramData\Vector
+
+sources:
+  win_security:
+    type: windows_event_log
+    channels: ["Security"]
+    poll_interval_secs: 5
+
+  win_system:
+    type: windows_event_log
+    channels: ["System"]
+    poll_interval_secs: 10
+
+  win_app:
+    type: windows_event_log
+    channels: ["Application"]
+    poll_interval_secs: 30
+
+transforms:
+  enrich:
+    type: remap
+    inputs: [win_security, win_system, win_app]
+    source: |
+      .source_type = "windows_event_log"
+      .level = .Level || "info"
+      .service = .Source || .Provider || "windows"
+      .host = .Hostname || .Computer || get_hostname!()
+      .meta.channel = .Channel
+      .meta.event_id = .EventID
+      .message = .Message || encode_json!(.)
+
+sinks:
+  ursus:
+    type: http
+    inputs: [enrich]
+    uri: "${URSUS_SERVER}/api/ingest/vector"
+    encoding:
+      codec: ndjson
+    framing:
+      method: newline_delimited
+    method: post
+    request:
+      headers:
+        X-Api-Key: "${URSUS_API_KEY}"
+        X-Agent-Id: "${COMPUTERNAME}"
+      timeout_secs: 10
+    batch:
+      max_events: 500
+      timeout_secs: 5
+    buffer:
+      type: disk
+      max_size: 268435456
+      when_full: drop_newest

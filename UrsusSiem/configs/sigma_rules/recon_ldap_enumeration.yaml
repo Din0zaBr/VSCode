@@ -1,0 +1,34 @@
+title: Active Directory LDAP Enumeration
+id: recon-ldap-001
+status: stable
+description: Detects LDAP queries used for Active Directory enumeration, often a precursor to attacks.
+author: URSUS SIEM
+date: 2024-01-01
+category: reconnaissance
+severity: medium
+tags:
+  - attack.discovery
+  - attack.t1087.002
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4662
+    message|contains|any:
+      - "1.2.840.113556.1.4.803"
+      - "LDAP_MATCHING_RULE_BIT_AND"
+      - "userAccountControl"
+      - "member;range="
+  threshold:
+    condition: selection | count() > 50 within 60s
+  condition: threshold
+fields:
+  - src.ip
+  - subject.name
+  - host
+  - message
+falsepositives:
+  - Legitimate AD management tools
+  - Identity management software
+level: medium

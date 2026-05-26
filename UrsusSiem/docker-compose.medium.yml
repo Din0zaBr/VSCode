@@ -1,0 +1,52 @@
+# Docker Compose profile for S/M tier (Sprint 8).
+#
+# Run with: docker compose -f docker-compose.yml -f docker-compose.medium.yml up -d
+#
+# Adds:
+#   * ClickHouse (single node) for hot logs
+#   * Sets URSUS_STORAGE=clickhouse in logvault-go
+#
+# Postgres stays in the stack for metadata (users, rules, scenarios, audit).
+# The logs table on PG is kept but no longer written to once dual-write
+# is switched off (see scripts/pg-to-ch.py + PLAN_V2.md §7).
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24-alpine
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: ursus
+      CLICKHOUSE_USER: ursus
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-ursus-secret}
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./migrations/clickhouse:/docker-entrypoint-initdb.d:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # native
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8123/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  logvault-go:
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      logvault-rust:
+        condition: service_healthy
+    environment:
+      URSUS_STORAGE: clickhouse
+      CLICKHOUSE_DSN: "clickhouse://ursus:${CLICKHOUSE_PASSWORD:-ursus-secret}@clickhouse:9000/ursus"
+      # Postgres stays for metadata (users, rules, scenarios, audit_log)
+      DATABASE_URL: "postgres://logvault:logvault-secret@postgres:5432/logvault"
+
+volumes:
+  clickhouse_data:

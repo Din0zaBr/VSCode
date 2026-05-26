@@ -1,0 +1,20 @@
+# URSUS SIEM — reverse proxy (Rust + Go stack)
+# /api/*, /agent/*, /health → logvault-go (Go gateway)
+# everything else → ui (nginx serving the React build)
+
+:80 {
+    encode gzip
+
+    handle /api/* {
+        reverse_proxy logvault-go:8080
+    }
+    handle /agent/* {
+        reverse_proxy logvault-go:8080
+    }
+    handle /health {
+        reverse_proxy logvault-go:8080
+    }
+    handle {
+        reverse_proxy ui:80
+    }
+}

@@ -1,0 +1,40 @@
+title: Credential Access - NTDS.dit File Copy Attempt
+id: cred-acc-003
+status: stable
+description: Detects attempts to copy the NTDS.dit Active Directory database file which contains password hashes for all domain accounts
+author: URSUS SIEM
+date: 2024-01-01
+category: credential_access
+severity: critical
+tags:
+  - attack.credential_access
+  - attack.t1003.003
+logsource:
+  category: file
+  service: windows_security
+detection:
+  selection:
+    object.path|contains|any:
+      - "ntds.dit"
+      - "NTDS.dit"
+      - "\\Windows\\NTDS\\"
+    message|contains|any:
+      - "copy"
+      - "xcopy"
+      - "robocopy"
+      - "vssadmin"
+      - "shadow"
+      - "esentutl"
+  condition: selection
+fields:
+  - src.ip
+  - host
+  - object.path
+  - object.name
+  - subject.name
+  - message
+  - action
+falsepositives:
+  - Legitimate AD backup operations
+  - Domain controller maintenance by authorized administrators
+level: critical
