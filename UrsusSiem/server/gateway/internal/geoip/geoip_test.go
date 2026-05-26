@@ -2,6 +2,7 @@ package geoip
 
 import (
 	"errors"
+	"net"
 	"os"
 	"testing"
 )
@@ -35,4 +36,28 @@ func contains(haystack, needle string) bool {
 		}
 	}
 	return false
+}
+
+func TestOpen_validFile_lookupKnownIP(t *testing.T) {
+	db, err := Open("testdata/GeoIP2-City-Test.mmdb")
+	if err != nil {
+		t.Skipf("fixture not present, run `make geoip-testdata`: %v", err)
+	}
+	defer db.Close()
+
+	// 81.2.69.142 is a documented record in the MaxMind test fixture.
+	res, err := db.Lookup("81.2.69.142")
+	if err != nil {
+		t.Fatalf("Lookup failed: %v", err)
+	}
+	if res.CountryISO != "GB" {
+		t.Errorf("CountryISO = %q, want GB", res.CountryISO)
+	}
+	if res.Latitude == 0 || res.Longitude == 0 {
+		t.Errorf("expected non-zero coords, got lat=%v lon=%v", res.Latitude, res.Longitude)
+	}
+	// Sanity: the test address parses as IPv4.
+	if ip := net.ParseIP("81.2.69.142"); ip == nil {
+		t.Fatal("test address itself failed to parse")
+	}
 }
