@@ -70,35 +70,53 @@ contexts' data it needs (e.g. Incident keeps `operator_read_model` and
 
 ## B. Code structure
 
+Adopts the existing PixErase-aligned, role-based layout already implied by `.importlinter`
+(three runnable apps; role modules under each layer), **plus** bounded-context subpackages
+inside each layer and independence contracts so contexts cannot import each other.
+
 ```
 src/ursus/
   domain/
-    common/        Entity, AggregateRoot, ValueObject, DomainEvent, EntityId, rule/exception bases
-    operator/  observed_entity/  incident/  metrics/        # pure domain, zero infra imports
+    common/                 Entity, AggregateRoot, ValueObject, DomainEvent, EntityId, rule/exception bases
+    operator/ observed_entity/ incident/ metrics/      # context domains, zero infra imports
   application/
-    common/        Interactor base, UnitOfWork port, IntegrationEventPublisher port,
-                   OutboxStore / InboxStore ports, CurrentOperator port
-    operator/  observed_entity/  incident/  metrics/        # interactors, command DTOs, event handlers, ports
+    common/ports/           UnitOfWork, IntegrationEventPublisher, OutboxStore, InboxStore, CurrentOperator
+    commands/<ctx>/         command interactors (e.g. commands/incident/raise_incident.py)
+    queries/<ctx>/          query interactors (read-model reads)
+                            # integration-event handlers are command interactors invoked by consumer_app
   infrastructure/
-    common/        SQLAlchemy Base, async session/UoW, outbox table+relay, inbox+dedupe,
-                   RabbitMQ/taskiq broker, event (de)serialization (adaptix),
-                   Keycloak JWKS validator, DuckDB / MinIO / Elastic clients, structlog
-    operator/  observed_entity/  incident/  metrics/        # repos, ORM models, projections, migrations
+    adapters/<ctx>/         repositories + projections (implement application ports)
+    event_bus/              RabbitMQ/taskiq publish + consume, event (de)serialization (adaptix)
+    mappers/                ORM <-> domain mappers
+    persistence/
+      models/<ctx>/         SQLAlchemy ORM models (incl. outbox / inbox tables)
+      migrations/           Alembic
+    run_lifecycle/          startup/shutdown wiring; DuckDB / MinIO / Elastic / Keycloak clients; structlog
   presentation/
-    common/        FastAPI app factory, dishka integration, CurrentOperator security dep, error handlers
-    operator/  observed_entity/  incident/  metrics/        # routers, request/response schemas
-  setup/           composition root: dishka providers, settings, FastAPI app + taskiq worker entrypoints
+    common/                 dishka integration, CurrentOperator security dependency, error handlers
+    <ctx>/                  routers + request/response schemas
+  setup/                    composition root: dishka providers, settings
+  http_app.py               FastAPI entrypoint (HTTP API)
+  consumer_app.py           taskiq RabbitMQ consumer entrypoint (event handlers / projections)
+  scheduler_app.py          taskiq scheduler entrypoint (outbox relays + Metrics threshold eval)
 ```
+
+The three apps map onto the event-driven model: **http_app** serves the API, **consumer_app**
+runs RabbitMQ event handlers (projections + inbox-dedupe), **scheduler_app** runs the periodic
+outbox relays and the Metrics threshold evaluator.
 
 ### import-linter contracts (boundaries made real)
 
-1. **Layered** (within `ursus`): `presentation` → `application` → `domain`;
-   `infrastructure` may depend on `application`/`domain` but nothing depends on it inward.
-   `domain` imports neither application, infrastructure, nor presentation.
-   The per-layer `common` package is the only shared dependency.
-2. **Independence** (per layer): `operator`, `observed_entity`, `incident`, `metrics`
-   are mutually independent — no context may import a sibling context in any layer.
-   This is how "modules never import each other" is enforced on a layer-first tree.
+1. **Layered** (existing): `presentation` → `application` → `domain`. Infrastructure depends on
+   application/domain but nothing depends on it inward.
+2. **Protected modules** (existing): command/query handlers, `application.common.ports`,
+   `infrastructure.adapters`, and `infrastructure.persistence.models` are importable only from
+   their allowed importers (the three apps + setup + sanctioned infrastructure subpackages).
+3. **Independence** (new): within each layer, the four contexts — `operator`,
+   `observed_entity`, `incident`, `metrics` — are mutually independent. Declared per layer
+   (`ursus.domain.*`, `ursus.application.commands.*`, `ursus.application.queries.*`,
+   `ursus.infrastructure.adapters.*`, `ursus.infrastructure.persistence.models.*`,
+   `ursus.presentation.*`). This is how "modules never import each other" is enforced.
 
 ## C. Runtime flow & reliability
 
@@ -133,20 +151,22 @@ Keycloak owns login / passwords / token issuance & refresh / user federation. Th
 - First authenticated request **JIT-provisions** a local Operator profile from the claims.
 - The Operator context maps Keycloak realm/client roles → URSUS permissions (authorization).
 
-## E. Shared kernel (per-layer `common`)
+## E. Shared kernel & cross-cutting modules
 
 - `domain/common`: `Entity`, `AggregateRoot`, `ValueObject`, `DomainEvent` base, `EntityId`
   / typed id helpers, domain rule & exception bases.
-- `application/common`: `Interactor` base, `UnitOfWork` port, `IntegrationEventPublisher`
-  port, `OutboxStore` / `InboxStore` ports, `CurrentOperator` provider port, result/DTO bases.
-- `infrastructure/common`: SQLAlchemy declarative `Base` + async engine/session factory,
-  `SqlAlchemyUnitOfWork`, outbox table + relay, inbox table + dedupe, RabbitMQ/taskiq broker
-  setup, integration-event (de)serialization (adaptix), Keycloak JWKS validator, DuckDB /
-  MinIO / Elasticsearch clients, structlog configuration.
-- `presentation/common`: FastAPI app factory, dishka–FastAPI integration, `CurrentOperator`
-  security dependency, exception handlers, middleware.
-- `setup/`: composition root — dishka providers, settings (env), FastAPI app + taskiq worker
-  entrypoints.
+- `application/common/ports`: `UnitOfWork`, `IntegrationEventPublisher`, `OutboxStore`,
+  `InboxStore`, `CurrentOperator` provider — plus the `Interactor` base and result/DTO bases.
+- `infrastructure/event_bus`: RabbitMQ/taskiq broker setup, publish + consume,
+  integration-event (de)serialization (adaptix).
+- `infrastructure/persistence`: SQLAlchemy declarative `Base` + async engine/session factory,
+  `SqlAlchemyUnitOfWork`, `models/` (incl. outbox/inbox tables), Alembic `migrations/`.
+- `infrastructure/run_lifecycle`: startup/shutdown wiring; Keycloak JWKS validator; DuckDB /
+  MinIO / Elasticsearch clients; structlog configuration.
+- `presentation/common`: dishka–FastAPI integration, `CurrentOperator` security dependency,
+  exception handlers, middleware.
+- `setup/`: composition root — dishka providers, settings (env).
+- `http_app.py` / `consumer_app.py` / `scheduler_app.py`: the three process entrypoints.
 
 ## F. First implementation target — walking skeleton
 
