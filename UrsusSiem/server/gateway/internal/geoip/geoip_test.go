@@ -61,3 +61,39 @@ func TestOpen_validFile_lookupKnownIP(t *testing.T) {
 		t.Fatal("test address itself failed to parse")
 	}
 }
+
+func TestLookup_invalidIP_returnsError(t *testing.T) {
+	db, err := Open("testdata/GeoIP2-City-Test.mmdb")
+	if err != nil {
+		t.Skipf("fixture not present, run `make geoip-testdata`: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Lookup("not-an-ip")
+	if err == nil {
+		t.Fatal("expected error for invalid IP, got nil")
+	}
+	if !contains(err.Error(), "invalid ip") {
+		t.Errorf("error %q should mention 'invalid ip'", err.Error())
+	}
+}
+
+func TestLookup_unknownIP_returnsEmpty(t *testing.T) {
+	db, err := Open("testdata/GeoIP2-City-Test.mmdb")
+	if err != nil {
+		t.Skipf("fixture not present, run `make geoip-testdata`: %v", err)
+	}
+	defer db.Close()
+
+	// 240.0.0.1 is in 240/4 — reserved, never present in any geo DB.
+	res, err := db.Lookup("240.0.0.1")
+	if err != nil {
+		t.Fatalf("expected nil error for unknown IP, got %v", err)
+	}
+	if res.CountryISO != "" {
+		t.Errorf("CountryISO = %q, want empty for reserved IP", res.CountryISO)
+	}
+	if res.Latitude != 0 || res.Longitude != 0 {
+		t.Errorf("expected zero coords, got lat=%v lon=%v", res.Latitude, res.Longitude)
+	}
+}
