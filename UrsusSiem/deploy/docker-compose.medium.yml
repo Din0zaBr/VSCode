@@ -1,18 +1,20 @@
-# Docker Compose profile for S/M tier (Sprint 8).
+# S/M tier overlay — adds ClickHouse for hot log storage.
 #
-# Run with: docker compose -f docker-compose.yml -f docker-compose.medium.yml up -d
+# Run from the repo root:
+#   docker compose -f deploy/docker-compose.yml \
+#                  -f deploy/docker-compose.medium.yml up -d
 #
-# Adds:
-#   * ClickHouse (single node) for hot logs
-#   * Sets URSUS_STORAGE=clickhouse in logvault-go
+# What it adds:
+#   * ClickHouse (single node) — replaces Postgres for the logs hot path
+#   * URSUS_STORAGE=clickhouse in gateway
 #
-# Postgres stays in the stack for metadata (users, rules, scenarios, audit).
-# The logs table on PG is kept but no longer written to once dual-write
-# is switched off (see scripts/pg-to-ch.py + PLAN_V2.md §7).
+# Postgres still runs for metadata (users, rules, scenarios, audit_log).
+# Backfill old logs PG → CH with tools/pg-to-ch.py (see PLAN_V2.md §7).
 
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:24-alpine
+    container_name: ursus-clickhouse
     restart: unless-stopped
     environment:
       CLICKHOUSE_DB: ursus
@@ -20,7 +22,7 @@ services:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-ursus-secret}
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ./migrations/clickhouse:/docker-entrypoint-initdb.d:ro
+      - ../server/migrations/clickhouse:/docker-entrypoint-initdb.d:ro
     ulimits:
       nofile:
         soft: 262144
@@ -34,18 +36,17 @@ services:
       timeout: 5s
       retries: 5
 
-  logvault-go:
+  gateway:
     depends_on:
       clickhouse:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      logvault-rust:
+      engine:
         condition: service_healthy
     environment:
       URSUS_STORAGE: clickhouse
       CLICKHOUSE_DSN: "clickhouse://ursus:${CLICKHOUSE_PASSWORD:-ursus-secret}@clickhouse:9000/ursus"
-      # Postgres stays for metadata (users, rules, scenarios, audit_log)
       DATABASE_URL: "postgres://logvault:logvault-secret@postgres:5432/logvault"
 
 volumes:

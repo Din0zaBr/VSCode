@@ -82,18 +82,19 @@ curl -fsSL https://get.ursus-siem.ru/install.sh | sudo bash
    └─────────────────────────────────┬──────────────────────────────┘
                                      │
                        ┌─────────────┴─────────────┐
-                       │   Vector (или агент)      │   ← на хосте клиента
+                       │   Vector (или ursus-agent)│   ← на хосте клиента
                        └─────────────┬─────────────┘
                                      │ Syslog 514 / HTTP NDJSON
        ╔═════════════════════════════▼═══════════════════════════════╗
        ║                URSUS SERVER (один VPS, ~200 MB RAM)         ║
        ║                                                             ║
        ║  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐   ║
-       ║  │ logvault-go  │→│ logvault-   │→│ Postgres / DuckDB  │   ║
-       ║  │ API + UI     │  │ rust engine │  │ + audit_log        │   ║
-       ║  │ syslog :514  │  │ correlate + │  │                    │   ║
-       ║  │ Telegram     │  │ ML + OCSF + │  │                    │   ║
-       ║  │ /metrics     │  │ TI          │  │                    │   ║
+       ║  │ gateway      │→│ engine      │→│ Postgres / DuckDB  │   ║
+       ║  │ (Go)         │  │ (Rust)      │  │ + audit_log        │   ║
+       ║  │ API + UI     │  │ correlate + │  │                    │   ║
+       ║  │ syslog :514  │  │ ML + OCSF + │  │                    │   ║
+       ║  │ Telegram     │  │ TI          │  │                    │   ║
+       ║  │ /metrics     │  │             │  │                    │   ║
        ║  └──────────────┘  └─────────────┘  └──────────────────┘   ║
        ╚═════════════════════════════════════════════════════════════╝
 ```
@@ -102,26 +103,54 @@ curl -fsSL https://get.ursus-siem.ru/install.sh | sudo bash
 
 ```
 UrsusSiem/
-├── logvault-go/           # API gateway, /api, /metrics, embedded UI
-├── logvault-rust/         # Парсер + корреляция + ML + OCSF + TI
-├── logvault-agent/        # Python агент (опц., альтернатива Vector)
-├── logvault-server/ui/    # React UI (Cyber Forest theme)
-├── logvault-llm/          # 🔴 v2.2 — LLM сервис (Pro tier)
-├── configs/
-│   ├── scenarios/         # 20 готовых сценариев
-│   ├── sigma_rules/       # 60 SIGMA-правил
-│   └── compliance/        # Приказ ФСТЭК №21 templates + typst
-├── integrations/vector/   # Vector profiles (linux/windows/syslog-relay)
-├── migrations/            # SQL миграции (Postgres) + ClickHouse
-├── scripts/               # install.sh, gen-password-hash, pg-to-ch
-├── docs/                  # Документация (русский) — mkdocs
-├── tests/                 # e2e скрипты
-├── docker-compose.yml     # default (Micro tier)
-├── docker-compose.medium.yml  # 🟡 v2.1 — + ClickHouse
-├── docker-compose.pro.yml     # 🔴 v2.2 — + LLM
-├── PLAN_V2.md             # архитектурный план
-├── URSUS_STRATEGY.md      # стратегия, позиционирование, конкуренты
-└── LICENSE                # AGPL-3.0 Community + commercial Pro
+│
+├── server/                ← всё про сервер
+│   ├── gateway/           # Go API gateway: /api, /metrics, syslog, embedded UI
+│   ├── engine/            # Rust: парсер + корреляция + ML + OCSF + Threat Intel
+│   ├── llm/               # 🔴 v2.2 — Python+llama.cpp (Pro tier)
+│   ├── ui/                # React UI (Cyber Forest theme)
+│   ├── migrations/        # SQL миграции (Postgres + ClickHouse)
+│   └── configs/
+│       ├── scenarios/     # 20 готовых сценариев под МСБ
+│       ├── sigma_rules/   # 60 SIGMA-правил
+│       └── compliance/    # Шаблоны Приказа ФСТЭК №21 + typst
+│
+├── agent/                 ← всё про агент сбора логов
+│   ├── src/               # Python код (readers, transport, EDR)
+│   ├── windows/           # PowerShell installers + profiles
+│   ├── Dockerfile         # Docker-образ
+│   ├── install.sh         # systemd installer (Linux)
+│   └── config.yaml        # пример конфига
+│
+├── docs/                  ← вся документация (mkdocs, русский)
+│   ├── getting-started.md, agent-deploy.md, syslog.md, scenarios.md
+│   ├── notifications/, compliance/, ml/
+│   ├── api.md, troubleshooting.md, migration.md
+│   └── mkdocs.yml
+│
+├── deploy/                ← развёртывание
+│   ├── docker-compose.yml         # default (Micro tier)
+│   ├── docker-compose.medium.yml  # 🟡 v2.1 — + ClickHouse
+│   ├── docker-compose.pro.yml     # 🔴 v2.2 — + LLM
+│   ├── Caddyfile
+│   └── .env.example
+│
+├── integrations/          ← внешние интеграции
+│   └── vector/            # Vector profiles (linux/windows/syslog-relay)
+│
+├── design-system/         ← брендбук + React UI-kit (Cyber Forest)
+│
+├── tools/                 ← утилиты
+│   ├── install.sh                  # auto-installer (curl | sudo bash)
+│   ├── pg-to-ch.py                 # Postgres → ClickHouse миграция
+│   └── gen-password-hash.go        # bcrypt helper для admin
+│
+├── tests/                 ← e2e-скрипты
+│
+├── README.md              ← этот файл
+├── PLAN_V2.md             ← архитектурный план (1000+ строк)
+├── URSUS_STRATEGY.md      ← позиционирование vs KUMA/Wazuh/UserGate
+└── LICENSE                ← AGPL-3.0 Community + commercial Pro/Compliance
 ```
 
 ## Лицензирование

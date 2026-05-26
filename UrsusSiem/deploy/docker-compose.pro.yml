@@ -1,0 +1,29 @@
+# Pro tier overlay — adds the local LLM service.
+#
+# Run from the repo root:
+#   docker compose -f deploy/docker-compose.yml \
+#                  -f deploy/docker-compose.pro.yml --profile ai up -d
+#
+# Requires a GGUF model file (~5 GB) at $URSUS_LLM_MODELS_DIR.
+# Default: ./models/vikhr-7b-instruct.gguf
+
+services:
+  llm:
+    build:
+      context: ../server/llm
+    container_name: ursus-llm
+    restart: unless-stopped
+    environment:
+      URSUS_LLM_MODEL: /models/vikhr-7b-instruct.gguf
+      URSUS_LLM_N_CTX: "4096"
+      URSUS_LLM_GPU_LAYERS: "${URSUS_LLM_GPU_LAYERS:-0}"
+    volumes:
+      - ${URSUS_LLM_MODELS_DIR:-../models}:/models:ro
+    ports:
+      - "8002:8000"
+    profiles:
+      - ai
+    deploy:
+      resources:
+        limits:
+          memory: 12g

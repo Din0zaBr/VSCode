@@ -1,5 +1,16 @@
 version: "3.9"
 
+# URSUS SIEM — production docker-compose (Micro tier).
+#
+# Run from the repo root:
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Or from this directory:
+#   cd deploy && docker compose up -d
+#
+# Paths in `build.context` are RELATIVE to this file
+# (so they walk up one level to ../server/...).
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -10,7 +21,7 @@ services:
       POSTGRES_DB: logvault
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ../server/migrations:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -19,9 +30,10 @@ services:
       timeout: 5s
       retries: 5
 
-  logvault-rust:
+  engine:
     build:
-      context: ./logvault-rust
+      context: ../server/engine
+    container_name: ursus-engine
     restart: unless-stopped
     environment:
       ENGINE_ADDR: "0.0.0.0:8001"
@@ -34,14 +46,15 @@ services:
       timeout: 5s
       retries: 3
 
-  logvault-go:
+  gateway:
     build:
-      context: ./logvault-go
+      context: ../server/gateway
+    container_name: ursus-gateway
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-      logvault-rust:
+      engine:
         condition: service_healthy
     environment:
       ADDR: ":8080"
@@ -49,28 +62,33 @@ services:
       JWT_SECRET: "${JWT_SECRET:-logvault-jwt-secret-change-in-production}"
       TOKEN_TTL_HOURS: "8"
       API_KEYS: "${API_KEYS:-changeme-agent-key}"
-      ENGINE_URL: "http://logvault-rust:8001"
+      ENGINE_URL: "http://engine:8001"
       CORS_ORIGINS: "${CORS_ORIGINS:-*}"
       MAX_BATCH_SIZE: "5000"
       ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH}"
-      # Sprint 1: built-in syslog listener for network devices.
+      # Built-in syslog listener for network devices (RFC 5424 + RFC 3164).
       # Leave empty to disable.
       URSUS_SYSLOG_UDP: "${URSUS_SYSLOG_UDP:-:514}"
       URSUS_SYSLOG_TCP: "${URSUS_SYSLOG_TCP:-:514}"
+      # Bundled scenarios + sigma rules (mounted below).
+      URSUS_SCENARIOS_DIR: /etc/ursus/scenarios
+    volumes:
+      - ../server/configs/scenarios:/etc/ursus/scenarios:ro
+      - ../server/configs/sigma_rules:/etc/ursus/sigma_rules:ro
+      - ../server/configs/compliance:/etc/ursus/compliance:ro
     ports:
       - "8080:8080"
-      # Syslog ingestion (RFC 5424 + RFC 3164). Network gear (Cisco/MikroTik/
-      # pfSense/etc.) emits to UDP/TCP 514. Bind only if not occupied on host.
+      # Syslog ingestion. Bind only if not occupied on host.
       - "514:514/udp"
       - "514:514/tcp"
 
-  # Frontend dev server (Vite, with hot reload — only `dev` profile)
+  # Dev-only Vite server with hot reload — `--profile dev`.
   ui-dev:
     image: node:20-alpine
     working_dir: /app
     volumes:
-      - ./logvault-server/ui:/app
+      - ../server/ui:/app
     command: sh -c "npm install && npm run dev -- --host"
     environment:
       VITE_API_URL: "http://localhost:8080"
@@ -79,10 +97,11 @@ services:
     profiles:
       - dev
 
-  # Production frontend: build the React app once and serve it via Caddy.
+  # Production frontend: build the React app once, serve via Caddy.
   ui:
     build:
-      context: ./logvault-server/ui
+      context: ../server/ui
+    container_name: ursus-ui
     restart: unless-stopped
     networks:
       default:
@@ -91,6 +110,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
+    container_name: ursus-caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -101,7 +121,7 @@ services:
       - caddy_config:/config
     depends_on:
       - ui
-      - logvault-go
+      - gateway
 
 volumes:
   postgres_data:
