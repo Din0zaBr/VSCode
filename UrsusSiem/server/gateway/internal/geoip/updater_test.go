@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 	"testing"
 	"time"
 )
@@ -136,5 +138,72 @@ func TestUpdater_downloadError_keepsOldFile(t *testing.T) {
 	// And no leftover .tmp.
 	if _, err := os.Stat(dest + ".tmp"); !os.IsNotExist(err) {
 		t.Errorf("temp file leaked: %v", err)
+	}
+}
+
+func TestUpdater_atomicReplace_noHalfWrittenFile(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("os.Rename is not atomic under open file handles on Windows; tracked separately")
+	}
+
+	tmp := t.TempDir()
+	dest := filepath.Join(tmp, "GeoLite2-City.mmdb")
+
+	if err := os.WriteFile(dest, []byte("v1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stale := time.Now().Add(-48 * time.Hour)
+	if err := os.Chtimes(dest, stale, stale); err != nil {
+		t.Fatal(err)
+	}
+
+	// Mirror sends the payload in two parts with a 50ms gap, so the
+	// rename window straddles concurrent reads.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("v2-"))
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+		time.Sleep(50 * time.Millisecond)
+		_, _ = w.Write([]byte("part2"))
+	}))
+	defer srv.Close()
+
+	u := &Updater{Mirror: srv.URL, DestPath: dest, MaxAge: 24 * time.Hour}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if _, err := u.Update(context.Background()); err != nil {
+			t.Errorf("Update failed: %v", err)
+		}
+	}()
+
+	// During the write window, read repeatedly. Every read must see
+	// either the full old content or the full new content — never a
+	// partial write.
+	deadline := time.Now().Add(100 * time.Millisecond)
+	reads := 0
+	for time.Now().Before(deadline) {
+		data, err := os.ReadFile(dest)
+		if err != nil {
+			continue // file briefly absent during rename is acceptable
+		}
+		s := string(data)
+		if s != "v1" && s != "v2-part2" {
+			t.Errorf("read #%d saw partial content %q", reads, s)
+		}
+		reads++
+	}
+	wg.Wait()
+
+	if reads == 0 {
+		t.Fatal("test made zero reads — invalid timing")
+	}
+	final, _ := os.ReadFile(dest)
+	if string(final) != "v2-part2" {
+		t.Errorf("final content = %q, want v2-part2", string(final))
 	}
 }
