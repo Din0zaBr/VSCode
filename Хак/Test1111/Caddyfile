@@ -1,0 +1,10 @@
+{$DOMAIN:kronos-nexus.online} {
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy server:8000
+	}
+
+	handle {
+		reverse_proxy ui:80
+	}
+}

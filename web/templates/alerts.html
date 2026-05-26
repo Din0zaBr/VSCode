@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}Инциденты — Ursus Insight{% endblock %}
+{% block page_title %}Управление Инцидентами{% endblock %}
+{% block breadcrumb %}Ursus Insight / Инциденты{% endblock %}
+
+{% block content %}
+<div class="table-panel">
+  <div class="table-header">
+    <span class="table-title">⚡ ИНЦИДЕНТЫ</span>
+    <div class="table-controls">
+      <select class="input" id="filter-status" onchange="loadAlerts(0)">
+        <option value="">Все статусы</option>
+        <option value="OPEN" selected>OPEN</option>
+        <option value="IN_PROGRESS">IN_PROGRESS</option>
+        <option value="RESOLVED">RESOLVED</option>
+        <option value="FALSE_POSITIVE">FALSE_POSITIVE</option>
+      </select>
+      <select class="input" id="filter-sev" onchange="loadAlerts(0)">
+        <option value="">Все severity</option>
+        <option value="CRITICAL">CRITICAL</option>
+        <option value="HIGH">HIGH</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="LOW">LOW</option>
+      </select>
+      <button class="btn btn-sm" onclick="loadAlerts(0)">↺ Обновить</button>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Время</th>
+        <th>Severity</th>
+        <th>Правило</th>
+        <th>Источник</th>
+        <th>Описание</th>
+        <th>Статус</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody id="alerts-body">
+      <tr><td colspan="8" class="empty-state"><div class="spinner"></div></td></tr>
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    <span id="alerts-count" style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">—</span>
+    <button class="btn btn-sm" id="btn-prev" onclick="prevPage()" disabled>← Пред</button>
+    <span id="page-info" style="font-family:var(--font-mono);font-size:11px;">стр. 1</span>
+    <button class="btn btn-sm" id="btn-next" onclick="nextPage()">След →</button>
+  </div>
+</div>
+
+<!-- Alert detail modal -->
+<div class="modal-backdrop" id="alert-modal">
+  <div class="modal">
+    <div class="modal-title">⚡ ДЕТАЛИ ИНЦИДЕНТА</div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PAGE_SIZE = 50;
+let currentOffset = 0;
+let totalAlerts = 0;
+
+const ts2str = ts => {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleString('ru-RU', {
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+};
+
+async function loadAlerts(offset = 0) {
+  currentOffset = offset;
+  const status = document.getElementById('filter-status').value;
+  const sev    = document.getElementById('filter-sev').value;
+
+  let url = `/api/alerts?limit=${PAGE_SIZE}&offset=${offset}`;
+  if (status) url += `&status=${status}`;
+  if (sev)    url += `&severity=${sev}`;
+
+  const tbody = document.getElementById('alerts-body');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="spinner"></div></td></tr>';
+
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    totalAlerts = d.total;
+
+    document.getElementById('alerts-count').textContent =
+      `${d.total.toLocaleString()} инцидентов`;
+    document.getElementById('page-info').textContent =
+      `стр. ${Math.floor(offset/PAGE_SIZE)+1} из ${Math.ceil(d.total/PAGE_SIZE)||1}`;
+    document.getElementById('btn-prev').disabled = offset === 0;
+    document.getElementById('btn-next').disabled = offset + PAGE_SIZE >= d.total;
+
+    if (!d.alerts.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Нет инцидентов</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = d.alerts.map(a => {
+      const desc = a.description && a.description.length > 60
+        ? a.description.slice(0,60) + '…'
+        : (a.description || '—');
+      return `
+        <tr class="fade-in">
+          <td style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">${a.id}</td>
+          <td style="font-family:var(--font-mono);font-size:10px;white-space:nowrap;">${ts2str(a.created_at)}</td>
+          <td><span class="sev-badge sev-${a.severity}">${a.severity}</span></td>
+          <td style="font-weight:600;">${a.rule_name}</td>
+          <td><span class="ip-tag">${a.source_ip || '—'}</span></td>
+          <td style="font-family:var(--font-mono);font-size:11px;" title="${a.description||''}">${desc}</td>
+          <td><span class="status-badge status-${a.status}">${a.status}</span></td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-sm" onclick="showAlert(${a.id})">⊕</button>
+              ${a.status === 'OPEN' ? `
+                <button class="btn btn-sm btn-primary" onclick="updateStatus(${a.id},'IN_PROGRESS')" title="В работу">▶</button>
+                <button class="btn btn-sm btn-success" onclick="updateStatus(${a.id},'RESOLVED')" title="Закрыть">✓</button>
+                <button class="btn btn-sm" onclick="updateStatus(${a.id},'FALSE_POSITIVE')" title="Ложная тревога">✗</button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color:var(--critical);">Ошибка: ${e}</td></tr>`;
+  }
+}
+
+function prevPage() { if (currentOffset >= PAGE_SIZE) loadAlerts(currentOffset - PAGE_SIZE); }
+function nextPage() { if (currentOffset + PAGE_SIZE < totalAlerts) loadAlerts(currentOffset + PAGE_SIZE); }
+
+async function updateStatus(id, status) {
+  try {
+    await fetch(`/api/alerts/${id}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({status})
+    });
+    loadAlerts(currentOffset);
+  } catch(e) {}
+}
+
+async function showAlert(id) {
+  try {
+    const r = await fetch(`/api/alerts?limit=500`);
+    const d = await r.json();
+    const alert = d.alerts.find(a => a.id === id);
+    if (!alert) return;
+
+    const eventIds = JSON.parse(alert.event_ids || '[]');
+
+    document.getElementById('modal-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <label class="form-label">SEVERITY</label>
+          <span class="sev-badge sev-${alert.severity}">${alert.severity}</span>
+        </div>
+        <div>
+          <label class="form-label">СТАТУС</label>
+          <span class="status-badge status-${alert.status}">${alert.status}</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ПРАВИЛО</label>
+        <div style="font-family:var(--font-mono);font-size:12px;">${alert.rule_name}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ОПИСАНИЕ</label>
+        <div style="font-size:13px;">${alert.description || '—'}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <label class="form-label">ИСТОЧНИК</label>
+          <span class="ip-tag">${alert.source_ip || '—'}</span>
+        </div>
+        <div>
+          <label class="form-label">ВРЕМЯ</label>
+          <div style="font-family:var(--font-mono);font-size:11px;">${ts2str(alert.created_at)}</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">СВЯЗАННЫЕ СОБЫТИЯ (${eventIds.length})</label>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);">
+          ${eventIds.slice(0,10).join(', ')}${eventIds.length > 10 ? '...' : ''}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ЗАМЕТКИ</label>
+        <textarea class="form-control" id="modal-notes" rows="3">${alert.notes || ''}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button class="btn btn-sm btn-primary" onclick="saveNotes(${alert.id})">Сохранить заметки</button>
+        ${alert.status === 'OPEN' ? `
+          <button class="btn btn-sm btn-success" onclick="updateStatusModal(${alert.id},'RESOLVED')">✓ Закрыть</button>
+          <button class="btn btn-sm" onclick="updateStatusModal(${alert.id},'FALSE_POSITIVE')">✗ Ложная тревога</button>
+        ` : ''}
+      </div>
+    `;
+    document.getElementById('alert-modal').classList.add('open');
+  } catch(e) {}
+}
+
+async function saveNotes(id) {
+  const notes = document.getElementById('modal-notes').value;
+  await fetch(`/api/alerts/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({notes})
+  });
+}
+
+async function updateStatusModal(id, status) {
+  await updateStatus(id, status);
+  closeModal();
+}
+
+function closeModal() {
+  document.getElementById('alert-modal').classList.remove('open');
+}
+document.getElementById('alert-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+loadAlerts(0);
+setInterval(() => loadAlerts(currentOffset), 20000);
+</script>
+{% endblock %}

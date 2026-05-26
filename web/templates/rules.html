@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Правила — Ursus Insight{% endblock %}
+{% block page_title %}Правила Корреляции{% endblock %}
+{% block breadcrumb %}Ursus Insight / Правила{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+  <button class="btn btn-primary" onclick="openNewRule()">+ Новое правило</button>
+</div>
+
+<div id="rules-container">
+  <div class="empty-state"><div class="spinner"></div></div>
+</div>
+
+<!-- Rule edit modal -->
+<div class="modal-backdrop" id="rule-modal">
+  <div class="modal" style="width:640px;">
+    <div class="modal-title">⟁ ПРАВИЛО КОРРЕЛЯЦИИ</div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <div class="form-group">
+      <label class="form-label">ID правила</label>
+      <input class="form-control" id="rule-id" placeholder="brute_force_ssh" style="font-family:var(--font-mono);"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-control" id="rule-name" placeholder="SSH Brute Force"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Описание</label>
+      <input class="form-control" id="rule-desc" placeholder="Краткое описание правила"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label class="form-label">Severity</label>
+        <select class="form-control" id="rule-severity">
+          <option value="CRITICAL">CRITICAL</option>
+          <option value="HIGH" selected>HIGH</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="LOW">LOW</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Включено</label>
+        <select class="form-control" id="rule-enabled">
+          <option value="1">Да</option>
+          <option value="0">Нет</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Условия (JSON)</label>
+      <textarea class="form-control" id="rule-conditions" rows="8"
+                style="font-family:var(--font-mono);font-size:11px;"
+                placeholder='{"type":"threshold","pattern":"Failed password","count":5,"window_sec":60,"group_by":"source_ip"}'></textarea>
+      <div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">
+        Типы: threshold | pattern | keyword | port_scan
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveRule()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CONDITION_TEMPLATES = {
+  threshold: {type:'threshold',pattern:'Failed password',count:5,window_sec:60,group_by:'source_ip'},
+  pattern:   {type:'pattern',pattern:'sudo.*COMMAND'},
+  keyword:   {type:'keyword',keywords:['malware','exploit','backdoor']},
+  port_scan: {type:'port_scan',unique_ports:20,window_sec:30,group_by:'source_ip'},
+};
+
+let editingId = null;
+
+async function loadRules() {
+  const container = document.getElementById('rules-container');
+  try {
+    const r = await fetch('/api/rules');
+    const rules = await r.json();
+    if (!rules.length) {
+      container.innerHTML = '<div class="empty-state">Нет правил</div>';
+      return;
+    }
+    container.innerHTML = rules.map(rule => `
+      <div class="rule-card fade-in">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px;">
+          <label class="toggle" title="${rule.enabled ? 'Включено' : 'Отключено'}">
+            <input type="checkbox" ${rule.enabled ? 'checked' : ''}
+                   onchange="toggleRule('${rule.id}', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="rule-info">
+          <div class="rule-name">${rule.name}</div>
+          <div class="rule-desc">${rule.description || '—'}</div>
+          <div class="rule-meta">
+            <span class="sev-badge sev-${rule.severity}">${rule.severity}</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">id: ${rule.id}</span>
+            <span class="rule-hits">↑ ${rule.hit_count} срабатываний</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-sm" onclick='editRule(${JSON.stringify(rule)})'>✎ Изменить</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state" style="color:var(--critical);">Ошибка: ${e}</div>`;
+  }
+}
+
+async function toggleRule(id, enabled) {
+  await fetch(`/api/rules/${id}/toggle`, {method:'PATCH'});
+  loadRules();
+}
+
+function openNewRule() {
+  editingId = null;
+  document.getElementById('rule-id').value         = '';
+  document.getElementById('rule-name').value       = '';
+  document.getElementById('rule-desc').value       = '';
+  document.getElementById('rule-severity').value   = 'HIGH';
+  document.getElementById('rule-enabled').value    = '1';
+  document.getElementById('rule-conditions').value = JSON.stringify(CONDITION_TEMPLATES.threshold, null, 2);
+  document.getElementById('rule-id').removeAttribute('readonly');
+  document.getElementById('rule-modal').classList.add('open');
+}
+
+function editRule(rule) {
+  editingId = rule.id;
+  document.getElementById('rule-id').value         = rule.id;
+  document.getElementById('rule-name').value       = rule.name;
+  document.getElementById('rule-desc').value       = rule.description || '';
+  document.getElementById('rule-severity').value   = rule.severity;
+  document.getElementById('rule-enabled').value    = rule.enabled ? '1' : '0';
+  try {
+    const cond = typeof rule.conditions === 'string'
+      ? JSON.parse(rule.conditions) : rule.conditions;
+    document.getElementById('rule-conditions').value = JSON.stringify(cond, null, 2);
+  } catch(e) {
+    document.getElementById('rule-conditions').value = rule.conditions;
+  }
+  document.getElementById('rule-id').setAttribute('readonly', true);
+  document.getElementById('rule-modal').classList.add('open');
+}
+
+async function saveRule() {
+  const id         = document.getElementById('rule-id').value.trim();
+  const name       = document.getElementById('rule-name').value.trim();
+  const desc       = document.getElementById('rule-desc').value.trim();
+  const severity   = document.getElementById('rule-severity').value;
+  const enabled    = parseInt(document.getElementById('rule-enabled').value);
+  const condStr    = document.getElementById('rule-conditions').value.trim();
+
+  if (!id || !name || !condStr) {
+    alert('Заполните все обязательные поля'); return;
+  }
+
+  let conditions;
+  try {
+    conditions = JSON.parse(condStr);
+  } catch(e) {
+    alert('Ошибка в JSON условий: ' + e.message); return;
+  }
+
+  try {
+    const r = await fetch(`/api/rules/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, description:desc, severity, enabled, conditions})
+    });
+    if (!r.ok) throw new Error(await r.text());
+    closeModal();
+    loadRules();
+  } catch(e) {
+    alert('Ошибка сохранения: ' + e);
+  }
+}
+
+function closeModal() {
+  document.getElementById('rule-modal').classList.remove('open');
+}
+document.getElementById('rule-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+loadRules();
+</script>
+{% endblock %}
