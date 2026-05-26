@@ -98,3 +98,43 @@ func TestUpdater_staleFile_downloadsAndReplaces(t *testing.T) {
 		t.Errorf("mtime not refreshed: %v ago", time.Since(info.ModTime()))
 	}
 }
+
+func TestUpdater_downloadError_keepsOldFile(t *testing.T) {
+	tmp := t.TempDir()
+	dest := filepath.Join(tmp, "GeoLite2-City.mmdb")
+
+	if err := os.WriteFile(dest, []byte("OLD-BUT-VALID"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	twoDaysAgo := time.Now().Add(-48 * time.Hour)
+	if err := os.Chtimes(dest, twoDaysAgo, twoDaysAgo); err != nil {
+		t.Fatal(err)
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	u := &Updater{
+		Mirror:   srv.URL + "/file",
+		DestPath: dest,
+		MaxAge:   24 * time.Hour,
+	}
+
+	_, err := u.Update(context.Background())
+	if err == nil {
+		t.Fatal("expected error from 500 response")
+	}
+
+	// Old file content must still be there.
+	data, _ := os.ReadFile(dest)
+	if string(data) != "OLD-BUT-VALID" {
+		t.Errorf("old file overwritten: now %q", string(data))
+	}
+
+	// And no leftover .tmp.
+	if _, err := os.Stat(dest + ".tmp"); !os.IsNotExist(err) {
+		t.Errorf("temp file leaked: %v", err)
+	}
+}
