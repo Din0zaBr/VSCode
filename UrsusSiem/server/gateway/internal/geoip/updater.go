@@ -3,6 +3,8 @@ package geoip
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"time"
 )
@@ -28,5 +30,39 @@ func (u *Updater) Update(ctx context.Context) (string, error) {
 			return u.DestPath, nil
 		}
 	}
-	return "", fmt.Errorf("geoip: download not yet implemented")
+
+	// Stale or missing — download.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.Mirror, nil)
+	if err != nil {
+		return "", fmt.Errorf("geoip: build request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("geoip: GET %s: %w", u.Mirror, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("geoip: mirror returned %d", resp.StatusCode)
+	}
+
+	// Write to a sibling temp file, then rename — atomic on POSIX.
+	tmpPath := u.DestPath + ".tmp"
+	f, err := os.Create(tmpPath)
+	if err != nil {
+		return "", fmt.Errorf("geoip: create temp: %w", err)
+	}
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		f.Close()
+		os.Remove(tmpPath)
+		return "", fmt.Errorf("geoip: write temp: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(tmpPath)
+		return "", fmt.Errorf("geoip: close temp: %w", err)
+	}
+	if err := os.Rename(tmpPath, u.DestPath); err != nil {
+		os.Remove(tmpPath)
+		return "", fmt.Errorf("geoip: rename to dest: %w", err)
+	}
+	return u.DestPath, nil
 }
