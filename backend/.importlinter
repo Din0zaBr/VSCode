@@ -1,0 +1,129 @@
+[importlinter]
+root_package = ursus
+
+
+[importlinter:contract:architecture_layers]
+name = Clean architecture layers (presentation -> application -> domain)
+type = layers
+layers =
+    ursus.presentation
+    ursus.application
+    ursus.domain
+
+
+[importlinter:contract:protected_application_handlers]
+name = Application command/query handlers are protected
+type = protected
+protected_modules =
+    ursus.application.commands
+    ursus.application.queries
+allowed_importers =
+    ursus.application
+    ursus.presentation
+    ursus.setup
+    ursus.http_app
+    ursus.consumer_app
+    ursus.scheduler_app
+
+
+[importlinter:contract:protected_application_ports]
+name = Application ports are implemented only by infrastructure adapters
+type = protected
+protected_modules =
+    ursus.application.common.ports
+allowed_importers =
+    ursus.application
+    ursus.presentation
+    ursus.infrastructure.adapters
+    ursus.infrastructure.event_bus
+    ursus.infrastructure.mappers
+    ursus.infrastructure.persistence.models
+    ursus.infrastructure.run_lifecycle
+    ursus.setup
+    ursus.http_app
+    ursus.consumer_app
+    ursus.scheduler_app
+
+
+[importlinter:contract:protected_infrastructure_adapters]
+name = Infrastructure adapters are wired only from setup
+type = protected
+protected_modules =
+    ursus.infrastructure.adapters
+allowed_importers =
+    ursus.infrastructure
+    ursus.http_app
+    ursus.consumer_app
+    ursus.setup
+
+
+[importlinter:contract:protected_persistence_models]
+name = Persistence models are internal to infrastructure
+type = protected
+protected_modules =
+    ursus.infrastructure.persistence.models
+allowed_importers =
+    ursus.infrastructure
+    ursus.setup
+    ursus.http_app
+    ursus.consumer_app
+
+
+[importlinter:contract:independence_domain_contexts]
+name = Domain contexts are mutually independent
+type = independence
+modules =
+    ursus.domain.operator
+    ursus.domain.observed_entity
+    ursus.domain.incident
+    ursus.domain.metrics
+
+
+[importlinter:contract:independence_command_contexts]
+name = Command contexts are mutually independent
+type = independence
+modules =
+    ursus.application.commands.operator
+    ursus.application.commands.observed_entity
+    ursus.application.commands.incident
+    ursus.application.commands.metrics
+
+
+[importlinter:contract:independence_query_contexts]
+name = Query contexts are mutually independent
+type = independence
+modules =
+    ursus.application.queries.operator
+    ursus.application.queries.observed_entity
+    ursus.application.queries.incident
+    ursus.application.queries.metrics
+
+
+[importlinter:contract:independence_adapter_contexts]
+name = Infrastructure adapter contexts are mutually independent
+type = independence
+modules =
+    ursus.infrastructure.adapters.operator
+    ursus.infrastructure.adapters.observed_entity
+    ursus.infrastructure.adapters.incident
+    ursus.infrastructure.adapters.metrics
+
+
+[importlinter:contract:independence_persistence_model_contexts]
+name = Persistence model contexts are mutually independent
+type = independence
+modules =
+    ursus.infrastructure.persistence.models.operator
+    ursus.infrastructure.persistence.models.observed_entity
+    ursus.infrastructure.persistence.models.incident
+    ursus.infrastructure.persistence.models.metrics
+
+
+[importlinter:contract:independence_presentation_contexts]
+name = Presentation contexts are mutually independent
+type = independence
+modules =
+    ursus.presentation.operator
+    ursus.presentation.observed_entity
+    ursus.presentation.incident
+    ursus.presentation.metrics
