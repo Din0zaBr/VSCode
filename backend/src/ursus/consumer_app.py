@@ -1,1 +1,1 @@
-﻿# entrypoint placeholder; implemented in a later plan
+# entrypoint placeholder; implemented in a later plan
