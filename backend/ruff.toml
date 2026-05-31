@@ -17,7 +17,7 @@ include = [
 
 exclude = [
     "src/ursus/_version.py",
-    "src/ursus/infrastructure/persistence/migrations/versions",
+    "src/ursus/infrastructure/persistence/migrations",
     "scripts",
 ]
 
