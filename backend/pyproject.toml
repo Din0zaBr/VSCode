@@ -1,0 +1,76 @@
+[build-system]
+requires = [
+    "hatchling==1.29.0",
+    "hatch-vcs==0.5.0",
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+search_parent_directories = true
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/ursus/_version.py"
+
+[project]
+name = "ursus"
+dynamic = ["version"]
+description = "Monitoring backend"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dature==0.17.1",
+    "dishka==1.10.1",
+    "fastapi[standard]==0.136.1",
+    "httpx==0.28.1",
+    "sqlalchemy[asyncio]==2.0.48",
+    "duckdb==1.5.3",
+    "psycopg[binary]==3.2.3",
+    "alembic==1.18.4",
+    "structlog==25.5.0",
+    "adaptix==3.0.0b12",    
+    "taskiq==0.12.4",
+]
+[dependency-groups]
+dev = [
+    { include-group = "lint" },
+    { include-group = "test" },
+    "prek==0.3.13",
+    "conventional-pre-commit==4.4.0",
+    "detect-secrets==1.5.0",
+    "typos==1.46.0",
+    "pre-commit-hooks==6.0.0",
+]
+lint = [
+    "bandit==1.9.4",
+    "codespell==2.4.2",
+    "mypy==2.0.0",
+    "ruff==0.15.12",
+    "import-linter==2.11",
+]
+test = [
+    "asgi-lifespan==2.1.0",
+    "pytest==9.0.3",
+    "pytest-asyncio==1.3.0",
+    "pytest-cov==7.1.0",
+    "pytest-xdist==3.8.0",
+    "testcontainers[postgres,minio,elasticsearch]==4.14.2",
+    "minio==7.2.20",
+    "pika==1.4.0",
+]
+
+[tool.bandit]
+skips = ["B101"]
+
+[tool.typos.default.extend-words]
+selectin = "selectin"
+CPY = "CPY"
+
+[tool.typos.files]
+extend-exclude = [
+    "scripts/**",
+    "static/**",
+    "src/*/infrastructure/persistence/migrations/versions/**",
+]

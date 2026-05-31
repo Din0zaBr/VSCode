@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import pytest
+import pytest
 
 from ursus.setup.settings import AppSettings
 
@@ -22,3 +19,9 @@ def test_from_env_uses_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = AppSettings.from_env()
     assert settings.environment == "local"
     assert settings.debug is False
+
+
+def test_postgres_dsn_is_read_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("URSUS_POSTGRES_DSN", "postgresql+psycopg://u:p@db:5432/ursus")
+    settings = AppSettings.from_env()
+    assert settings.postgres_dsn == "postgresql+psycopg://u:p@db:5432/ursus"
