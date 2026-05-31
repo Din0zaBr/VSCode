@@ -17,9 +17,7 @@ class ThingHappened(IntegrationEvent):
 
 def test_to_envelope_extracts_routing_metadata() -> None:
     serializer = IntegrationEventSerializer()
-    event = ThingHappened(
-        event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc"
-    )
+    event = ThingHappened(event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc")
     envelope = serializer.to_envelope(event)
     assert envelope.event_type == "test.thing_happened"
     assert envelope.schema_version == 1
@@ -29,9 +27,7 @@ def test_to_envelope_extracts_routing_metadata() -> None:
 
 def test_from_payload_round_trips() -> None:
     serializer = IntegrationEventSerializer()
-    event = ThingHappened(
-        event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc"
-    )
+    event = ThingHappened(event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc")
     envelope = serializer.to_envelope(event)
     restored = serializer.from_payload(envelope.payload, ThingHappened)
     assert restored == event
@@ -39,9 +35,7 @@ def test_from_payload_round_trips() -> None:
 
 def test_from_payload_is_tolerant_to_unknown_fields() -> None:
     serializer = IntegrationEventSerializer()
-    event = ThingHappened(
-        event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc"
-    )
+    event = ThingHappened(event_id=uuid4(), occurred_at=datetime.now(UTC), thing_id="abc")
     payload = {**serializer.to_envelope(event).payload, "added_in_v2": 99}
     restored = serializer.from_payload(payload, ThingHappened)
     assert restored == event

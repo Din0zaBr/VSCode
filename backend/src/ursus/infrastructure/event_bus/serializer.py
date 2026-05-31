@@ -25,7 +25,5 @@ class IntegrationEventSerializer:
             payload=self._retort.dump(event, type(event)),
         )
 
-    def from_payload(
-        self, payload: dict[str, object], event_cls: type[EventT]
-    ) -> EventT:
+    def from_payload(self, payload: dict[str, object], event_cls: type[EventT]) -> EventT:
         return self._retort.load(payload, event_cls)
