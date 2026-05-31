@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 from uuid import UUID
 
 from sqlalchemy import func
@@ -14,7 +14,7 @@ from ursus.infrastructure.persistence.schemas import MESSAGING_SCHEMA
 
 class OutboxMessage(Base):
     __tablename__ = "outbox"
-    __table_args__ = {"schema": MESSAGING_SCHEMA}
+    __table_args__: ClassVar[dict[str, str]] = {"schema": MESSAGING_SCHEMA}  # type: ignore[misc]
 
     event_id: Mapped[UUID] = mapped_column(primary_key=True)
     event_type: Mapped[str]
