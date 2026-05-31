@@ -37,6 +37,7 @@ allowed_importers =
     ursus.infrastructure.adapters
     ursus.infrastructure.event_bus
     ursus.infrastructure.mappers
+    ursus.infrastructure.persistence
     ursus.infrastructure.persistence.models
     ursus.infrastructure.run_lifecycle
     ursus.setup
