@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 
 # NOTE: the SQLAlchemy async types and the ports are imported at runtime (not under
 # TYPE_CHECKING) because dishka resolves provider signatures via `get_type_hints` at
-# container-build time. The `runtime-evaluated-decorators = ["dishka.provide"]` ruff setting
-# (added in Task 3) keeps ruff's TC rules from moving them under TYPE_CHECKING.
+# container-build time. The `runtime-evaluated-decorators = ["dishka.provide"]` ruff
+# setting (added in Task 3) keeps ruff's TC rules from moving them under TYPE_CHECKING.
 
 
 class AppProvider(Provider):

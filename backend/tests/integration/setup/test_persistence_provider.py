@@ -7,12 +7,13 @@ from ursus.setup.ioc import build_container
 from ursus.setup.settings import AppSettings
 
 
-@pytest.fixture
+@pytest.fixture()
 def _env(monkeypatch: pytest.MonkeyPatch, postgres_dsn: str) -> None:
     monkeypatch.setenv("URSUS_POSTGRES_DSN", postgres_dsn)
 
 
-async def test_container_provides_unit_of_work(_env: None) -> None:
+@pytest.mark.usefixtures("_env")
+async def test_container_provides_unit_of_work() -> None:
     container = build_container()
     try:
         async with container() as request_container:
@@ -22,7 +23,8 @@ async def test_container_provides_unit_of_work(_env: None) -> None:
         await container.close()
 
 
-async def test_settings_carry_container_dsn(_env: None, postgres_dsn: str) -> None:
+@pytest.mark.usefixtures("_env")
+async def test_settings_carry_container_dsn(postgres_dsn: str) -> None:
     container = build_container()
     try:
         settings = await container.get(AppSettings)
