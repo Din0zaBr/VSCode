@@ -89,3 +89,7 @@ mark-parentheses = true
 parametrize-names-type = "tuple"
 parametrize-values-type = "tuple"
 parametrize-values-row-type = "tuple"
+
+[lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["ursus.infrastructure.persistence.base.Base"]
+runtime-evaluated-decorators = ["dishka.provide", "dataclasses.dataclass"]
