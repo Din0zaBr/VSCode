@@ -1,0 +1,120 @@
+# Closed-network pre-commit config.
+# All hooks run from locally installed packages (`uv sync --all-groups`);
+# no remote repositories are fetched. Invoke via `just pre-commit-all`,
+# which calls `prek run --all-files` inside the uv-managed venv.
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      - id: trailing-whitespace
+        name: trailing-whitespace
+        entry: python -m pre_commit_hooks.trailing_whitespace_fixer
+        language: system
+        types: [text]
+
+      - id: end-of-file-fixer
+        name: end-of-file-fixer
+        entry: python -m pre_commit_hooks.end_of_file_fixer
+        language: system
+        types: [text]
+
+      - id: mixed-line-ending
+        name: mixed-line-ending
+        entry: python -m pre_commit_hooks.mixed_line_ending
+        language: system
+        types: [text]
+
+      - id: check-case-conflict
+        name: check-case-conflict
+        entry: python -m pre_commit_hooks.check_case_conflict
+        language: system
+
+      - id: check-added-large-files
+        name: check-added-large-files
+        entry: python -m pre_commit_hooks.check_added_large_files
+        language: system
+        args: [--maxkb=2000]
+
+      - id: check-ast
+        name: check-ast
+        entry: python -m pre_commit_hooks.check_ast
+        language: system
+        types: [python]
+
+      - id: check-yaml
+        name: check-yaml
+        entry: python -m pre_commit_hooks.check_yaml
+        language: system
+        types: [yaml]
+
+      - id: check-toml
+        name: check-toml
+        entry: python -m pre_commit_hooks.check_toml
+        language: system
+        types: [toml]
+
+      - id: check-merge-conflict
+        name: check-merge-conflict
+        entry: python -m pre_commit_hooks.check_merge_conflict
+        language: system
+
+      - id: detect-secrets
+        name: detect-secrets
+        entry: detect-secrets-hook
+        language: system
+        args:
+          - --exclude-files
+          - "\\.env.*|^deploy/|alembic\\.ini|migrations/|^tests/|^scripts|^static"
+
+      - id: typos
+        name: typos
+        entry: typos
+        language: system
+        pass_filenames: false
+
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format src tests
+        language: system
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+
+      - id: ruff-check
+        name: ruff-check
+        entry: ruff check --exit-non-zero-on-fix src tests
+        language: system
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: mypy src tests
+        language: system
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+
+      - id: bandit
+        name: bandit
+        entry: bandit -c pyproject.toml -r src
+        language: system
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+
+      - id: import-linter
+        name: import-linter
+        entry: lint-imports
+        language: system
+        require_serial: true
+        pass_filenames: false
+
+      - id: conventional-pre-commit
+        name: conventional-pre-commit
+        entry: conventional-pre-commit
+        language: system
+        stages: [commit-msg]
