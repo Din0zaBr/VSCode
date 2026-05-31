@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from uuid import uuid4
 
 from ursus.application.common.events.integration_event import IntegrationEvent
 from ursus.domain.common.domain_event import DomainEvent
